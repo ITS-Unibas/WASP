@@ -1,0 +1,20 @@
+{
+    "Application" : {
+        "BaseDirectory" : "C:\\ProgramData\\Unibasel\\wasp",
+        "GitServiceUser" : "schaefek",
+        "PackagesIncomingAll" : "git.its.unibas.ch/scm/sun/packages-incoming-all.git",
+        "PackagesIncomingFiltered" : "git.its.unibas.ch/scm/sun/packages-incoming-filtered.git",
+        "WindowsSoftware" : "git.its.unibas.ch/scm/sun/windows-software.git",
+        "ChocoRepo" : "github.com/chocolatey/choco.git",
+        "JiraObserver" : "git.its.unibas.ch/scm/sun/jira-observer.git"
+    },
+    "Logger" : {
+        "EventLogName" : "WASP",
+        "EventID" : 9999,
+        "LogSubFilePath" : "logs",
+        "LogFileNamePrefix" : "choco_log",
+        "MaxLogFiles" : 10,
+        "LogLevel" : 0,
+        "LogToHost" : true
+    }
+}
