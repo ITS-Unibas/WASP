@@ -76,7 +76,7 @@ function Write-Log {
       # Only log when severity level is greater or equal log level
       if($Severity -ge $LogLevel) {
           if (-Not (Test-Path $LogPath -ErrorAction SilentlyContinue)) {
-              New-Item -ItemType directory -Path $LogPath
+              $null = New-Item -ItemType directory -Path $LogPath
           }
           if (-Not (Test-Path $LogFilePath -ErrorAction SilentlyContinue)) {
               $numLogFiles = (Get-ChildItem -Path $LogPath -Filter '*.log' | Measure-Object).Count
@@ -85,7 +85,7 @@ function Write-Log {
               } elseif ($numLogFiles -gt $MaxLogFiles) {
                 Get-ChildItem $LogPath | Sort-Object CreationTime | Select-Object -First ($numLogFiles - $MaxLogFiles + 1) | Remove-Item
               }
-              New-Item $LogFilePath -type file
+              $null = New-Item $LogFilePath -type file
           }
 
           $line | Add-Content $LogFilePath
