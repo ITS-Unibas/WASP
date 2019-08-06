@@ -6,7 +6,7 @@ function Initialize-Prerequisites {
    Imports chocolatey helper functions and manages securityprotocols
    .NOTES
     FileName: Initialize-Prerequisites.ps1
-    Author: schaefek
+    Author: Kevin Schaefer, Maximilian Burgert, Tim Koenigl
     Contact: its-wcs-ma@unibas.ch
     Created: 2019-08-05
     Updated: 2019-08-05

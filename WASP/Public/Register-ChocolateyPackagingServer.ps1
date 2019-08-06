@@ -6,7 +6,7 @@ function Register-ChocolateyPackagingServer {
     Setup a new Chocolatey Packaging Server with all the stuff you need for doing sick packaging
    .NOTES
     FileName: Register-ChocolateyPackagingServer.ps1
-    Author: schaefek
+    Author: Kevin Schaefer
     Contact: its-wcs-ma@unibas.ch
     Created: 2019-07-31
     Updated: 2019-07-31
