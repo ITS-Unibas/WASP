@@ -6,7 +6,8 @@
         "PackagesIncomingFiltered" : "git.its.unibas.ch/scm/sun/packages-incoming-filtered.git",
         "WindowsSoftware" : "git.its.unibas.ch/scm/sun/windows-software.git",
         "ChocoRepo" : "github.com/chocolatey/choco.git",
-        "JiraObserver" : "git.its.unibas.ch/scm/sun/jira-observer.git"
+        "JiraObserver" : "git.its.unibas.ch/scm/sun/jira-observer.git",
+        "BitBucketAPIToken" : ""
     },
     "Logger" : {
         "EventLogName" : "WASP",
