@@ -54,7 +54,7 @@ begin{
         }
     }
     if(-Not $script:FilePathPresent) {
-        #Write-Log "Calling Set File Path with path $FileName" -Severity 1
+        Write-Log "Calling Set File Path with path $FileName" -Severity 1
         $script:ToolsPathPresent = $false
         $script:ToolsDirPresent = $false
         $InstallerContent | ForEach-Object {
@@ -81,7 +81,7 @@ begin{
     }
 
     if($UnzipPath) {
-        #Write-Log "Calling set unzip location and remove installzip, got unzip location $UnzipPath" -Severity 1
+        Write-Log "Calling set unzip location and remove installzip, got unzip location $UnzipPath" -Severity 1
         $ChocolateyPackageFolder = Join-Path -Path $PackagePath -ChildPath 'tools'
         $InstallerContent -Replace ".*unzipLocation[\s]*=[\s]*Get-PackageCacheLocation","unzipLocation = $ChocolateyPackageFolder"
         $InstallerContent -Replace "Install-ChocolateyZipPackage[\s]*=[\s]@packageArgs",""
