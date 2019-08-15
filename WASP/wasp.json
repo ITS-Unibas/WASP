@@ -7,7 +7,9 @@
         "WindowsSoftware" : "git.its.unibas.ch/scm/sun/windows-software.git",
         "ChocoRepo" : "github.com/chocolatey/choco.git",
         "JiraObserver" : "git.its.unibas.ch/scm/sun/jira-observer.git",
-        "BitBucketAPIToken" : ""
+        "BitBucketAPIToken" : "",
+        "PreAdditionalScripts" : ["InitialScript.ps1"],
+        "PostAdditionalScripts" : ["FinalScript.ps1"]
     },
     "Logger" : {
         "EventLogName" : "WASP",
