@@ -10,7 +10,6 @@ function Start-Overrides() {
         After building these packages they will be pushed to the right choco server depending on their location on the remote branches (dev/test/prod).
 
     #>
-
     $config = Read-ConfigFile
     Set-Location $config.Application.BaseDirectory
 
