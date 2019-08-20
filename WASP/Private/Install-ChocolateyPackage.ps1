@@ -1,21 +1,20 @@
-<#
-  .SYNOPSIS
-    This function overrides the Install-ChocolateyPackage function and receives an url and checksums to download the package binary.
-
-  .DESCRIPTION
-    This function receives and saves the parameters which are given in the package script.
-    With this parameters the Chocolatey Web downloader can be started and the binary can be downloaded into the tools folder of the package.
-    In the end the script gets modified by calling the Edit-ChocolateyInstaller script.
-
-  .PARAMETER all
-    For further information to the parameters:
-    https://github.com/chocolatey/choco/blob/master/src/chocolatey.resources/helpers/functions/Install-ChocolateyPackage.ps1
-
-  .OUTPUTS
-    In general this function does not return anything, but the installer script gets modified s.t. it runs with a binary instead an url.
-#>
-
 function Install-ChocolateyPackage() {
+    <#
+    .SYNOPSIS
+        This function overrides the Install-ChocolateyPackage function and receives an url and checksums to download the package binary.
+
+    .DESCRIPTION
+        This function receives and saves the parameters which are given in the package script.
+        With this parameters the Chocolatey Web downloader can be started and the binary can be downloaded into the tools folder of the package.
+        In the end the script gets modified by calling the Edit-ChocolateyInstaller script.
+
+    .PARAMETER all
+        For further information to the parameters:
+        https://github.com/chocolatey/choco/blob/master/src/chocolatey.resources/helpers/functions/Install-ChocolateyPackage.ps1
+
+    .OUTPUTS
+        In general this function does not return anything, but the installer script gets modified s.t. it runs with a binary instead an url.
+    #>
     param(
         [parameter(Mandatory = $true, Position = 0)][string] $packageName,
         [parameter(Mandatory = $false, Position = 1)]

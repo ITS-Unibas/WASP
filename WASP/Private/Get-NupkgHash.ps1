@@ -1,21 +1,21 @@
-<#
-  .SYNOPSIS
-    Gets a hash string for a given nupkg
+function Get-NupkgHash() {
+    <#
+    .SYNOPSIS
+        Gets a hash string for a given nupkg
 
-  .DESCRIPTION
-    This function extracts the nupkg into a temporary created folder. Afterwards it goes over the nuspec, all files in the tools folder and in the legal folder if they exists.
-    It creates the hash for each file and appends it to a hash string which is returned later. The temporary folder will be deleted in the end, so the package does not change by this function.
+    .DESCRIPTION
+        This function extracts the nupkg into a temporary created folder. Afterwards it goes over the nuspec, all files in the tools folder and in the legal folder if they exists.
+        It creates the hash for each file and appends it to a hash string which is returned later. The temporary folder will be deleted in the end, so the package does not change by this function.
 
-  .PARAMETER nupkgPath
-    This parameter is the absolute path of the nupkg to extract.
+    .PARAMETER nupkgPath
+        This parameter is the absolute path of the nupkg to extract.
 
-  .PARAMETER packageFolder
-    This parameter is the absolute path to the package folder where the nupkg is in.
+    .PARAMETER packageFolder
+        This parameter is the absolute path to the package folder where the nupkg is in.
 
-  .OUTPUTS
-    This fuction returns a string which consists of a concatenation of all file hashes and represents the hashvalue of the nupkg
-#>
-function Get-HashNupkg() {
+    .OUTPUTS
+        This fuction returns a string which consists of a concatenation of all file hashes and represents the hashvalue of the nupkg
+    #>
     param(
       [Parameter(Mandatory=$true)][string]$nupkgPath,
       [Parameter(Mandatory=$true)][string]$packageFolder

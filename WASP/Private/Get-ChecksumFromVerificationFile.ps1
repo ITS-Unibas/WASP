@@ -1,24 +1,24 @@
-<#
-  .SYNOPSIS
-    This helper function will try to find the correct checksum in a VERIFICATION.txt file.
-
-  .DESCRIPTION
-    If this function is called and the VERIFICATION.txt file exists there will be searched for the checksum in the file by using different regex.
-    Depending on the parameter input there will be searched for 32 bit checksums or 64 bit checksums.
-    If there is no checksum found $Null will be returned.
-
-  .PARAMETER searchFor32BitChecksum
-    A mandatory boolean which describes if there should be searched for a 32 bit checksum if it is set to true.
-    Has to be set to false if searchFor64BitChecksum is set to true!
-
-  .PARAMETER searchFor64BitChecksum
-    A mandatory boolean which describes if there should be searched for a 64 bit checksum if it is set to true.
-    Has to be set to false if searchFor32BitChecksum is set to true!
-
-  .OUTPUTS
-    The checksum will be returned as a string.
-#>
 function Get-ChecksumFromVerificationFile() {
+    <#
+    .SYNOPSIS
+        This helper function will try to find the correct checksum in a VERIFICATION.txt file.
+
+    .DESCRIPTION
+        If this function is called and the VERIFICATION.txt file exists there will be searched for the checksum in the file by using different regex.
+        Depending on the parameter input there will be searched for 32 bit checksums or 64 bit checksums.
+        If there is no checksum found $Null will be returned.
+
+    .PARAMETER searchFor32BitChecksum
+        A mandatory boolean which describes if there should be searched for a 32 bit checksum if it is set to true.
+        Has to be set to false if searchFor64BitChecksum is set to true!
+
+    .PARAMETER searchFor64BitChecksum
+        A mandatory boolean which describes if there should be searched for a 64 bit checksum if it is set to true.
+        Has to be set to false if searchFor32BitChecksum is set to true!
+
+    .OUTPUTS
+        The checksum will be returned as a string.
+    #>
     param(
         [parameter(Mandatory = $True)][bool] $searchFor32BitChecksum,
         [parameter(Mandatory = $True)][bool] $searchFor64BitChecksum

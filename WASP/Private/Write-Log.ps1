@@ -1,30 +1,29 @@
 function Write-Log {
     <#
-  .SYNOPSIS
-    Writes a message in a log file.
+    .SYNOPSIS
+        Writes a message in a log file.
 
-  .DESCRIPTION
-    If the Write-Log function is called the given string is logged into a log file. The log file folder is created if non-existing and there will be a maximum number of log files.DESCRIPTION
-    If the max number of log files is reached the oldest one gets removed.
-  .NOTES
-    FileName:    Write-Log.ps1
-    Author:      Maximilian Burgert, Tim Koenigl, Kevin Schaefer
-    Contact:     its-wcs-ma@unibas.ch
-    Created:     2019-07-30
-    Updated:     2019-07-31
-    Version:     1.0.0
+    .DESCRIPTION
+        If the Write-Log function is called the given string is logged into a log file. The log file folder is created if non-existing and there will be a maximum number of log files.DESCRIPTION
+        If the max number of log files is reached the oldest one gets removed.
+    .NOTES
+        FileName:    Write-Log.ps1
+        Author:      Maximilian Burgert, Tim Koenigl, Kevin Schaefer
+        Contact:     its-wcs-ma@unibas.ch
+        Created:     2019-07-30
+        Updated:     2019-07-31
+        Version:     1.0.0
 
-  .PARAMETER Message
-    The message which gets logged as a string.
+    .PARAMETER Message
+        The message which gets logged as a string.
 
-  .PARAMETER Severity
-    The log level. There are 3 log levels (1,2,3) where 0 is the lowest and 3 the highest log level.
+    .PARAMETER Severity
+        The log level. There are 3 log levels (1,2,3) where 0 is the lowest and 3 the highest log level.
 
-  .EXAMPLE
-    PS> Write-Log -Message "TestLog" -Severity 2
-#>
+    .EXAMPLE
+        PS> Write-Log -Message "TestLog" -Severity 2
+    #>
     [cmdletbinding()]
-
     param (
         [Parameter(Mandatory = $true)]
         [AllowEmptyString()]

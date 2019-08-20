@@ -1,22 +1,22 @@
-<#
-  .SYNOPSIS
-    This function overrides the Install-ChocolateyInstallPackage function and receives an optional filepath. It checks if the binary already exists or if it has to be downloaded first.
-
-  .DESCRIPTION
-    This function receives and saves the parameters which are given in the package script.
-    If there is file parameter given the function checks if the binary exists or not. If it does not exist the VERIFICATION.txt will be checked to retrieve an url and checksums.
-
-    With this parameters the Chocolatey Web downloader can be started and the binary can be downloaded into the tools folder of the package.
-    In the end the script gets modified by calling the Edit-ChocolateyInstaller script.
-
-  .PARAMETER all
-    For further information to the parameters:
-    https://github.com/chocolatey/choco/blob/master/src/chocolatey.resources/helpers/functions/Install-ChocolateyInstallPackage.ps1
-
-  .OUTPUTS
-    In general this function does not return anything, but the installer script gets modified.
-#>
 function Install-ChocolateyInstallPackage() {
+    <#
+    .SYNOPSIS
+        This function overrides the Install-ChocolateyInstallPackage function and receives an optional filepath. It checks if the binary already exists or if it has to be downloaded first.
+
+    .DESCRIPTION
+        This function receives and saves the parameters which are given in the package script.
+        If there is file parameter given the function checks if the binary exists or not. If it does not exist the VERIFICATION.txt will be checked to retrieve an url and checksums.
+
+        With this parameters the Chocolatey Web downloader can be started and the binary can be downloaded into the tools folder of the package.
+        In the end the script gets modified by calling the Edit-ChocolateyInstaller script.
+
+    .PARAMETER all
+        For further information to the parameters:
+        https://github.com/chocolatey/choco/blob/master/src/chocolatey.resources/helpers/functions/Install-ChocolateyInstallPackage.ps1
+
+    .OUTPUTS
+        In general this function does not return anything, but the installer script gets modified.
+    #>
     param(
         [parameter(Mandatory = $true, Position = 0)][string] $packageName,
         [parameter(Mandatory = $false, Position = 1)]

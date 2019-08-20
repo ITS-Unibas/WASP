@@ -1,25 +1,25 @@
-<#
-  .SYNOPSIS
-    This helper function will try to find the correct url in a VERIFICATION.txt file.
-
-  .DESCRIPTION
-    If this function is called and the VERIFICATION.txt file exists there will be searched for the url in the file by using different regex.
-    Depending on the parameter input there will be searched for a 32 bit url or a 64 bit url. If for the specified url type a url cannot be found,
-    a more generic regex is used to check if there is any url in the document with an executable file ending.
-    If there is no url found $Null will be returned.
-
-  .PARAMETER searchFor32BitUrl
-    A mandatory boolean which describes if there should be searched for a 32 bit url if it is set to true.
-    Has to be set to false if searchFor64Url is set to true!
-
-  .PARAMETER searchFor64BitUrl
-    A mandatory boolean which describes if there should be searched for a 64 bit url if it is set to true.
-    Has to be set to false if searchFor32BitUrl is set to true!
-
-  .OUTPUTS
-    The url will be returned as a string.
-#>
 function Get-UrlFromVerificationFile() {
+    <#
+    .SYNOPSIS
+        This helper function will try to find the correct url in a VERIFICATION.txt file.
+
+    .DESCRIPTION
+        If this function is called and the VERIFICATION.txt file exists there will be searched for the url in the file by using different regex.
+        Depending on the parameter input there will be searched for a 32 bit url or a 64 bit url. If for the specified url type a url cannot be found,
+        a more generic regex is used to check if there is any url in the document with an executable file ending.
+        If there is no url found $Null will be returned.
+
+    .PARAMETER searchFor32BitUrl
+        A mandatory boolean which describes if there should be searched for a 32 bit url if it is set to true.
+        Has to be set to false if searchFor64Url is set to true!
+
+    .PARAMETER searchFor64BitUrl
+        A mandatory boolean which describes if there should be searched for a 64 bit url if it is set to true.
+        Has to be set to false if searchFor32BitUrl is set to true!
+
+    .OUTPUTS
+        The url will be returned as a string.
+    #>
     param(
         [parameter(Mandatory = $true)][bool] $searchFor32BitUrl,
         [parameter(Mandatory = $true)][bool] $searchFor64BitUrl

@@ -1,21 +1,21 @@
 function Request-GitRepo {
     <#
-   .SYNOPSIS
-    Clone a git repo
-   .DESCRIPTION
-    Clone a git repo with specified user from a specified server
-   .NOTES
-    FileName: Request-GitRepo.ps1
-    Author: Kevin Schaefer, Maximilian Burgert, Tim Koenigl
-    Contact: its-wcs-ma@unibas.ch
-    Created: 2019-07-31
-    Updated: 2019-07-31
-    Version: 1.0.0
-   .PARAMETER
-   .EXAMPLE
-    PS>
-   .LINK
-#>
+    .SYNOPSIS
+        Clone a git repo
+    .DESCRIPTION
+        Clone a git repo with specified user from a specified server
+    .NOTES
+        FileName: Request-GitRepo.ps1
+        Author: Kevin Schaefer, Maximilian Burgert, Tim Koenigl
+        Contact: its-wcs-ma@unibas.ch
+        Created: 2019-07-31
+        Updated: 2019-07-31
+        Version: 1.0.0
+    .PARAMETER
+    .EXAMPLE
+        PS>
+    .LINK
+    #>
     [cmdletbinding()]
     param(
         [Parameter()]

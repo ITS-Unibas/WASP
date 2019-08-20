@@ -1,23 +1,23 @@
-<#
-  .SYNOPSIS
-    This function overrides the Install-ChocolateyZipPackage function and receives a optional filepath or an url to a zip file. Depending on the input the functions downloads and/or unzips the binaries.
-
-  .DESCRIPTION
-    This function receives and saves the parameters which are given in the package script.
-    If there is file parameter given the function checks if the binary exists or not. If it does not exist and there is also no url given the VERIFICATION.txt will be checked to retrieve an url and checksums.
-    If there is a url given or a url found in the VERIFICATION.txt file it will be downloaded.
-    Afterwards the zip will be unpacked into the tools folder.
-
-    In the end the script gets modified by calling the Edit-ChocolateyInstaller script.
-
-  .PARAMETER all
-    For further information to the parameters:
-    https://github.com/chocolatey/choco/blob/master/src/chocolatey.resources/helpers/functions/Install-ChocolateyZipPackage.ps1
-
-  .OUTPUTS
-    In general this function does not return anything, but the installer script gets modified.
-#>
 function Install-ChocolateyZipPackage() {
+    <#
+    .SYNOPSIS
+        This function overrides the Install-ChocolateyZipPackage function and receives a optional filepath or an url to a zip file. Depending on the input the functions downloads and/or unzips the binaries.
+
+    .DESCRIPTION
+        This function receives and saves the parameters which are given in the package script.
+        If there is file parameter given the function checks if the binary exists or not. If it does not exist and there is also no url given the VERIFICATION.txt will be checked to retrieve an url and checksums.
+        If there is a url given or a url found in the VERIFICATION.txt file it will be downloaded.
+        Afterwards the zip will be unpacked into the tools folder.
+
+        In the end the script gets modified by calling the Edit-ChocolateyInstaller script.
+
+    .PARAMETER all
+        For further information to the parameters:
+        https://github.com/chocolatey/choco/blob/master/src/chocolatey.resources/helpers/functions/Install-ChocolateyZipPackage.ps1
+
+    .OUTPUTS
+        In general this function does not return anything, but the installer script gets modified.
+    #>
     param(
         [parameter(Mandatory = $true, Position = 0)][string] $packageName,
         [parameter(Mandatory = $false, Position = 1)][string] $url = '',
