@@ -18,10 +18,10 @@
   .OUTPUTS
     The checksum will be returned as a string.
 #>
-function Get-ChecksumFromVerificationFile(){
+function Get-ChecksumFromVerificationFile() {
     param(
-      [parameter(Mandatory=$True)][bool] $searchFor32BitChecksum,
-      [parameter(Mandatory=$True)][bool] $searchFor64BitChecksum
+        [parameter(Mandatory = $True)][bool] $searchFor32BitChecksum,
+        [parameter(Mandatory = $True)][bool] $searchFor64BitChecksum
     )
   
     $verificationPath = "..\legal\VERIFICATION.txt"
@@ -30,21 +30,22 @@ function Get-ChecksumFromVerificationFile(){
     $regexChecksum32 = '(checksum32:\s[\w]+|checksum:\s[\w]+)'
     $regexChecksum64 = '(checksum64:\s[\w]+)'
     if (Test-Path $verificationPath) {
-      if ($searchFor32BitChecksum){
-        Write-Log "$($packageName): Searching for 32 bit Checksum"
-        $checksumMatches32 = (Select-String -Path $verificationPath -Pattern $regexChecksum32).Matches
-        if ($checksumMatches32){
-          $checksum32 = $checksumMatches32 -Replace '[\s]*checksum[32]*:[\s]*',''
-          return $checksum32
+        if ($searchFor32BitChecksum) {
+            Write-Log "$($packageName): Searching for 32 bit Checksum"
+            $checksumMatches32 = (Select-String -Path $verificationPath -Pattern $regexChecksum32).Matches
+            if ($checksumMatches32) {
+                $checksum32 = $checksumMatches32 -Replace '[\s]*checksum[32]*:[\s]*', ''
+                return $checksum32
+            }
         }
-      } elseif ($searchFor64BitChecksum){
-        Write-Log "$($packageName): Searching for 64 bit Checksum"
-        $checksumMatches64 = (Select-String -Path $verificationPath -Pattern $regexChecksum64).Matches
-        if ($checksumMatches64){
-          $checksum64 = $checksumMatches64 -Replace '[\s]*checksum64:[\s]*',''
-          return $checksum64
+        elseif ($searchFor64BitChecksum) {
+            Write-Log "$($packageName): Searching for 64 bit Checksum"
+            $checksumMatches64 = (Select-String -Path $verificationPath -Pattern $regexChecksum64).Matches
+            if ($checksumMatches64) {
+                $checksum64 = $checksumMatches64 -Replace '[\s]*checksum64:[\s]*', ''
+                return $checksum64
+            }
         }
-      }
     }
     return
-  }
+}

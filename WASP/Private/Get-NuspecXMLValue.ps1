@@ -1,5 +1,5 @@
 function Get-NuspecXMLValue {
-<#
+    <#
    .SYNOPSIS
     This function gets the path to a package with an nuspec file inside and extracts the value of a specific tag.
    .DESCRIPTION
@@ -21,31 +21,32 @@ function Get-NuspecXMLValue {
     PS>
    .LINK
 #>
-[cmdletbinding()]
-param(
-    [Parameter(Mandatory=$true)]
-    [ValidateNotNullOrEmpty()]
-    [string]
-    $NuspecFile,
+    [cmdletbinding()]
+    param(
+        [Parameter(Mandatory = $true)]
+        [ValidateNotNullOrEmpty()]
+        [string]
+        $NuspecFile,
 
-    [Parameter(Mandatory=$true)]
-    [ValidateNotNullOrEmpty()]
-    [string]
-    $Tag
-)
-begin{
-    $Value = $null
-}
-process {
-    $TagLine = (Get-Content $NuspecFile | Where-Object {$_ -like "*<$Tag>*"})
-    $Value = $TagLine -Replace "<$Tag>",""
-    $Value = $Value -Replace "</$Tag>",""
-} end {
-    try {
-        return $Value.Trim()
-    } catch {
-        Write-Log "The tag was not found in the specified file. Please provide a valid nuspec file." -Severity 3
+        [Parameter(Mandatory = $true)]
+        [ValidateNotNullOrEmpty()]
+        [string]
+        $Tag
+    )
+    begin {
+        $Value = $null
     }
-}
+    process {
+        $TagLine = (Get-Content $NuspecFile | Where-Object { $_ -like "*<$Tag>*" })
+        $Value = $TagLine -Replace "<$Tag>", ""
+        $Value = $Value -Replace "</$Tag>", ""
+    } end {
+        try {
+            return $Value.Trim()
+        }
+        catch {
+            Write-Log "The tag was not found in the specified file. Please provide a valid nuspec file." -Severity 3
+        }
+    }
 
 }

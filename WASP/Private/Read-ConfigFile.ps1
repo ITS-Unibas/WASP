@@ -1,5 +1,5 @@
 ﻿function Read-ConfigFile () {
-<#
+    <#
     .Synopsis
     Read the configuration file
     .DESCRIPTION
@@ -13,22 +13,23 @@
     Version:     1.0.0
 
 #>
-  param(
-  )
+    param(
+    )
 
-  begin {
+    begin {
 
-  } process {
-      $FilePath = Join-Path -Path (Get-Item -Path $PSScriptRoot).Parent.FullName -ChildPath 'wasp.json'
+    } process {
+        $FilePath = Join-Path -Path (Get-Item -Path $PSScriptRoot).Parent.FullName -ChildPath 'wasp.json'
 
-    try {
-      $Config = Get-Content -Path $FilePath | ConvertFrom-Json -ErrorAction Stop
+        try {
+            $Config = Get-Content -Path $FilePath | ConvertFrom-Json -ErrorAction Stop
 
-    } catch {
-      Write-Error -Exception $_.Exception
+        }
+        catch {
+            Write-Error -Exception $_.Exception
+        }
+    } end {
+        return $config
     }
-  } end {
-    return $config
-  }
 
 }

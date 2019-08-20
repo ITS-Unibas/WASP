@@ -2,6 +2,8 @@
     "Application" : {
         "BaseDirectory" : "C:\\ProgramData\\Unibasel\\wasp",
         "GitServiceUser" : "schaefek",
+        "GitBaseUrl" : "https://git.its.unibas.ch",
+        "GitProject" : "SUN",
         "PackagesIncomingAll" : "git.its.unibas.ch/scm/sun/packages-incoming-all.git",
         "PackagesIncomingFiltered" : "git.its.unibas.ch/scm/sun/packages-incoming-filtered.git",
         "WindowsSoftware" : "git.its.unibas.ch/scm/sun/windows-software.git",

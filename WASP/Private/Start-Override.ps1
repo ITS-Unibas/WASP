@@ -21,10 +21,10 @@ function Start-OverrideFunctionForPackage($packToolInstallPath) {
     # TODO: might not be useful to have it in this additional function!
     $original = '.\chocolateyInstall_old.ps1'
     Set-Location ([System.IO.Path]::GetDirectoryName($packToolInstallPath))
-    if(Test-Path $original){
-      # Script has already been executed
-      Write-Log "Scripts were already overridden, no need to do it again."
-      return
+    if (Test-Path $original) {
+        # Script has already been executed
+        Write-Log "Scripts were already overridden, no need to do it again."
+        return
     }
     Invoke-Expression -Command $packToolInstallPath
-  }
+}

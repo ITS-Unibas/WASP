@@ -9,17 +9,17 @@
   .OUTPUTS
     The checksumType will be returned as a string.
 #>
-function Get-ChecksumTypeFromVerificationFile(){
+function Get-ChecksumTypeFromVerificationFile() {
     $verificationPath = "..\legal\VERIFICATION.txt"
     # Now search for a given url with one of the follwing patterns:
     # "x32: http...", "x86: http...", "32-bit: <http...>", "64-bit: <http...>"
     $regexChecksumType = '(checksum\stype:[\s]*[\w]+)'
     if (Test-Path $verificationPath) {
-      $checksumTypeMatches = (Select-String -Path $verificationPath -Pattern $regexChecksumType).Matches
-      if ($checksumTypeMatches){
-        $checksumType = $checksumTypeMatches -Replace 'checksum\stype:[\s]*',''
-        return $checksumType
-      }
+        $checksumTypeMatches = (Select-String -Path $verificationPath -Pattern $regexChecksumType).Matches
+        if ($checksumTypeMatches) {
+            $checksumType = $checksumTypeMatches -Replace 'checksum\stype:[\s]*', ''
+            return $checksumType
+        }
     }
     return 'md5'
-  }
+}

@@ -20,27 +20,28 @@
 #>
 function Set-NewReleaseVersion() {
     param(
-      [Parameter(Mandatory=$true)][boolean]$firstReleaseVersion,
-      [Parameter(Mandatory=$true)][string]$nuspecPath
+        [Parameter(Mandatory = $true)][boolean]$firstReleaseVersion,
+        [Parameter(Mandatory = $true)][string]$nuspecPath
     )
     $version = ExtractXMLValue $nuspecPath "version"
     $versionOld = $version
     $versionTag = "<version>" + $version + "</version>"
-    $hasFourSegments = [regex]::Match($versionTag,"<version>(\w|\d)+\.(\w|\d)+\.(\w|\d)+\.(\w|\d)+<\/version>").Success
+    $hasFourSegments = [regex]::Match($versionTag, "<version>(\w|\d)+\.(\w|\d)+\.(\w|\d)+\.(\w|\d)+<\/version>").Success
   
     if ($hasFourSegments -eq $true -or (($hasFourSegments -eq $false) -and ($firstReleaseVersion -eq $false))) {
-      $versionSplit = $version.split(".")
-      $versionSplit = $versionSplit[0..($versionSplit.Length-2)]
-      $version = $versionSplit -join "."
+        $versionSplit = $version.split(".")
+        $versionSplit = $versionSplit[0..($versionSplit.Length - 2)]
+        $version = $versionSplit -join "."
     }
   
     if ($firstReleaseVersion -eq $true) {
-      # This is the first time this package will be build so we append the release version 000
-      $set = (Get-Content $nuspecPath) -replace "<version>.*</version>",("<version>" + $version + ".000" + "</version>") | Set-Content $nuspecPath
-    } else {
-      $releaseVersion = [int]($versionOld.Substring($versionOld.length - 3))
-      $newRelease = $releaseVersion + 1
-      $newRelease = ([string]$newRelease).PadLeft(3,"0")
-      $set = (Get-Content $nuspecPath) -replace "<version>.*</version>",("<version>" + $version + "." + $newRelease + "</version>") | Set-Content $nuspecPath
+        # This is the first time this package will be build so we append the release version 000
+        $set = (Get-Content $nuspecPath) -replace "<version>.*</version>", ("<version>" + $version + ".000" + "</version>") | Set-Content $nuspecPath
     }
-  }
+    else {
+        $releaseVersion = [int]($versionOld.Substring($versionOld.length - 3))
+        $newRelease = $releaseVersion + 1
+        $newRelease = ([string]$newRelease).PadLeft(3, "0")
+        $set = (Get-Content $nuspecPath) -replace "<version>.*</version>", ("<version>" + $version + "." + $newRelease + "</version>") | Set-Content $nuspecPath
+    }
+}

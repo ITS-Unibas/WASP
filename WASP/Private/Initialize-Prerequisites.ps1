@@ -1,5 +1,5 @@
 function Initialize-Prerequisites {
-<#
+    <#
    .SYNOPSIS
    Imports and sets all needed components
    .DESCRIPTION
@@ -16,16 +16,16 @@ function Initialize-Prerequisites {
    .LINK
 #>
 
-process {
-    $ChocoPath = $env:ChocolateyInstall
-    if(-Not $ChocoPath) {
-        Write-Log "Chocolatey seems not to be installed, please run 'Register-ChocolateyServer' first."
-        return
-    }
+    process {
+        $ChocoPath = $env:ChocolateyInstall
+        if (-Not $ChocoPath) {
+            Write-Log "Chocolatey seems not to be installed, please run 'Register-ChocolateyServer' first."
+            return
+        }
 
-    $ChocoHelperPath = Join-Path -Path $ChocoPath -ChildPath "helpers"
-    Get-ChildItem -Path $ChocoHelperPath -Filter "*.psm1" | ForEach-Object {Import-Module $_.FullName}
-    [Net.ServicePointManager]::SecurityProtocol = 'tls12, tls11, tls'
-}
+        $ChocoHelperPath = Join-Path -Path $ChocoPath -ChildPath "helpers"
+        Get-ChildItem -Path $ChocoHelperPath -Filter "*.psm1" | ForEach-Object { Import-Module $_.FullName }
+        [Net.ServicePointManager]::SecurityProtocol = 'tls12, tls11, tls'
+    }
 
 }
