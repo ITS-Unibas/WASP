@@ -114,11 +114,12 @@ function Start-Overrides() {
 
                 }
             }
-            elseif (($branch -eq 'prod') -or ($branch -eq 'testing')) {
+            elseif (($branch -eq 'prod') -or ($branch -eq 'test')) {
+                # if packages are moved to prod and testing, push them to the appropriate choco servers
                 if ($branch -eq 'prod') {
                     $chocolateyDestinationServer = $config.Application.ChocoServerPROD
                 }
-                elseif ($branch -eq 'testing') {
+                elseif ($branch -eq 'test') {
                     $chocolateyDestinationServer = $config.Application.ChocoServerTEST
                 }
                 Write-Log ([string] (git checkout $branch 2>&1))
@@ -138,28 +139,9 @@ function Start-Overrides() {
                     $packagePath = Join-Path $PathWindowsSoftwareRepo $package
                     $versionsList = Get-ChildItem $packagePath -Directory
                     foreach ($version in $versionsList) {
-                        Set-Location (Join-Path $packagePath $version)
-
-                        # TODO: define nuspecFolder
-                        Send-NupkgToServer $nuspecFolder $chocolateyDestinationServer
-
-                        try {
-                            $nupkg = Get-ChildItem '.\' | Where-Object { $_.FullName -match ".nupkg" }
-                            if (-Not (Test-Path $nupkg) -or -Not ($nupkg -match ".nupkg")) {
-                                Write-Log ("No nupkg to push, skipping package $package $version")
-                                return
-                            }
-                            $nuspec = Get-ChildItem ".\" | Where-Object { $_.FullName -match ".nuspec" }
-                            if ($nuspec) {
-                                Send-NupkgToServer $nuspecFolder $chocolateyDestinationServer
-                            }
-                        }
-                        catch {
-                            Write-Log ("Package " + $nupkg + " could not be pushed.") -Severity 3
-                        }
-                        Set-Location $packagePath
+                        $packageRootPath = Join-Path $packagePath $version
+                        Send-NupkgToServer $packageRootPath $chocolateyDestinationServer
                     }
-                    Set-Location $PathWindowsSoftwareRepo
                 }
             }
         }

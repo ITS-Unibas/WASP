@@ -13,9 +13,6 @@ function Start-OverrideFunctionForPackage {
         - Install-ChocolateyZipPackage
 
         What exactly each overwritten function does can be read in each functions description.
-
-    .EXAMPLE
-    This script is called by the function Start-OverrideFunctionForPackage
     #>
     [CmdletBinding()]
     param (
@@ -29,7 +26,7 @@ function Start-OverrideFunctionForPackage {
     
     process {
         Set-Location ([System.IO.Path]::GetDirectoryName($packToolInstallPath))
-        if (!Test-Path $original) {
+        if (!(Test-Path $original)) {
             Invoke-Expression -Command $packToolInstallPath
         }
         else {
