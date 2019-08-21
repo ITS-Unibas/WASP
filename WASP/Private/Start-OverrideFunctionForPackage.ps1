@@ -1,31 +1,44 @@
-function Start-OverrideFunctionForPackage($packToolInstallPath) {
+function Start-OverrideFunctionForPackage {
     <#
     .SYNOPSIS
-        This function checks if a package has alreday been overridden and if so, does not override it again. Otherwise it will run the install script at the given path.
+        This script is called to run the install script of a package. There are three different install functions that are overwritten.
 
     .DESCRIPTION
-        This function receives and saves the parameters which are given in the package script.
-        If there is file parameter given the function checks if the binary exists or not. If it does not exist and there is also no url given the VERIFICATION.txt will be checked to retrieve an url and checksums.
-        If there is a url given or a url found in the VERIFICATION.txt file it will be downloaded.
-        Afterwards the zip will be unpacked into the tools folder.
+        When this script is called with a ChocolateyInstall.ps1 script the script is run normally and when the script reaches one of the three
+        overwritten install functions we can intersect and do our own settings to adapt the package to our workflow
 
-        In the end the script gets modified by calling the Edit-ChocolateyInstaller script.
+        The overwritten install functions are:
+        - Install-ChocolateyPackage
+        - Install-ChocolateyInstallPackage
+        - Install-ChocolateyZipPackage
 
-    .PARAMETER all
-        For further information to the parameters:
-        https://github.com/chocolatey/choco/blob/master/src/chocolatey.resources/helpers/functions/Install-ChocolateyZipPackage.ps1
+        What exactly each overwritten function does can be read in each functions description.
 
-    .OUTPUTS
-        In general this function does not return anything, but the installer script gets modified.
+    .EXAMPLE
+    This script is called by the function Start-OverrideFunctionForPackage
     #>
-
-    # TODO: might not be useful to have it in this additional function!
-    $original = '.\chocolateyInstall_old.ps1'
-    Set-Location ([System.IO.Path]::GetDirectoryName($packToolInstallPath))
-    if (Test-Path $original) {
-        # Script has already been executed
-        Write-Log "Scripts were already overridden, no need to do it again."
-        return
+    [CmdletBinding()]
+    param (
+        [string]
+        $packToolInstallPath
+    )
+    
+    begin {
+        $original = '.\chocolateyInstall_original.ps1'
     }
-    Invoke-Expression -Command $packToolInstallPath
+    
+    process {
+        Set-Location ([System.IO.Path]::GetDirectoryName($packToolInstallPath))
+        if (!Test-Path $original) {
+            Invoke-Expression -Command $packToolInstallPath
+        }
+        else {
+            # Script has already been executed
+            Write-Log "Scripts were already overridden, no need to do it again."
+            return
+        }
+    }
+    
+    end {
+    }
 }

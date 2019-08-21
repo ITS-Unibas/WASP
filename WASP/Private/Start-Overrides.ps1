@@ -50,8 +50,6 @@ function Start-Overrides() {
                     continue
                 }
 
-                Write-Log ([string] (git pull 2>&1))
-
                 Set-Location $packageRootPath
 
                 if (-Not (Test-Path ".\tools")) {
@@ -94,7 +92,7 @@ function Start-Overrides() {
                             # There were changes in the package, so iterate the version of the nuspec.
                             Set-NewReleaseVersion $false $nuspecFile
                             # Because the later new build package has a different version and therefore a new nupkg will be created we have to remove the old not anymore used nupkg
-                            $removed = Remove-Item -Path ".\*.nupkg"
+                            Remove-Item -Path ".\*.nupkg"
                         }
                     }
                     else {
@@ -106,33 +104,22 @@ function Start-Overrides() {
                     Write-Log ([string] (git add . 2>&1))
                     Write-Log ([string] (git commit -m "Created override for $packageName $packageVersion" 2>&1))
                     Write-Log ([string] (git push 2>&1))
+
+                    Send-NupkgToServer $packageRootPath $config.Application.ChocoServerDEV
                 }
                 catch [Exception] {
                     $ChocolateyPackageName = Get-NuspecXMLValue $packageRootPath "id"
                     Write-Log ("Package " + $ChocolateyPackageName + " override process crashed. Skipping it.") -Severity 3
                     Write-Log ($_.Exception | Format-List -force | Out-String) -Severity 3
-                    # In case we couldn't create a override or couldn't build the package we continue because we don't want to push it.
-                    continue
-                }
-                # Try to push the package to the dev choco server
-                try {
-                    $nupkg = (Get-ChildItem -Path $nuspecFolder | Where-Object { $_.FullName -match ".nupkg" }).FullName
-                    if (-Not (Test-Path ($nupkg)) -or -Not ($nupkg -match ".nupkg")) {
-                        Write-Log ("No nupkg to push, skipping package " + $_.FullName)
-                        return
-                    }
-                    Invoke-Expression -Command ("choco push " + $nupkg + " -s " + $config.Application.ChocoServerDEV + " -f --api-key=chocolateyrocks")
-                }
-                catch {
-                    Write-Log ("Package " + $nupkg + " could not be pushed.") -Severity 3
+
                 }
             }
             elseif (($branch -eq 'prod') -or ($branch -eq 'testing')) {
                 if ($branch -eq 'prod') {
-                    $chocolateyDestinationServer = 'prod'
+                    $chocolateyDestinationServer = $config.Application.ChocoServerPROD
                 }
                 elseif ($branch -eq 'testing') {
-                    $chocolateyDestinationServer = 'test'
+                    $chocolateyDestinationServer = $config.Application.ChocoServerTEST
                 }
                 Write-Log ([string] (git checkout $branch 2>&1))
 
@@ -153,6 +140,9 @@ function Start-Overrides() {
                     foreach ($version in $versionsList) {
                         Set-Location (Join-Path $packagePath $version)
 
+                        # TODO: define nuspecFolder
+                        Send-NupkgToServer $nuspecFolder $chocolateyDestinationServer
+
                         try {
                             $nupkg = Get-ChildItem '.\' | Where-Object { $_.FullName -match ".nupkg" }
                             if (-Not (Test-Path $nupkg) -or -Not ($nupkg -match ".nupkg")) {
@@ -161,7 +151,7 @@ function Start-Overrides() {
                             }
                             $nuspec = Get-ChildItem ".\" | Where-Object { $_.FullName -match ".nuspec" }
                             if ($nuspec) {
-                                Invoke-Expression -Command ("choco push " + $nupkg + " -s https://its-wcs-choco1.its.unibas.ch/$chocolateyDestinationServer/chocolatey --api-key=chocolateyrocks")
+                                Send-NupkgToServer $nuspecFolder $chocolateyDestinationServer
                             }
                         }
                         catch {
@@ -174,8 +164,5 @@ function Start-Overrides() {
             }
         }
     }
-
-    end { }
     
-
 }
