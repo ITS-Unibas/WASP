@@ -9,7 +9,7 @@ function Invoke-DeleteRequest {
     [CmdletBinding()]
     param (
         [string]
-        $Url ,
+        $Url,
 
         [string]
         $Body
@@ -24,7 +24,7 @@ function Invoke-DeleteRequest {
             Method      = 'DELETE'
             Uri         = $Url
             ContentType = "application/json"
-            Headers     = @{Authorization = "Bearer {0}"-f$config.Application.BitBucketAPIToken}
+            Headers     = @{Authorization = "Bearer {0}" -f $config.Application.BitBucketAPIToken }
             Body        = $Body
         }
         return Invoke-RestMethod @Splat -ErrorAction Stop
