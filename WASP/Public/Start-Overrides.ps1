@@ -16,34 +16,24 @@ function Start-Overrides() {
         $GitRepo = $config.Application.WindowsSoftware
         $GitFile = $GitRepo.Substring($GitRepo.LastIndexOf("/") + 1, $GitRepo.Length - $GitRepo.LastIndexOf("/") - 1)
         $GitFolderName = $GitFile.Replace(".git", "")
-        $SoftwareRepositoryPath = Join-Path -Path $config.Application.BaseDirectory-ChildPath $GitFolderName
+        $SoftwareRepositoryPath = Join-Path -Path $config.Application.BaseDirectory -ChildPath $GitFolderName
     }
 
     process { 
         Set-Location $SoftwareRepositoryPath
 
-        # Checkout prod if we are not already on it
-        Write-Log ([string] (git checkout "prod" 2>&1))
-        Write-Log ([string] (git pull 2>&1))
-  
+        Switch-GitBranch "prod"
+
         $remoteBranches = Get-RemoteBranches $SoftwareRepositoryPath
   
         $nameAndVersionSeparator = '@'
         foreach ($branch in $remoteBranches) {
-            # Reset the Location to the root of our windows software repo
             if (-Not($branch -eq 'prod') -and -Not ($branch -eq 'testing')) {
+                # Check for new packages on remote branches, that contain 'dev/' in their names
+                Switch-GitBranch $branch
+
                 $packageName, $packageVersion = $branch.split($nameAndVersionSeparator)
                 $packageName = $packageName -Replace 'dev/', ''
-                Write-Log ([string] (git checkout $branch 2>&1))
-
-                # Check if we could checkout the correct branch
-                if ((Get-CurrentBranchName) -ne $branch) {
-                    Write-Log "Couldn't checkout $branch. Exiting now!" -Severity 3
-                    exit 1
-                }
-
-                Write-Log ([string] (git pull 2>&1))
-
                 $packageRootPath = (Join-Path $packageName $packageVersion)
                 if (-Not (Test-Path $packageRootPath)) {
                     Write-Log "PR for $packageName was not yet merged. Continuing .." -Severity 1
@@ -122,16 +112,7 @@ function Start-Overrides() {
                 elseif ($branch -eq 'test') {
                     $chocolateyDestinationServer = $config.Application.ChocoServerTEST
                 }
-                Write-Log ([string] (git checkout $branch 2>&1))
-
-                # Check if we could checkout the correct branch
-                if ((Get-CurrentBranchName) -ne $branch) {
-                    Write-Log "Couldn't checkout $branch. Exiting now!" -Severity 3
-                    exit 1
-                }
-
-                # Pull to get any get changes on the branch
-                Write-Log ([string] (git pull 2>&1))
+                Switch-GitBranch $branch
 
                 $packagesList = Get-ChildItem $PathWindowsSoftwareRepo -Directory
 
