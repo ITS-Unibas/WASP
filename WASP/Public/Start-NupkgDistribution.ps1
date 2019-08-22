@@ -1,14 +1,11 @@
-function Start-Overrides() {
+function Start-NupkgDistribution() {
     <#
     .SYNOPSIS
-        Checks out all branches in the windows software repo and iterates over each package to override it if necessary, build it and push it to the matching choco server.
+        This function distributes nupkg packages to the choco server.
 
     .DESCRIPTION
-        All dev and test remote branches as well as the prod branch will be checked out. On each branch each package will be checked.
-        At each package first it will be overwritten. Afterwards the nupkg if existing will be checked and a hash is created. Then a new nupkg is created and the hash of it is compared to the one of the old nupkg.
-        If they differ the release version of the nupkg will be iterated because there was a change in this package. If not the release version won't be changed.
-        After building these packages they will be pushed to the right choco server depending on their location on the remote branches (dev/test/prod).
-
+        This function iteares over all development branches and builds a new package or a package which was build previously, but modified, and pushes it to the development server.
+        If a package has been approved for testing or production, the packages on the appropriate git branches will be pushed to their corresponding choco servers.
     #>
     begin {
         $config = Read-ConfigFile
@@ -121,6 +118,7 @@ function Start-Overrides() {
                     $versionsList = Get-ChildItem $packagePath -Directory
                     foreach ($version in $versionsList) {
                         $packageRootPath = Join-Path $packagePath $version
+                        # TODO: Only send nupkg to server when it does not exist there yet
                         Send-NupkgToServer $packageRootPath $chocolateyDestinationServer
                     }
                 }
