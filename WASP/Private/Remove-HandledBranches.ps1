@@ -43,11 +43,11 @@ function Remove-HandledBranches {
     
             if (-Not ($remoteBranch -eq "master") -and ((-Not $pullrequestsOpen.contains($remoteBranch)) -or $pullrequestsOpen.length -eq 0)) {
                 $packageName, $packageVersion = $remoteBranch.split($nameAndVersionSeparator)
-                $packageName = $packageName -replace "dev/", ""
+                $packageName = $packageName -replace $config.Application.GitBranchDEV, ""
 
                 # TODO: Test which branch should be switched to
 
-                Switch-GitBranch 'prod'
+                Switch-GitBranch $config.Application.GitBranchPROD
                 
                 Switch-GitBranch $remoteBranch
                 
@@ -56,7 +56,7 @@ function Remove-HandledBranches {
                     Write-Log "Deleting branch $remoteBranch in Windows software because the PR was declined."
                     $repo.DeleteBranch($WinSoftwareRepoName, $remoteBranch)
                     # Checkout prod and delete the local branch
-                    Switch-GitBranch 'prod'
+                    Switch-GitBranch $config.Application.GitBranchPROD
 
                     Write-Log ([string](git branch -D $remoteBranch 2>&1))
                 }

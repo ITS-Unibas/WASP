@@ -19,18 +19,18 @@ function Start-NupkgDistribution() {
     process { 
         Set-Location $SoftwareRepositoryPath
 
-        Switch-GitBranch "prod"
+        Switch-GitBranch $config.Application.GitBranchPROD
 
         $remoteBranches = Get-RemoteBranches $SoftwareRepositoryPath
   
         $nameAndVersionSeparator = '@'
         foreach ($branch in $remoteBranches) {
-            if (-Not($branch -eq 'prod') -and -Not ($branch -eq 'testing')) {
+            if (-Not($branch -eq $config.Application.GitBranchPROD) -and -Not ($branch -eq $config.Application.GitBranchTEST)) {
                 # Check for new packages on remote branches, that contain 'dev/' in their names
                 Switch-GitBranch $branch
 
                 $packageName, $packageVersion = $branch.split($nameAndVersionSeparator)
-                $packageName = $packageName -Replace 'dev/', ''
+                $packageName = $packageName -Replace $config.Application.GitBranchDEV, ''
                 $packageRootPath = (Join-Path $packageName $packageVersion)
                 if (-Not (Test-Path $packageRootPath)) {
                     Write-Log "PR for $packageName was not yet merged. Continuing .." -Severity 1
@@ -101,12 +101,12 @@ function Start-NupkgDistribution() {
 
                 }
             }
-            elseif (($branch -eq 'prod') -or ($branch -eq 'test')) {
+            elseif (($branch -eq $config.Application.GitBranchPROD) -or ($branch -eq $config.Application.GitBranchTEST)) {
                 # if packages are moved to prod and testing, push them to the appropriate choco servers
-                if ($branch -eq 'prod') {
+                if ($branch -eq $config.Application.GitBranchPROD) {
                     $chocolateyDestinationServer = $config.Application.ChocoServerPROD
                 }
-                elseif ($branch -eq 'test') {
+                elseif ($branch -eq $config.Application.GitBranchTEST) {
                     $chocolateyDestinationServer = $config.Application.ChocoServerTEST
                 }
                 Switch-GitBranch $branch
