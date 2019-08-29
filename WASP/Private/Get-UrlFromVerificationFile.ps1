@@ -24,14 +24,14 @@ function Get-UrlFromVerificationFile() {
         [parameter(Mandatory = $true)][bool] $searchFor32BitUrl,
         [parameter(Mandatory = $true)][bool] $searchFor64BitUrl
     )
-  
+
     $verificationPath = "..\legal\VERIFICATION.txt"
     # Now search for a given url with one of the follwing patterns:
     # "x32: http...", "x86: http...", "32-bit: <http...>", "64-bit: <http...>"
     $regex32 = '(x32:\s.*|32-Bit:\s<.*>|x86:\s.*|32-Bit software:\s<.*>)'
     $regex64 = '(x64:\s.*|64-Bit:\s<.*>|64-Bit software:\s<.*>)'
     $regexLink = '(http[:/\w\d.?&%^$=#\-@+\*]*)'
-  
+
     if (Test-Path $verificationPath) {
         if ($searchFor32BitUrl) {
             # We only want to search for 32bit urls in our verification text

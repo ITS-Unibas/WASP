@@ -37,9 +37,9 @@ function Install-ChocolateyZipPackage() {
     )
     $fileType = 'zip'
     $downloadFilePath = Join-Path (Get-Item -Path ".\").FullName "$($packageName)Install.$fileType"
-  
+
     $urlWasSetToFile = $False
-  
+
     if ($url -eq '' -or $url -eq $null) {
         if ($file -and (Test-Path $file)) {
             # first check whether we already have our zip file
@@ -56,7 +56,7 @@ function Install-ChocolateyZipPackage() {
                 searchFor64BitUrl = $False
             }
             $url = Get-UrlFromVerificationFile @searchArgs
-  
+
             $searchArgs = @{
                 searchFor32BitChecksum = $True
                 searchFor64BitChecksum = $False
@@ -64,7 +64,7 @@ function Install-ChocolateyZipPackage() {
             $checksum = Get-ChecksumFromVerificationFile @searchArgs
         }
     }
-  
+
     if ($url64bit -eq '' -or $url64bit -eq $null) {
         if ($file64 -and (Test-Path $file64)) {
             # first check whether we already have our zip file
@@ -81,7 +81,7 @@ function Install-ChocolateyZipPackage() {
                 searchFor64BitUrl = $True
             }
             $url64bit = Get-UrlFromVerificationFile @searchArgs
-  
+
             $searchArgs = @{
                 searchFor32BitChecksum = $False
                 searchFor64BitChecksum = $True
@@ -97,24 +97,24 @@ function Install-ChocolateyZipPackage() {
         Write-Log "$($packageName): No urls found! Exiting..." -Severity 3
         exit 1
     }
-  
+
     if ($checksumType -or $checksumType64) {
         # Checksum was defined in install.ps1 script as parameter
         if ($checksumType) {
-            $checksumType64 = $checksumType 
+            $checksumType64 = $checksumType
         }
         else {
-            $checksumType = $checksumType64 
+            $checksumType = $checksumType64
         }
     }
     else {
         $checksumType = Get-ChecksumTypeFromVerificationFile
         $checksumType64 = $checksumType
     }
-  
+
     try {
         $filePath = Get-ChocolateyWebFile $packageName $downloadFilePath $url $url64bit -checkSum $checksum -checksumType $checksumType -checkSum64 $checksum64 -checksumType64 $checksumType64 -options $options -getOriginalFileName
-  
+
         # Set Choco env variable needed by the Unzipper
         # TODO Remove hardcoded itunes path with generic package location
         $env:ChocolateyPackageFolder = "$env:ChocoCommunityRepoPath\automatic\$packageName\tools"

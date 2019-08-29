@@ -14,7 +14,7 @@ function Switch-GitBranch {
         [string]
         $branch
     )
-    
+
     process {
         Write-Log ([string] (git checkout $branch 2>&1))
 

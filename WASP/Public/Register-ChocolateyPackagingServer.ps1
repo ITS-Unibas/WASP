@@ -29,7 +29,7 @@ function Register-ChocolateyPackagingServer {
             Write-Error -Message "You need administrator rights to execute these operations" -Category AuthenticationError -Exception ([System.NotSupportedException]::new())
             return
         }
-    
+
         # Install chocolatey
         Invoke-Expression ((New-Object System.Net.WebClient).DownloadString('https://chocolatey.org/install.ps1')) | ForEach-Object { Write-Log $_ }
         # TODO: Check if chocolatey was installed
@@ -38,7 +38,7 @@ function Register-ChocolateyPackagingServer {
         Request-GitRepo -User $Config.Application.GitServiceUser -GitRepo $Config.Application.PackagesIncomingFiltered -CloneDirectory $Config.Application.BaseDirectory
         Request-GitRepo -User $Config.Application.GitServiceUser -GitRepo $Config.Application.WindowsSoftware -CloneDirectory $Config.Application.BaseDirectory
         # TODO: Why ist this repo cloned? When you install chocolatey you get all the helpers for free, will have further checks while going on with the refactoring
-        Request-GitRepo -User $Config.Application.GitServiceUser -GitRepo $Config.Application.ChocoRepo -CloneDirectory $Config.Application.BaseDirectory    
+        Request-GitRepo -User $Config.Application.GitServiceUser -GitRepo $Config.Application.ChocoRepo -CloneDirectory $Config.Application.BaseDirectory
         Request-GitRepo -User $Config.Application.GitServiceUser -GitRepo $Config.Application.JiraObserver -CloneDirectory $Config.Application.BaseDirectory
 
         # TODO: ErrorHandling

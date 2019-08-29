@@ -22,11 +22,11 @@ function Remove-RemoteBranch {
         [string]
         $Branch
     )
-    
+
     begin {
         $config = Read-ConfigFile
     }
-    
+
     process {
         $remoteBranches = Get-RemoteBranches $Repo
         if ($remoteBranches.Contains($Branch)) {
@@ -39,7 +39,7 @@ function Remove-RemoteBranch {
             Write-Log "Branch $Branch to delete does not exist."
         }
     }
-    
+
     end {
     }
 }

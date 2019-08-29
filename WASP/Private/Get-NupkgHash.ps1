@@ -35,7 +35,7 @@ function Get-NupkgHash() {
         $hashString = $hashString + ([string](Get-FileHash $_.FullName).Hash)
       }
     }
-  
+
     $legalDir = ($dir.FullName + '\legal')
     if (Test-Path $legalDir) {
       $legalObjects = Get-ChildItem -Path $legalDir |

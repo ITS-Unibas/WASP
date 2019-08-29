@@ -42,7 +42,7 @@ function Set-NewReleaseVersion() {
             $versionSplit = $versionSplit[0..($versionSplit.Length - 2)]
             $version = $versionSplit -join "."
         }
-      
+
         if ($firstReleaseVersion -eq $true) {
             # This is the first time this package will be build so we append the release version 000
             $set = (Get-Content $nuspecPath) -replace "<version>.*</version>", ("<version>" + $version + ".000" + "</version>") | Set-Content $nuspecPath
@@ -56,6 +56,6 @@ function Set-NewReleaseVersion() {
     }
 
     end {
-    
+
     }
 }

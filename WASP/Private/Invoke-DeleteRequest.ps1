@@ -14,11 +14,11 @@ function Invoke-DeleteRequest {
         [string]
         $Body
     )
-    
+
     begin {
         $config = Read-ConfigFile
     }
-    
+
     process {
         $Splat = @{
             Method      = 'DELETE'

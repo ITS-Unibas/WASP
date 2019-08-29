@@ -15,11 +15,11 @@ function Get-RemoteBranchesByStatus {
         [string]
         $Status
     )
-    
+
     begin {
         $config = Read-ConfigFile
     }
-    
+
     process {
         $branches = New-Object System.Collections.ArrayList
         $url = ("{0}/rest/api/1.0/projects/{1}/repos/{2}/pull-requests?state=$Status" -f $config.Application.GitBaseURL, $config.Application.GitProject, $Repo)

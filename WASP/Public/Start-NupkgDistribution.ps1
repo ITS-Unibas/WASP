@@ -9,20 +9,20 @@ function Start-NupkgDistribution() {
     #>
     begin {
         $config = Read-ConfigFile
-        
+
         $GitRepo = $config.Application.WindowsSoftware
         $GitFile = $GitRepo.Substring($GitRepo.LastIndexOf("/") + 1, $GitRepo.Length - $GitRepo.LastIndexOf("/") - 1)
         $GitFolderName = $GitFile.Replace(".git", "")
         $SoftwareRepositoryPath = Join-Path -Path $config.Application.BaseDirectory -ChildPath $GitFolderName
     }
 
-    process { 
+    process {
         Set-Location $SoftwareRepositoryPath
 
         Switch-GitBranch $config.Application.GitBranchPROD
 
         $remoteBranches = Get-RemoteBranches $SoftwareRepositoryPath
-  
+
         $nameAndVersionSeparator = '@'
         foreach ($branch in $remoteBranches) {
             if (-Not($branch -eq $config.Application.GitBranchPROD) -and -Not ($branch -eq $config.Application.GitBranchTEST)) {
@@ -98,7 +98,6 @@ function Start-NupkgDistribution() {
                     $ChocolateyPackageName = Get-NuspecXMLValue $packageRootPath "id"
                     Write-Log ("Package " + $ChocolateyPackageName + " override process crashed. Skipping it.") -Severity 3
                     Write-Log ($_.Exception | Format-List -force | Out-String) -Severity 3
-
                 }
             }
             elseif (($branch -eq $config.Application.GitBranchPROD) -or ($branch -eq $config.Application.GitBranchTEST)) {
@@ -125,5 +124,4 @@ function Start-NupkgDistribution() {
             }
         }
     }
-    
 }

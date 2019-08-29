@@ -10,11 +10,11 @@ function Invoke-GetRequest {
         [string]
         $Url
     )
-    
+
     begin {
         $config = Read-ConfigFile
     }
-    
+
     process {
         $Splat = @{
             Method      = 'GET'

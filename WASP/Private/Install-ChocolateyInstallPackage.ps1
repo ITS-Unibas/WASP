@@ -29,7 +29,7 @@ function Install-ChocolateyInstallPackage() {
         [alias("useOnlyPackageSilentArgs")][switch] $useOnlyPackageSilentArguments = $false,
         [parameter(ValueFromRemainingArguments = $true)][Object[]] $ignoredArguments
     )
-  
+
     if ($file64) {
         # We got a valid paramter for our file64 Path
         # Next check whether the file exists
@@ -150,7 +150,7 @@ function Install-ChocolateyInstallPackage() {
             }
         }
     }
-  
+
     $downloadFilePath = Join-Path (Get-Item -Path ".\").FullName "$($packageName)Install.$fileType"
     $checksumType = Get-ChecksumTypeFromVerificationFile
     $checksumType64 = $checksumType

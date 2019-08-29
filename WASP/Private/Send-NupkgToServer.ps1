@@ -22,7 +22,7 @@ function Send-NupkgToServer {
         [String]
         $url
     )
-    
+
     process {
         try {
             $nupkg = (Get-ChildItem -Path $nuspecFolder | Where-Object { $_.FullName -match ".nupkg" }).FullName

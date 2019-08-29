@@ -23,7 +23,7 @@ function Get-ChecksumFromVerificationFile() {
         [parameter(Mandatory = $True)][bool] $searchFor32BitChecksum,
         [parameter(Mandatory = $True)][bool] $searchFor64BitChecksum
     )
-  
+
     $verificationPath = "..\legal\VERIFICATION.txt"
     # Now search for a given checksum with one of the follwing patterns:
     # "(checksum32:\s[\w]+)", "(checksum64:\s[\w]+)"

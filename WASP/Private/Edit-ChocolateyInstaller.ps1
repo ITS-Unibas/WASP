@@ -75,7 +75,7 @@ function Edit-ChocolateyInstaller {
                     $script:ToolsDirPresent = $true
                 }
             }
-        
+
             $InstallerContent = $InstallerContent | ForEach-Object {
                 $_
                 if ($_ -match "packageArgs = @") {
@@ -99,7 +99,7 @@ function Edit-ChocolateyInstaller {
             $InstallerContent -Replace "Install-ChocolateyZipPackage[\s]*=[\s]@packageArgs", ""
         }
 
-    
+
 
         # Now we're getting to check if there was already version packaged. If yes we're going to get the last version
         [string[]]$StringVersions = Get-ChildItem -Path $ParentSWDirectory -Directory | Select-Object -ExpandProperty Name # | Select-Object -ExpandProperty $_.Name # | Sort-object $_ -descending | Select-Object -First 2
@@ -139,7 +139,7 @@ function Edit-ChocolateyInstaller {
         }
         else {
             foreach ($AdditionalScript in $AdditionalScripts) {
-                $ScriptPath = Join-Path -Path $ChocolateyPackageFolder -ChildPath $AdditionalScript            
+                $ScriptPath = Join-Path -Path $ChocolateyPackageFolder -ChildPath $AdditionalScript
                 $null = New-Item -Path $ScriptPath -ErrorAction SilentlyContinue
             }
         }

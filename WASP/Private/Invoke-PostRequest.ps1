@@ -14,11 +14,11 @@ function Invoke-PostRequest {
         [string]
         $Body
     )
-    
+
     begin {
         $config = Read-ConfigFile
     }
-    
+
     process {
         $Splat = @{
             Method      = 'POST'

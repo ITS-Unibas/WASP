@@ -19,11 +19,11 @@ function Start-OverrideFunctionForPackage {
         [string]
         $packToolInstallPath
     )
-    
+
     begin {
         $original = '.\chocolateyInstall_original.ps1'
     }
-    
+
     process {
         Set-Location ([System.IO.Path]::GetDirectoryName($packToolInstallPath))
         if (!(Test-Path $original)) {
@@ -35,7 +35,7 @@ function Start-OverrideFunctionForPackage {
             return
         }
     }
-    
+
     end {
     }
 }

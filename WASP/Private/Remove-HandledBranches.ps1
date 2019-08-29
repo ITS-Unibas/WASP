@@ -7,9 +7,9 @@ function Remove-HandledBranches {
     #>
     [CmdletBinding()]
     param (
-        
+
     )
-    
+
     begin {
         $config = Read-ConfigFile
 
@@ -23,8 +23,8 @@ function Remove-HandledBranches {
         $GitFolderName = $GitFile.Replace(".git", "")
         $WindowsSoftwarePath = Join-Path -Path $config.Application.BaseDirectory -ChildPath $GitFolderName
     }
-    
-    process {    
+
+    process {
         Write-Log "Getting branches with status: Open"
         # Get all branches which have open pull requests in windows software repo from packages incoming filtered
         $pullrequestsOpen = Get-RemoteBranchesByStatus $WinSoftwareRepoName 'Open'
@@ -48,7 +48,7 @@ function Remove-HandledBranches {
 
                 $packageName, $packageVersion = $remoteBranch.split($nameAndVersionSeparator)
                 $packageName = $packageName -replace $config.Application.GitBranchDEV, ""
-                
+
                 if (-Not (Test-Path ('.\' + $packageName + '\' + $packageVersion))) {
                     # The branch on windows software was not merged, because there is no package folder, so we have to delete it.
                     Write-Log "Deleting branch $remoteBranch in Windows software because the PR was declined."
@@ -59,7 +59,7 @@ function Remove-HandledBranches {
                     Write-Log ([string](git branch -D $remoteBranch 2>&1))
                 }
             }
-    
+
         }
 
         # TODO: Is this necessary?

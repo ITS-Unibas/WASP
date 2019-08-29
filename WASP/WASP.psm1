@@ -4,17 +4,17 @@ $Private = @(Get-ChildItem -Path $PSScriptRoot\Private\*.ps1 -ErrorAction Silent
 foreach ($import in @($Public + $Private)) {
     try {
         . $import.fullname
-  
+
     }
     catch {
         Write-Error -Message "Failed to import function $($import.fullname): $_"
     }
-  
-  
+
+
 }
 
 $wasp = @'
- 
+
 " ,  ,
    ", ,
       ""     _---.    ..;%%%;, .
@@ -35,13 +35,13 @@ $wasp = @'
                                    //        %  ;%%;
                                   //          d%%%"
                                    \           %%
-                                               V                                               
+                                               V
 
-                  \ \ /\ / / _` / __| '_ \ 
+                  \ \ /\ / / _` / __| '_ \
                    \ V  V / (_| \__ \ |_) |
-                    \_/\_/ \__,_|___/ .__/ 
-                                    | |    
-                                    |_|  
+                    \_/\_/ \__,_|___/ .__/
+                                    | |
+                                    |_|
 '@
 
 
