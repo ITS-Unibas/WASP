@@ -1,4 +1,4 @@
-function Update-PackagesIncomingFiltered {
+function Update-PackageInboxFiltered {
     <#
     .SYNOPSIS
         Short description
@@ -21,6 +21,12 @@ function Update-PackagesIncomingFiltered {
     )
 
     begin {
+    }
+
+    process {
+
+        # TODO: Needs rework
+
         if ($newPackages) {
             $devBranchPrefix = 'dev/'
             ForEach ($pkg in $newPackages) {
@@ -79,9 +85,6 @@ function Update-PackagesIncomingFiltered {
                 }
             }
         }
-    }
-
-    process {
     }
 
     end {

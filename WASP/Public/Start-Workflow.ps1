@@ -21,18 +21,22 @@ function Start-Workflow {
     process {
         Remove-LocalBranch
         Remove-HandledBranches
+        # TODO: Rename repository
         # Update windows software repository
         Set-Location $PSScriptRoot
         Write-Log ([string] (git checkout master 2>&1))
         Write-Log ([string] (git pull 2>&1))
 
+        # TODO: implement function
         Update-Submodules
 
         # Get all the packages which are to accept and further processed
         $list = Get-PackagesManual
         $list += Get-PackagesAutomatic
-        # Add-WishlistToGit
-        Update-PackagesIncomingFiltered($list)
+
+        Update-Wishlist
+
+        Update-PackageInboxFiltered($list)
     }
 
     end {

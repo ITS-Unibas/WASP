@@ -23,9 +23,16 @@ function Update-Wishlist {
     }
 
     process {
+
+        # TODO: Rework
+
         Set-Location $PSScriptRoot
         Write-Log ([string] (git checkout master 2>&1))
         Write-Log ([string] (git pull 2>&1))
+        Write-Log ([string] (git add $wishlistPath 2>&1))
+        Write-Log ([string] (git commit -m "Automated push to commit changes to the wishlist" 2>&1))
+        Write-Log ([string] (git checkout master 2>&1))
+        Write-Log ([string] (git push 2>&1))
     }
 
     end {
