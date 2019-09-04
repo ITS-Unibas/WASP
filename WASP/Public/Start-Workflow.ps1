@@ -16,6 +16,8 @@ function Start-Workflow {
 
     begin {
         $config = Read-ConfigFile
+
+
     }
 
     process {
@@ -31,12 +33,45 @@ function Start-Workflow {
         Update-Submodules
 
         # Get all the packages which are to accept and further processed
-        $list = Get-PackagesManual
-        $list += Get-PackagesAutomatic
+        $newPackages = @()
 
+        # Manual updated packages
+        $packagesManual = @(Get-ChildItem $manualSoftwareFolder)
+        foreach ($package in $packagesManual) {
+            # Use the latest created package as reference
+            $latest = Get-ChildItem -Path $package.FullName | Sort-Object CreationTime -Descending | Select-Object -First 1
+            $version = (ExtractXMLValue $latest.FullName "version")
+
+            $newPackages += Search-Whitelist $package.Name $version
+        }
+
+        # Automatic updated packages
+        foreach ($repository in $config.Application.AutomaticPackageRepositories) {
+            # TODO: Add path to cloned repository
+            $packages = @(Get-ChildItem $repository)
+            foreach ($package in $packages) {
+                $newPackages += Search-Whitelist $package.Name $version
+            }
+        }
+
+        # Commit and push the changes made to the wishlist
         Update-Wishlist
 
-        Update-PackageInboxFiltered($list)
+        # Initialize branches for each new package
+        Update-PackageInboxFiltered($newPackages)
+
+        # Create pull request from each new package branch to package-gallery
+
+        # Update windows software repository
+        Set-Location $PSScriptRoot
+        Write-Log ([string] (git checkout master 2>&1))
+        Write-Log ([string] (git pull 2>&1))
+
+        <#
+        Start distributing packages to choco servers and promote packages based on package issue position
+        on assicuated atlassian jira kanban board
+        #>
+        Start-PackageDistribution
     }
 
     end {

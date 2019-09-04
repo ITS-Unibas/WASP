@@ -20,14 +20,15 @@ function Search-Whitelist {
         [string]
         $packageName,
 
-        # Mandatorys
+        # Mandatory
         [string]
-        $version
+        $packageVersion
     )
 
     begin {
         $config = Read-ConfigFile
 
+        # TODO: The paths need to be updated here
         $wishlistPath = (Join-Path $PSScriptRoot ..\wishlist.txt)
         $wishlist = Get-Content -Path $wishlistPath | Where-Object { $_ -notlike "#*" }
 
@@ -35,27 +36,29 @@ function Search-Whitelist {
     }
 
     process {
-
-        # TODO: The paths need to be updated here
-
         Foreach ($line in $wishlist) {
             $origLine = $line
             if ($line -match "@") {
-                $line, $latestVersion = $line.split($nameAndVersionSeparator)
+                $line, $previousVersion = $line.split($nameAndVersionSeparator)
             }
             else {
-                $latestVersion = "0.0.0.0"
+                $previousVersion = "0.0.0.0"
             }
+
+            if (([version]$packageVersion) -le ([version]$previousVersion)) {
+                continue
+            }
+
             if ($packageName -like $line.Trim()) {
                 Write-Log "Copying $communityPackName $version." -Severity 1
                 #Create directory structure if not existing
-                $destPath = $filteredFolderPath + "\" + $line + "\" + $version
+                $destPath = $filteredFolderPath + "\" + $line + "\" + $packageVersion
 
                 Copy-Item $package.FullName -Destination $destPath -Recurse
 
-                $SetContentComm = (Get-Content -Path $wishlistPath) -replace $origLine, ($line + $nameAndVersionSeparator + $version) | Set-Content $wishlistPath
+                $SetContentComm = (Get-Content -Path $wishlistPath) -replace $origLine, ($line + $nameAndVersionSeparator + $packageVersion) | Set-Content $wishlistPath
                 # Return list of destPaths
-                $tmp = @{'path' = $destPath; 'name' = $line; 'version' = $version }
+                $tmp = @{'path' = $destPath; 'name' = $line; 'version' = $packageVersion }
                 $updatedPackages += , $tmp
             }
         }

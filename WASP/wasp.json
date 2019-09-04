@@ -17,7 +17,8 @@
         "PostAdditionalScripts" : ["FinalScript.ps1"],
         "ChocoServerDEV" : "https://its-wcs-choco1.its.unibas.ch/dev/chocolatey",
         "ChocoServerTEST" : "https://its-wcs-choco1.its.unibas.ch/test/chocolatey",
-        "ChocoServerPROD" : "https://its-wcs-choco1.its.unibas.ch/prod/chocolatey"
+        "ChocoServerPROD" : "https://its-wcs-choco1.its.unibas.ch/prod/chocolatey",
+        "AutomaticPackageRepositories" : ["https://github.com/chocolatey/chocolatey-coreteampackages.git"]
     },
     "Logger" : {
         "EventLogName" : "WASP",
