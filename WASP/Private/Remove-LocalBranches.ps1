@@ -1,9 +1,9 @@
-function Remove-LocalBranch {
+function Remove-LocalBranches {
     <#
     .SYNOPSIS
-        Short description
+        Delete local branches of a given repository as path
     .DESCRIPTION
-        Long description
+        Deletes a local branch only of it is not contained in remote branches of the repository
     .EXAMPLE
         PS C:\> <example usage>
         Explanation of what the example does
@@ -17,30 +17,27 @@ function Remove-LocalBranch {
     [CmdletBinding()]
     param (
         [string]
-        $branch,
-
-        [string]
-        $repository
+        $Repository
     )
 
     begin {
         $config = Read-ConfigFile
 
-        $GitRepo = $config.Application.$WindowsSoftware
+        $GitRepo = $repository
         $GitFile = $GitRepo.Substring($GitRepo.LastIndexOf("/") + 1, $GitRepo.Length - $GitRepo.LastIndexOf("/") - 1)
         $GitFolderName = $GitFile.Replace(".git", "")
-        $WindowsSoftwarePath = Join-Path -Path $config.Application.BaseDirectory -ChildPath $GitFolderName
+        $RepositoryPath = Join-Path -Path $config.Application.BaseDirectory -ChildPath $GitFolderName
     }
 
     process {
-        Set-Location $WindowsSoftwarePath
+        $remoteBranches = Get-RemoteBranches $Repository
 
-        $remoteBranches = Get-RemoteBranches $WinSoftwareRepoName
-
+        Set-Location $RepositoryPath
         Write-Log ([string] (git checkout $config.Application.GitBranchPROD 2>&1))
         Write-Log ([string] (git pull 2>&1))
         $localBranches = git branch
         ForEach ($local in $localBranches) {
+            # TODO: Investigate what this does
             if ($local -match "\*") {
                 # Skip currently checked out prod branch
                 continue

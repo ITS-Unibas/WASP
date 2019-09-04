@@ -23,8 +23,8 @@ function Start-Workflow {
     }
 
     process {
-        Remove-LocalBranch
         Remove-HandledBranches
+
         # TODO: Rename repository
         # Update windows software repository
         Set-Location $PSScriptRoot

@@ -62,7 +62,7 @@ function Remove-HandledBranches {
 
         }
 
-        # TODO: Is this necessary?
-        Set-Location ..
+        # Remove local branches where the remote branch does not exist anymore
+        Remove-LocalBranches $config.Application.WindowsSoftware
     }
 }
