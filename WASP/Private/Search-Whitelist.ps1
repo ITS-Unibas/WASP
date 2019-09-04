@@ -28,18 +28,27 @@ function Search-Whitelist {
     begin {
         $config = Read-ConfigFile
 
-        # TODO: The paths need to be updated here
-        $wishlistPath = (Join-Path $PSScriptRoot ..\wishlist.txt)
-        $wishlist = Get-Content -Path $wishlistPath | Where-Object { $_ -notlike "#*" }
+        $GitRepo = $config.Application.$WindowsSoftware
+        $GitFile = $GitRepo.Substring($GitRepo.LastIndexOf("/") + 1, $GitRepo.Length - $GitRepo.LastIndexOf("/") - 1)
+        $GitFolderName = $GitFile.Replace(".git", "")
+        $PackagesInbxFilteredPath = Join-Path -Path $config.Application.BaseDirectory -ChildPath $GitFolderName
+        $wishlistPath = Join-Path -Path  $PackagesInbxFilteredPath -ChildPath "wishlist.txt"
+
+        $GitRepo = $config.Application.$PackagesInboxFiltered
+        $GitFile = $GitRepo.Substring($GitRepo.LastIndexOf("/") + 1, $GitRepo.Length - $GitRepo.LastIndexOf("/") - 1)
+        $GitFolderName = $GitFile.Replace(".git", "")
+        $PackagesInbxFilteredPath = Join-Path -Path $config.Application.BaseDirectory -ChildPath $GitFolderName
 
         $updatedPackages = @()
     }
 
     process {
+        $wishlist = Get-Content -Path $wishlistPath | Where-Object { $_ -notlike "#*" }
+
         Foreach ($line in $wishlist) {
             $origLine = $line
             if ($line -match "@") {
-                $line, $previousVersion = $line.split($nameAndVersionSeparator)
+                $packageNameWhitelist, $previousVersion = $line.split($nameAndVersionSeparator)
             }
             else {
                 $previousVersion = "0.0.0.0"
@@ -49,16 +58,16 @@ function Search-Whitelist {
                 continue
             }
 
-            if ($packageName -like $line.Trim()) {
+            if ($packageName -like $packageNameWhitelist.Trim()) {
                 Write-Log "Copying $communityPackName $version." -Severity 1
                 #Create directory structure if not existing
-                $destPath = $filteredFolderPath + "\" + $line + "\" + $packageVersion
+                $destPath = $PackagesInbxFilteredPath + "\" + $packageName + "\" + $packageVersion
 
                 Copy-Item $package.FullName -Destination $destPath -Recurse
 
-                $SetContentComm = (Get-Content -Path $wishlistPath) -replace $origLine, ($line + $nameAndVersionSeparator + $packageVersion) | Set-Content $wishlistPath
+                $SetContentComm = (Get-Content -Path $wishlistPath) -replace $origLine, ($packageName + $nameAndVersionSeparator + $packageVersion) | Set-Content $wishlistPath
                 # Return list of destPaths
-                $tmp = @{'path' = $destPath; 'name' = $line; 'version' = $packageVersion }
+                $tmp = @{'path' = $destPath; 'name' = $packageName; 'version' = $packageVersion }
                 $updatedPackages += , $tmp
             }
         }

@@ -3,12 +3,6 @@ function Start-Workflow {
     .SYNOPSIS
         This function initiates the workflow of automated packaging
     .DESCRIPTION
-        TODO: Update description
-        The update of the git repositories first removes all local and remote branches which have been handled.
-        Then, it updates the whishlist by inserting the current package versions. To get the latest changes from
-        the package source repositories, the submodules of the package inbox will be updated and then determined,
-        which package will be moved to which of the git branches of the package gallery. The filtered package inbox
-        is then updated.
     #>
     [CmdletBinding()]
     param (
@@ -17,7 +11,15 @@ function Start-Workflow {
     begin {
         $config = Read-ConfigFile
 
+        $GitRepo = $config.Application.$PackagesInboxManual
+        $GitFile = $GitRepo.Substring($GitRepo.LastIndexOf("/") + 1, $GitRepo.Length - $GitRepo.LastIndexOf("/") - 1)
+        $GitFolderName = $GitFile.Replace(".git", "")
+        $PackagesManualPath = Join-Path -Path $config.Application.BaseDirectory -ChildPath $GitFolderName
 
+        $GitRepo = $config.Application.$PackagesInboxAutomatic
+        $GitFile = $GitRepo.Substring($GitRepo.LastIndexOf("/") + 1, $GitRepo.Length - $GitRepo.LastIndexOf("/") - 1)
+        $GitFolderName = $GitFile.Replace(".git", "")
+        $PackagesAutomaticPath = Join-Path -Path $config.Application.BaseDirectory -ChildPath $GitFolderName
     }
 
     process {
@@ -36,7 +38,7 @@ function Start-Workflow {
         $newPackages = @()
 
         # Manual updated packages
-        $packagesManual = @(Get-ChildItem $manualSoftwareFolder)
+        $packagesManual = @(Get-ChildItem $PackagesManualPath)
         foreach ($package in $packagesManual) {
             # Use the latest created package as reference
             $latest = Get-ChildItem -Path $package.FullName | Sort-Object CreationTime -Descending | Select-Object -First 1
@@ -46,8 +48,8 @@ function Start-Workflow {
         }
 
         # Automatic updated packages
-        foreach ($repository in $config.Application.AutomaticPackageRepositories) {
-            # TODO: Add path to cloned repository
+        $automaticRepositories = @(Get-ChildItem $PackagesAutomaticPath)
+        foreach ($repository in $automaticRepositories) {
             $packages = @(Get-ChildItem $repository)
             foreach ($package in $packages) {
                 $newPackages += Search-Whitelist $package.Name $version
