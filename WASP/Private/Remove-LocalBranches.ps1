@@ -29,9 +29,8 @@ function Remove-LocalBranches {
         $remoteBranches = Get-RemoteBranches $Repository
 
         # Pull prod branch to get current branches
-        Set-Location $RepositoryPath
-        Switch-GitBranch $config.Application.GitBranchPROD
-        $localBranches = git branch
+        Write-Log ([string] (git -C $RepositoryPath pull origin $config.Application.GitBranchPROD 2>&1))
+        $localBranches = git -C $RepositoryPath branch
 
         ForEach ($local in $localBranches) {
             # TODO: Investigate what this does
@@ -41,7 +40,7 @@ function Remove-LocalBranches {
             }
             if (-Not ($remoteBranches.Contains($local.Trim()))) {
                 # local branch not anymore a remote branch, so it can be deleted locally
-                Write-Log ([string] (git branch -D $local.Trim() 2>&1))
+                Write-Log ([string] (git -C $RepositoryPath branch -D $local.Trim() 2>&1))
             }
         }
     }

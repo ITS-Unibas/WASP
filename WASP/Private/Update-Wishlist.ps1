@@ -9,7 +9,11 @@ function Update-Wishlist {
     param (
         [parameter(Mandatory = $true)]
         [string]
-        $RepositoryPath
+        $RepositoryPath,
+
+        [parameter(Mandatory = $true)]
+        [string]
+        $Branch
     )
 
     begin {
@@ -17,11 +21,11 @@ function Update-Wishlist {
     }
 
     process {
-        Set-Location $PackageGalleryPath
-        Switch-GitBranch $config.Application.GitBranchPROD
-        Write-Log ([string] (git add $wishlistPath 2>&1))
-        Write-Log ([string] (git commit -m "Automated push to commit changes to the wishlist" 2>&1))
-        Write-Log ([string] (git push 2>&1))
+        Write-Log ([string] (git -C $RepositoryPath pull origin $Branch 2>&1))
+        Write-Log ([string] (git -C $RepositoryPath checkout $Branch 2>&1))
+        Write-Log ([string] (git -C $RepositoryPath add $wishlistPath 2>&1))
+        Write-Log ([string] (git -C $RepositoryPath commit -m "Automated push to commit changes to the wishlist" 2>&1))
+        Write-Log ([string] (git -C $RepositoryPath push 2>&1))
     }
 
     end {
