@@ -20,42 +20,54 @@ function Search-Whitelist {
         [string]
         $packageName,
 
-        # Mandatorys
+        # Mandatory
         [string]
-        $version
+        $packageVersion
     )
 
     begin {
         $config = Read-ConfigFile
 
-        $wishlistPath = (Join-Path $PSScriptRoot ..\wishlist.txt)
-        $wishlist = Get-Content -Path $wishlistPath | Where-Object { $_ -notlike "#*" }
+        $GitRepo = $config.Application.$WindowsSoftware
+        $GitFile = $GitRepo.Substring($GitRepo.LastIndexOf("/") + 1, $GitRepo.Length - $GitRepo.LastIndexOf("/") - 1)
+        $GitFolderName = $GitFile.Replace(".git", "")
+        $PackagesInbxFilteredPath = Join-Path -Path $config.Application.BaseDirectory -ChildPath $GitFolderName
+        $wishlistPath = Join-Path -Path  $PackagesInbxFilteredPath -ChildPath "wishlist.txt"
+
+        $GitRepo = $config.Application.$PackagesInboxFiltered
+        $GitFile = $GitRepo.Substring($GitRepo.LastIndexOf("/") + 1, $GitRepo.Length - $GitRepo.LastIndexOf("/") - 1)
+        $GitFolderName = $GitFile.Replace(".git", "")
+        $PackagesInbxFilteredPath = Join-Path -Path $config.Application.BaseDirectory -ChildPath $GitFolderName
 
         $updatedPackages = @()
     }
 
     process {
-
-        # TODO: The paths need to be updated here
+        $wishlist = Get-Content -Path $wishlistPath | Where-Object { $_ -notlike "#*" }
 
         Foreach ($line in $wishlist) {
             $origLine = $line
             if ($line -match "@") {
-                $line, $latestVersion = $line.split($nameAndVersionSeparator)
+                $packageNameWhitelist, $previousVersion = $line.split($nameAndVersionSeparator)
             }
             else {
-                $latestVersion = "0.0.0.0"
+                $previousVersion = "0.0.0.0"
             }
-            if ($packageName -like $line.Trim()) {
+
+            if (([version]$packageVersion) -le ([version]$previousVersion)) {
+                continue
+            }
+
+            if ($packageName -like $packageNameWhitelist.Trim()) {
                 Write-Log "Copying $communityPackName $version." -Severity 1
                 #Create directory structure if not existing
-                $destPath = $filteredFolderPath + "\" + $line + "\" + $version
+                $destPath = $PackagesInbxFilteredPath + "\" + $packageName + "\" + $packageVersion
 
                 Copy-Item $package.FullName -Destination $destPath -Recurse
 
-                $SetContentComm = (Get-Content -Path $wishlistPath) -replace $origLine, ($line + $nameAndVersionSeparator + $version) | Set-Content $wishlistPath
+                $SetContentComm = (Get-Content -Path $wishlistPath) -replace $origLine, ($packageName + $nameAndVersionSeparator + $packageVersion) | Set-Content $wishlistPath
                 # Return list of destPaths
-                $tmp = @{'path' = $destPath; 'name' = $line; 'version' = $version }
+                $tmp = @{'path' = $destPath; 'name' = $packageName; 'version' = $packageVersion }
                 $updatedPackages += , $tmp
             }
         }
