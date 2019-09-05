@@ -11,15 +11,15 @@ function Start-Workflow {
     begin {
         $config = Read-ConfigFile
 
-        $GitRepo = $config.Application.$PackagesInboxManual
+        $GitRepo = $config.Application.PackagesInboxManual
         $GitFile = $GitRepo.Substring($GitRepo.LastIndexOf("/") + 1, $GitRepo.Length - $GitRepo.LastIndexOf("/") - 1)
         $GitFolderName = $GitFile.Replace(".git", "")
-        $PackagesManualPath = Join-Path -Path $config.Application.BaseDirectory -ChildPath $GitFolderName
+        $PackagesInboxManualPath = Join-Path -Path $config.Application.BaseDirectory -ChildPath $GitFolderName
 
-        $GitRepo = $config.Application.$PackagesInboxAutomatic
+        $GitRepo = $config.Application.PackagesInboxAutomatic
         $GitFile = $GitRepo.Substring($GitRepo.LastIndexOf("/") + 1, $GitRepo.Length - $GitRepo.LastIndexOf("/") - 1)
         $GitFolderName = $GitFile.Replace(".git", "")
-        $PackagesAutomaticPath = Join-Path -Path $config.Application.BaseDirectory -ChildPath $GitFolderName
+        $PackagesInboxAutomaticPath = Join-Path -Path $config.Application.BaseDirectory -ChildPath $GitFolderName
     }
 
     process {
@@ -31,14 +31,13 @@ function Start-Workflow {
         Write-Log ([string] (git checkout master 2>&1))
         Write-Log ([string] (git pull 2>&1))
 
-        # TODO: implement function
-        Update-Submodules
+        Update-Submodules $PackagesInboxAutomaticPath
 
         # Get all the packages which are to accept and further processed
         $newPackages = @()
 
         # Manual updated packages
-        $packagesManual = @(Get-ChildItem $PackagesManualPath)
+        $packagesManual = @(Get-ChildItem $PackagesInboxManualPath)
         foreach ($package in $packagesManual) {
             # Use the latest created package as reference
             $latest = Get-ChildItem -Path $package.FullName | Sort-Object CreationTime -Descending | Select-Object -First 1
@@ -48,7 +47,7 @@ function Start-Workflow {
         }
 
         # Automatic updated packages
-        $automaticRepositories = @(Get-ChildItem $PackagesAutomaticPath)
+        $automaticRepositories = @(Get-ChildItem $PackagesInboxAutomaticPath)
         foreach ($repository in $automaticRepositories) {
             $packages = @(Get-ChildItem $repository)
             foreach ($package in $packages) {

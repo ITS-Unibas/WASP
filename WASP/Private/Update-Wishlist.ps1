@@ -1,18 +1,9 @@
 function Update-Wishlist {
     <#
     .SYNOPSIS
-        Short description
+        Add and commit changes made to the whitelist in package-gallery repository
     .DESCRIPTION
-        Long description
-    .EXAMPLE
-        PS C:\> <example usage>
-        Explanation of what the example does
-    .INPUTS
-        Inputs (if any)
-    .OUTPUTS
-        Output (if any)
-    .NOTES
-        General notes
+        Add and commit changes made to the whitelist in package-gallery repository
     #>
     [CmdletBinding()]
     param (
@@ -20,18 +11,21 @@ function Update-Wishlist {
     )
 
     begin {
+        $config = Read-ConfigFile
+
+        $GitRepo = $config.Application.WindowsSoftware
+        $GitFile = $GitRepo.Substring($GitRepo.LastIndexOf("/") + 1, $GitRepo.Length - $GitRepo.LastIndexOf("/") - 1)
+        $GitFolderName = $GitFile.Replace(".git", "")
+        $PackageGalleryPath = Join-Path -Path $config.Application.BaseDirectory -ChildPath $GitFolderName
+
+        $wishlistPath = Join-Path -Path $PackageGalleryPath -ChildPath 'wishlist.txt'
     }
 
     process {
-
-        # TODO: Rework
-
-        Set-Location $PSScriptRoot
-        Write-Log ([string] (git checkout master 2>&1))
-        Write-Log ([string] (git pull 2>&1))
+        Set-Location $PackageGalleryPath
+        Switch-GitBranch $config.Application.GitBranchPROD
         Write-Log ([string] (git add $wishlistPath 2>&1))
         Write-Log ([string] (git commit -m "Automated push to commit changes to the wishlist" 2>&1))
-        Write-Log ([string] (git checkout master 2>&1))
         Write-Log ([string] (git push 2>&1))
     }
 

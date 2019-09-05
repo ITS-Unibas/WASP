@@ -13,18 +13,22 @@ function Remove-HandledBranches {
     begin {
         $config = Read-ConfigFile
 
-        $GitRepo = $config.Application.$PackagesInboxFiltered
+        $GitRepo = $config.Application.PackagesInboxFiltered
         $GitFile = $GitRepo.Substring($GitRepo.LastIndexOf("/") + 1, $GitRepo.Length - $GitRepo.LastIndexOf("/") - 1)
         $GitFolderName = $GitFile.Replace(".git", "")
         $PackagesInboxFilteredPath = Join-Path -Path $config.Application.BaseDirectory -ChildPath $GitFolderName
+
+        $GitRepo = $config.Application.WindowsSoftware
+        $GitFile = $GitRepo.Substring($GitRepo.LastIndexOf("/") + 1, $GitRepo.Length - $GitRepo.LastIndexOf("/") - 1)
+        $PackageGalleryRepositoryName = $GitFile.Replace(".git", "")
     }
 
     process {
-        Write-Log "Getting branches with status: Open"
+        Write-Log "Getting branches with pull request status: Open"
         # Get all branches which have open pull requests in windows software repo from packages incoming filtered
-        $pullrequestsOpen = Get-RemoteBranchesByStatus $WinSoftwareRepoName 'Open'
+        $pullrequestsOpen = Get-RemoteBranchesByStatus $PackageGalleryRepositoryName 'Open'
         # Get all branches in packages incoming filtered repository
-        $PackagesInboxFilteredBranches = Get-RemoteBranches $PackagesFilteredRepoName
+        $PackagesInboxFilteredBranches = Get-RemoteBranches $Repository
 
         ForEach ($remoteBranch in $PackagesInboxFilteredBranches) {
             Set-Location $PackagesInboxFilteredPath

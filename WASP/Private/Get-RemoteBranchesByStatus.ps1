@@ -27,6 +27,5 @@ function Get-RemoteBranchesByStatus {
         $JSONbranches = $r.values
         $JSONbranches | ForEach-Object { $branches.Add($_.fromRef.displayID) }
         return $branches
-
     }
 }
