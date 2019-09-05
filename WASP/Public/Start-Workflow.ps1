@@ -20,17 +20,17 @@ function Start-Workflow {
         $GitFile = $GitRepo.Substring($GitRepo.LastIndexOf("/") + 1, $GitRepo.Length - $GitRepo.LastIndexOf("/") - 1)
         $GitFolderName = $GitFile.Replace(".git", "")
         $PackagesInboxAutomaticPath = Join-Path -Path $config.Application.BaseDirectory -ChildPath $GitFolderName
+
+        $GitRepo = $config.Application.WindowsSoftware
+        $GitFile = $GitRepo.Substring($GitRepo.LastIndexOf("/") + 1, $GitRepo.Length - $GitRepo.LastIndexOf("/") - 1)
+        $GitFolderName = $GitFile.Replace(".git", "")
+        $PackageGalleryPath = Join-Path -Path $config.Application.BaseDirectory -ChildPath $GitFolderName
     }
 
     process {
         Remove-HandledBranches
 
-        # TODO: Rename repository
-        # Update windows software repository
-        Set-Location $PSScriptRoot
-        Write-Log ([string] (git checkout master 2>&1))
-        Write-Log ([string] (git pull 2>&1))
-
+        # Update the added submodules in the package-inbox-automatic repository
         Update-Submodules $PackagesInboxAutomaticPath
 
         # Get all the packages which are to accept and further processed
@@ -55,18 +55,11 @@ function Start-Workflow {
             }
         }
 
-        # Commit and push the changes made to the wishlist
-        Update-Wishlist
+        # Commit and push changes to wishlist located in the path
+        Update-Wishlist $PackageGalleryPath
 
         # Initialize branches for each new package
-        Update-PackageInboxFiltered($newPackages)
-
-        # Create pull request from each new package branch to package-gallery
-
-        # Update windows software repository
-        Set-Location $PSScriptRoot
-        Write-Log ([string] (git checkout master 2>&1))
-        Write-Log ([string] (git pull 2>&1))
+        Update-PackageInboxFiltered $newPackages
 
         <#
         Start distributing packages to choco servers and promote packages based on package issue position

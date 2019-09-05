@@ -1,24 +1,19 @@
 function Update-Wishlist {
     <#
     .SYNOPSIS
-        Add and commit changes made to the whitelist in package-gallery repository
+        Add and commit changes made to the whitelist in given repository
     .DESCRIPTION
-        Add and commit changes made to the whitelist in package-gallery repository
+        Add and commit changes made to the whitelist in given repository where the whishlist is directly located
     #>
     [CmdletBinding()]
     param (
-
+        [parameter(Mandatory = $true)]
+        [string]
+        $RepositoryPath
     )
 
     begin {
-        $config = Read-ConfigFile
-
-        $GitRepo = $config.Application.WindowsSoftware
-        $GitFile = $GitRepo.Substring($GitRepo.LastIndexOf("/") + 1, $GitRepo.Length - $GitRepo.LastIndexOf("/") - 1)
-        $GitFolderName = $GitFile.Replace(".git", "")
-        $PackageGalleryPath = Join-Path -Path $config.Application.BaseDirectory -ChildPath $GitFolderName
-
-        $wishlistPath = Join-Path -Path $PackageGalleryPath -ChildPath 'wishlist.txt'
+        $wishlistPath = Join-Path -Path $RepositoryPath -ChildPath 'wishlist.txt'
     }
 
     process {
