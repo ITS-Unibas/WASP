@@ -4,18 +4,14 @@ function Remove-LocalBranches {
         Delete local branches of a given repository as path
     .DESCRIPTION
         Deletes a local branch only of it is not contained in remote branches of the repository
-    .EXAMPLE
-        PS C:\> <example usage>
-        Explanation of what the example does
     .INPUTS
-        Inputs (if any)
-    .OUTPUTS
-        Output (if any)
+        URL of Repository
     .NOTES
         General notes
     #>
     [CmdletBinding()]
     param (
+        [Parameter(Mandatory = $true)]
         [string]
         $Repository
     )
@@ -32,10 +28,11 @@ function Remove-LocalBranches {
     process {
         $remoteBranches = Get-RemoteBranches $Repository
 
+        # Pull prod branch to get current branches
         Set-Location $RepositoryPath
-        Write-Log ([string] (git checkout $config.Application.GitBranchPROD 2>&1))
-        Write-Log ([string] (git pull 2>&1))
+        Switch-GitBranch $config.Application.GitBranchPROD
         $localBranches = git branch
+
         ForEach ($local in $localBranches) {
             # TODO: Investigate what this does
             if ($local -match "\*") {

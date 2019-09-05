@@ -21,7 +21,6 @@ function Switch-GitBranch {
         # Check if we could checkout the correct branch
         if ((Get-CurrentBranchName) -ne $branch) {
             Write-Log "Couldn't checkout $branch. Exiting now!" -Severity 3
-            exit 1
         }
 
         Write-Log ([string] (git pull 2>&1))

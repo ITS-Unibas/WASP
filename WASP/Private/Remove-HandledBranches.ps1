@@ -13,15 +13,10 @@ function Remove-HandledBranches {
     begin {
         $config = Read-ConfigFile
 
-        $GitRepo = $config.Application.$PackagesIncomingFiltered
+        $GitRepo = $config.Application.$PackagesInboxFiltered
         $GitFile = $GitRepo.Substring($GitRepo.LastIndexOf("/") + 1, $GitRepo.Length - $GitRepo.LastIndexOf("/") - 1)
         $GitFolderName = $GitFile.Replace(".git", "")
-        $PackagesIncomingFilteredPath = Join-Path -Path $config.Application.BaseDirectory -ChildPath $GitFolderName
-
-        $GitRepo = $config.Application.$WindowsSoftware
-        $GitFile = $GitRepo.Substring($GitRepo.LastIndexOf("/") + 1, $GitRepo.Length - $GitRepo.LastIndexOf("/") - 1)
-        $GitFolderName = $GitFile.Replace(".git", "")
-        $WindowsSoftwarePath = Join-Path -Path $config.Application.BaseDirectory -ChildPath $GitFolderName
+        $PackagesInboxFilteredPath = Join-Path -Path $config.Application.BaseDirectory -ChildPath $GitFolderName
     }
 
     process {
@@ -29,40 +24,22 @@ function Remove-HandledBranches {
         # Get all branches which have open pull requests in windows software repo from packages incoming filtered
         $pullrequestsOpen = Get-RemoteBranchesByStatus $WinSoftwareRepoName 'Open'
         # Get all branches in packages incoming filtered repository
-        $PackagesIncomingFilteredBranches = Get-RemoteBranches $PackagesFilteredRepoName
-        $nameAndVersionSeparator = '@'
+        $PackagesInboxFilteredBranches = Get-RemoteBranches $PackagesFilteredRepoName
 
-        ForEach ($remoteBranch in $PackagesIncomingFilteredBranches) {
-
-            Set-Location $PackagesIncomingFilteredPath
-            Write-Log ([string](git pull 2>&1))
-
+        ForEach ($remoteBranch in $PackagesInboxFilteredBranches) {
+            Set-Location $PackagesInboxFilteredPath
             if ((-Not ($remoteBranch -eq 'master')) -and ((-Not $pullrequestsOpen.contains($remoteBranch)) -or $pullrequestsOpen.length -eq 0)) {
-                Write-Log "PR for $remoteBranch is not Open anymore. Deleting from our filtered packages, because it was merged or declined..."
+                Write-Log "PR for $remoteBranch is not open anymore. Deleting branch from our filtered packages, because it was merged or declined..."
+                # Remove remote package branch in filtered repository
                 Remove-RemoteBranch $PackagesFilteredRepoName $remoteBranch
+                # Switch to master branch
                 Switch-GitBranch 'master'
                 # Delete the local branch
                 Write-Log ([string](git branch -D $remoteBranch 2>&1))
-
-                Set-Location $WindowsSoftwarePath
-
-                $packageName, $packageVersion = $remoteBranch.split($nameAndVersionSeparator)
-                $packageName = $packageName -replace $config.Application.GitBranchDEV, ""
-
-                if (-Not (Test-Path ('.\' + $packageName + '\' + $packageVersion))) {
-                    # The branch on windows software was not merged, because there is no package folder, so we have to delete it.
-                    Write-Log "Deleting branch $remoteBranch in Windows software because the PR was declined."
-                    Remove-RemoteBranch $WinSoftwareRepoName $remoteBranch
-                    # Checkout prod and
-                    Switch-GitBranch $config.Application.GitBranchPROD
-                    # Delete the local branch
-                    Write-Log ([string](git branch -D $remoteBranch 2>&1))
-                }
             }
-
         }
 
-        # Remove local branches where the remote branch does not exist anymore
+        # Remove local branches from package-gallery where the remote branch does not exist anymore
         Remove-LocalBranches $config.Application.WindowsSoftware
     }
 }
