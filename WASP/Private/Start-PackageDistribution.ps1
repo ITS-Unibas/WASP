@@ -106,10 +106,10 @@ function Start-PackageDistribution() {
                 }
                 Switch-GitBranch $branch
 
-                $packagesList = Get-ChildItem $PathWindowsSoftwareRepo -Directory
+                $packagesList = Get-ChildItem $PackageGalleryPath -Directory
 
                 foreach ($package in $packagesList) {
-                    $packagePath = Join-Path $PathWindowsSoftwareRepo $package
+                    $packagePath = Join-Path $PackageGalleryPath $package
                     $versionsList = Get-ChildItem $packagePath -Directory
                     foreach ($version in $versionsList) {
                         $packageRootPath = Join-Path $packagePath $version
