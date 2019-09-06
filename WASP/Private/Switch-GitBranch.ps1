@@ -19,7 +19,7 @@ function Switch-GitBranch {
         Write-Log ([string] (git checkout $branch 2>&1))
 
         # Check if we could checkout the correct branch
-        if ((Get-CurrentBranchName) -ne $branch) {
+        if ((Get-CurrentBranchName -Path $PWD.Path) -ne $branch) {
             Write-Log "Couldn't checkout $branch. Make sure the location to the repository path was set and the branch does exist" -Severity 3
         }
 
