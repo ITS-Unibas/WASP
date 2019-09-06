@@ -22,10 +22,14 @@ function Get-RemoteBranches {
     process {
         $branches = New-Object System.Collections.ArrayList
         $url = ("{0}/rest/api/1.0/projects/{1}/repos/{2}/branches" -f $config.Application.GitBaseURL, $config.Application.GitProject, $repo)
-        $r = Invoke-GetRequest $url
-        $JSONbranches = $r.values
-
-        $JSONbranches | ForEach-Object { $null = $branches.Add($_.displayID) }
+        try {
+            $r = Invoke-GetRequest $url
+            $JSONbranches = $r.values
+            $JSONbranches | ForEach-Object { $null = $branches.Add($_.displayID) }
+        }
+        catch {
+            Write-Log "Get request failed for $url" -Severity 3
+        }
         return $branches
     }
 }
