@@ -49,7 +49,10 @@ function Start-Workflow {
         # Automatic updated packages
         $automaticRepositories = @(Get-ChildItem $PackagesInboxPath)
         foreach ($repository in $automaticRepositories) {
-            $packages = @(Get-ChildItem $repository)
+            if ($repository.Name -eq '.gitmodules' -or $repository.Name -like '*manual*') {
+                break
+            }
+            $packages = @(Get-ChildItem $repository.FullName)
             foreach ($package in $packages) {
                 $newPackages += Search-Whitelist $package.Name $version
             }
