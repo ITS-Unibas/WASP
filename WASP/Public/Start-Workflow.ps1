@@ -21,7 +21,7 @@ function Start-Workflow {
         $GitFolderName = $GitFile.Replace(".git", "")
         $PackagesInboxAutomaticPath = Join-Path -Path $config.Application.BaseDirectory -ChildPath $GitFolderName
 
-        $GitRepo = $config.Application.WindowsSoftware
+        $GitRepo = $config.Application.PackageGallery
         $GitFile = $GitRepo.Substring($GitRepo.LastIndexOf("/") + 1, $GitRepo.Length - $GitRepo.LastIndexOf("/") - 1)
         $GitFolderName = $GitFile.Replace(".git", "")
         $PackageGalleryPath = Join-Path -Path $config.Application.BaseDirectory -ChildPath $GitFolderName

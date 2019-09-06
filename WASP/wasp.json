@@ -10,7 +10,7 @@
         "PackagesInboxAutomatic": "git.its.unibas.ch/scm/sun/packages-incoming-all.git",
         "PackagesInboxManual": "git.its.unibas.ch/scm/sun/packages-inbox-manual.git",
         "PackagesInboxFiltered": "git.its.unibas.ch/scm/sun/packages-incoming-filtered.git",
-        "WindowsSoftware": "git.its.unibas.ch/scm/sun/windows-software.git",
+        "PackageGallery": "git.its.unibas.ch/scm/sun/windows-software.git",
         "ChocoRepo": "github.com/chocolatey/choco.git",
         "JiraObserver": "git.its.unibas.ch/scm/sun/jira-observer.git",
         "BitBucketAPIToken": "",

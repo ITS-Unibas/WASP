@@ -18,7 +18,7 @@ function Remove-HandledBranches {
         $GitFolderName = $GitFile.Replace(".git", "")
         $PackagesInboxFilteredPath = Join-Path -Path $config.Application.BaseDirectory -ChildPath $GitFolderName
 
-        $GitRepo = $config.Application.WindowsSoftware
+        $GitRepo = $config.Application.PackageGallery
         $GitFile = $GitRepo.Substring($GitRepo.LastIndexOf("/") + 1, $GitRepo.Length - $GitRepo.LastIndexOf("/") - 1)
         $PackageGalleryRepositoryName = $GitFile.Replace(".git", "")
     }
@@ -41,7 +41,7 @@ function Remove-HandledBranches {
             }
         }
 
-        # Remove local branches from package-gallery where the remote branch does not exist anymoreFormatFf
-        Remove-LocalBranches $config.Application.WindowsSoftware
+        # Remove local branches from package-gallery where the remote branch does not exist anymore
+        Remove-LocalBranches $config.Application.PackageGallery
     }
 }

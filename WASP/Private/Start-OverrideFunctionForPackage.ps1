@@ -27,7 +27,7 @@ function Start-OverrideFunctionForPackage {
     process {
         # TODO: Check if a location switch is needed when executing chocos 'install' functions
         # Set-Location $packToolInstallPath
-        if (!(Test-Path $original)) {
+        if (-Not (Test-Path $original)) {
             Invoke-Expression -Command $packToolInstallPath
         }
         else {
