@@ -61,8 +61,10 @@ function Start-Workflow {
         # Commit and push changes to wishlist located in the path
         Update-Wishlist $PackageGalleryPath $config.Application.GitBranchPROD
         Write-Log "Found the following new packages: $newPackages"
-        # Initialize branches for each new package
-        Update-PackageInboxFiltered $newPackages
+        if ($newPackages) {
+            # Initialize branches for each new package
+            Update-PackageInboxFiltered $newPackages
+        }
 
         <#
         Start distributing packages to choco servers and promote packages based on package issue position
