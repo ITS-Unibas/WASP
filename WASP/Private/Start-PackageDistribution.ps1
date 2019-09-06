@@ -19,7 +19,7 @@ function Start-PackageDistribution() {
     process {
         Switch-GitBranch $config.Application.GitBranchPROD
 
-        $remoteBranches = Get-RemoteBranches $PackageGalleryPath
+        $remoteBranches = Get-RemoteBranches $GitFolderName
 
         $nameAndVersionSeparator = '@'
         foreach ($branch in $remoteBranches) {
