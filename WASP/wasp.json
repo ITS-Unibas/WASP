@@ -1,32 +1,40 @@
 {
-    "Application" : {
-        "BaseDirectory" : "C:\\ProgramData\\Unibasel\\wasp",
-        "GitServiceUser" : "schaefek",
-        "GitBaseUrl" : "https://git.its.unibas.ch",
-        "GitProject" : "SUN",
-        "GitBranchDEV" : "dev/",
-        "GitBranchTEST" : "test",
-        "GitBranchPROD" : "prod",
-        "PackagesIncomingAll" : "git.its.unibas.ch/scm/sun/packages-incoming-all.git",
-        "PackagesIncomingFiltered" : "git.its.unibas.ch/scm/sun/packages-incoming-filtered.git",
-        "WindowsSoftware" : "git.its.unibas.ch/scm/sun/windows-software.git",
-        "ChocoRepo" : "github.com/chocolatey/choco.git",
-        "JiraObserver" : "git.its.unibas.ch/scm/sun/jira-observer.git",
-        "BitBucketAPIToken" : "",
-        "PreAdditionalScripts" : ["InitialScript.ps1"],
-        "PostAdditionalScripts" : ["FinalScript.ps1"],
-        "ChocoServerDEV" : "https://its-wcs-choco1.its.unibas.ch/dev/chocolatey",
-        "ChocoServerTEST" : "https://its-wcs-choco1.its.unibas.ch/test/chocolatey",
-        "ChocoServerPROD" : "https://its-wcs-choco1.its.unibas.ch/prod/chocolatey",
-        "Reviewers" : ["burmax00", "schaefek", "stoecklb"]
+    "Application": {
+        "BaseDirectory": "C:\\ProgramData\\Unibasel\\wasp",
+        "GitServiceUser": "schaefek",
+        "GitBaseUrl": "https://git.its.unibas.ch",
+        "GitProject": "SUN",
+        "GitBranchDEV": "dev/",
+        "GitBranchTEST": "test",
+        "GitBranchPROD": "prod",
+        "PackagesIncomingAll": "git.its.unibas.ch/scm/sun/packages-incoming-all.git",
+        "PackagesIncomingFiltered": "git.its.unibas.ch/scm/sun/packages-incoming-filtered.git",
+        "WindowsSoftware": "git.its.unibas.ch/scm/sun/windows-software.git",
+        "ChocoRepo": "github.com/chocolatey/choco.git",
+        "JiraObserver": "git.its.unibas.ch/scm/sun/jira-observer.git",
+        "BitBucketAPIToken": "",
+        "PreAdditionalScripts": [
+            "InitialScript.ps1"
+        ],
+        "PostAdditionalScripts": [
+            "FinalScript.ps1"
+        ],
+        "ChocoServerDEV": "https://its-wcs-choco1.its.unibas.ch/dev/chocolatey",
+        "ChocoServerTEST": "https://its-wcs-choco1.its.unibas.ch/test/chocolatey",
+        "ChocoServerPROD": "https://its-wcs-choco1.its.unibas.ch/prod/chocolatey",
+        "Reviewers": [
+            "burmax00",
+            "schaefek",
+            "stoecklb"
+        ]
     },
-    "Logger" : {
-        "EventLogName" : "WASP",
-        "EventID" : 9999,
-        "LogSubFilePath" : "logs",
-        "LogFileNamePrefix" : "choco_log",
-        "MaxLogFiles" : 10,
-        "LogLevel" : 0,
-        "LogToHost" : true
+    "Logger": {
+        "EventLogName": "WASP",
+        "EventID": 9999,
+        "LogSubFilePath": "logs",
+        "LogFileNamePrefix": "choco_log",
+        "MaxLogFiles": 10,
+        "LogLevel": 0,
+        "LogToHost": true
     }
 }
