@@ -1,4 +1,4 @@
-function Start-NupkgDistribution() {
+function Start-PackageDistribution() {
     <#
     .SYNOPSIS
         This function distributes nupkg packages to the choco server.
