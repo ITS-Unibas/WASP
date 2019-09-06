@@ -31,7 +31,7 @@ function Start-Workflow {
         Remove-HandledBranches
 
         # Update the added submodules in the package-inbox-automatic repository
-        Update-Submodules $PackagesInboxAutomaticPath
+        Write-Log ([string](git -C $PackagesInboxAutomaticPath submodule update --remote --recursive 2>&1))
 
         # Get all the packages which are to accept and further processed
         $newPackages = @()

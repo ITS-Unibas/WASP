@@ -13,20 +13,19 @@ function Start-PackageDistribution() {
         $GitRepo = $config.Application.WindowsSoftware
         $GitFile = $GitRepo.Substring($GitRepo.LastIndexOf("/") + 1, $GitRepo.Length - $GitRepo.LastIndexOf("/") - 1)
         $GitFolderName = $GitFile.Replace(".git", "")
-        $SoftwareRepositoryPath = Join-Path -Path $config.Application.BaseDirectory -ChildPath $GitFolderName
+        $PackageGalleryPath = Join-Path -Path $config.Application.BaseDirectory -ChildPath $GitFolderName
     }
 
     process {
-        Set-Location $SoftwareRepositoryPath
-
         Switch-GitBranch $config.Application.GitBranchPROD
 
-        $remoteBranches = Get-RemoteBranches $SoftwareRepositoryPath
+        $remoteBranches = Get-RemoteBranches $PackageGalleryPath
 
         $nameAndVersionSeparator = '@'
         foreach ($branch in $remoteBranches) {
             if (-Not($branch -eq $config.Application.GitBranchPROD) -and -Not ($branch -eq $config.Application.GitBranchTEST)) {
                 # Check for new packages on remote branches, that contain 'dev/' in their names
+                Set-Location $PackageGalleryPath
                 Switch-GitBranch $branch
 
                 $packageName, $packageVersion = $branch.split($nameAndVersionSeparator)
@@ -37,23 +36,20 @@ function Start-PackageDistribution() {
                     continue
                 }
 
-                Set-Location $packageRootPath
+                $toolsPath = Join-Path -Path $packageRootPath -ChildPath "tools"
 
-                if (-Not (Test-Path ".\tools")) {
+                if (-Not (Test-Path $toolsPath)) {
                     Write-Log ("No tools folder, skipping package $packageName $packageVersion") -Severity 2
                     return
                 }
-                # Have to be in tools folder s.t. override works
-                Set-Location (".\tools")
 
                 # Call Override Function with the wanted package to override
                 try {
-                    Start-OverrideFunctionForPackage ($packageRootPath + "\tools\chocolateyInstall.ps1")
+                    Start-OverrideFunctionForPackage ( Join-Path $toolsPath "chocolateyInstall.ps1")
                     if ($LASTEXITCODE -eq 1) {
                         Write-Log "Override-Function terminated with an error. Exiting.." -Severity 3
                         exit 1
                     }
-                    Set-Location $packageRootPath
                     # Check if a nupkg already exists
                     $nupkg = (Get-ChildItem -Path $packageRootPath | Where-Object { $_.FullName -match ".nupkg" }).FullName
                     $nuspecFile = (Get-ChildItem -Path $packageRootPath | Where-Object { $_.FullName -match ".nuspec" }).FullName
@@ -87,10 +83,10 @@ function Start-PackageDistribution() {
                         Set-NewReleaseVersion $true $nuspecFile
                     }
                     #Build the package
-                    Invoke-Expression -Command ("choco pack " + $nuspecFile + " -s .")
-                    Write-Log ([string] (git add . 2>&1))
-                    Write-Log ([string] (git commit -m "Created override for $packageName $packageVersion" 2>&1))
-                    Write-Log ([string] (git push 2>&1))
+                    Invoke-Expression -Command ("choco pack $nuspecFile -s $packageRootPath")
+                    Write-Log ([string] (git -C $packageRootPath add . 2>&1))
+                    Write-Log ([string] (git -C $packageRootPath commit -m "Created override for $packageName $packageVersion" 2>&1))
+                    Write-Log ([string] (git -C $packageRootPath push 2>&1))
 
                     Send-NupkgToServer $packageRootPath $config.Application.ChocoServerDEV
                 }

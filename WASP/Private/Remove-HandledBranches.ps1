@@ -29,21 +29,19 @@ function Remove-HandledBranches {
         $pullrequestsOpen = Get-RemoteBranchesByStatus $PackageGalleryRepositoryName 'Open'
         # Get all branches in packages incoming filtered repository
         $PackagesInboxFilteredBranches = Get-RemoteBranches $Repository
-
+        # Checkout master branch on packages-inbox-filtered to avoid beeing on a branch to delete
+        Write-Log ([string](git -C $PackagesInboxFilteredPath checkout 'master' 2>&1))
         ForEach ($remoteBranch in $PackagesInboxFilteredBranches) {
-            Set-Location $PackagesInboxFilteredPath
             if ((-Not ($remoteBranch -eq 'master')) -and ((-Not $pullrequestsOpen.contains($remoteBranch)) -or $pullrequestsOpen.length -eq 0)) {
                 Write-Log "PR for $remoteBranch is not open anymore. Deleting branch from our filtered packages, because it was merged or declined..."
                 # Remove remote package branch in filtered repository
                 Remove-RemoteBranch $PackagesFilteredRepoName $remoteBranch
-                # Switch to master branch
-                Switch-GitBranch 'master'
                 # Delete the local branch
-                Write-Log ([string](git branch -D $remoteBranch 2>&1))
+                Write-Log ([string](git -C $PackagesInboxFilteredPath branch -D $remoteBranch 2>&1))
             }
         }
 
-        # Remove local branches from package-gallery where the remote branch does not exist anymore
+        # Remove local branches from package-gallery where the remote branch does not exist anymoreFormatFf
         Remove-LocalBranches $config.Application.WindowsSoftware
     }
 }
