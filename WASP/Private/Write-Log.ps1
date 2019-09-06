@@ -70,7 +70,7 @@ function Write-Log {
         }
 
         # TODO: Get Cmdlet Name does not work. Always write-log stated
-        $line = "$(Get-Date -Format 'dd/MM/yyyy HH:mm') $($EntryType) $((Get-Item $PSCommandPath | Select-Object -ExpandProperty Name).replace('.ps1', '')): $($Message)"
+        $line = "$(Get-Date -Format 'dd/MM/yyyy HH:mm') $($EntryType) $((Get-PSCallStack)[1].Command): $($Message)"
 
         # Ensure that $LogFilePath is set to a global variable at the top of script
         # Only log when severity level is greater or equal log level
