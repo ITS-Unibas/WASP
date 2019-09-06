@@ -4,6 +4,10 @@ function Get-RemoteBranchesByStatus {
         Function returns a list of branches with pull-requests in given repo with a given status.
     .DESCRIPTION
         Status can either be OPEN, MERGED or DECLINED
+    .PARAMETER Repo
+        Name of the repository which the remote branchnames should fetched for
+    .PARAMETER Status
+        Pull request status to filter
     #>
     [CmdletBinding()]
     param (
@@ -25,7 +29,7 @@ function Get-RemoteBranchesByStatus {
         $url = ("{0}/rest/api/1.0/projects/{1}/repos/{2}/pull-requests?state=$Status" -f $config.Application.GitBaseURL, $config.Application.GitProject, $Repo)
         $r = Invoke-GetRequest $url
         $JSONbranches = $r.values
-        $JSONbranches | ForEach-Object { $branches.Add($_.fromRef.displayID) }
+        $JSONbranches | ForEach-Object { $null = $branches.Add($_.fromRef.displayID) }
         return $branches
 
     }

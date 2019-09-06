@@ -1,92 +1,58 @@
 function Update-PackageInboxFiltered {
     <#
     .SYNOPSIS
-        Short description
+        Updates the filtered inbox repo
     .DESCRIPTION
-        Long description
-    .EXAMPLE
-        PS C:\> <example usage>
-        Explanation of what the example does
-    .INPUTS
-        Inputs (if any)
-    .OUTPUTS
-        Output (if any)
-    .NOTES
-        General notes
+        Updates the filtered inbox repo and creates a pull request for the package gallery
+    .PARAMETER NewPackages
+        Define all new packages which should be packaged
     #>
     [CmdletBinding()]
     param (
+        [Parameter(Mandatory = $true)]
+        [ValidateNotNullOrEmpty()]
         [array]
-        $newPackages
+        $NewPackages
     )
 
     begin {
+        $Config = Read-ConfigFile
+        $PackagesInboxRepoPath = Join-Path -Path $Config.Application.BaseDirectory -ChildPath $Config.Application.PackagesIncomingFiltered
     }
-
     process {
 
-        # TODO: Needs rework
+        if (-Not (Test-Path $PackagesInboxRepoPath)) {
+            Write-Log -Message "PacakgeInboxFiltered was not cloned yet. You probably have not run 'Register-ChocolateyPackagingServer' yet. Please ensure the server is set up correctly" -Severity 3
+            return
+        }
 
-        if ($newPackages) {
-            $devBranchPrefix = 'dev/'
-            ForEach ($pkg in $newPackages) {
-                # commit and push to packages-incoming-filtered repo
-                $path = $pkg.path
-                $packageName = $pkg.name
-                $packageVersion = $pkg.version
-                if (Test-Path $PathPackagesIncomingFiltered) {
-                    Write-Log "Starting Release Management Routine"
-                    Set-Location $PathPackagesIncomingFiltered
+        foreach ($Package in $NewPackages) {
+            $PackagePath = $Package.path
+            $PackageName = $Package.name
+            $PackageVersion = $Package.version
 
-                    $repo = [GitRepository]::new()
-                    $repo.BaseURL = $env:RepoBaseUrl
-                    $repo.ProjectName = $env:RepoProjectName
-                    $repo.RepositoryName = $env:PackagesFilteredRepoName
-                    $repo.DefaultBranch = $env:WinSoftwareDefaultBranchName
-                    $remoteBranches = $repo.GetRemoteBranches($WinSoftwareRepoName)
+            Write-Log "Starting update routin for package $Package"
+            $DevBranch = "$($Config.GitBranchDEV)$($PackageName)@$PackageVersion"
 
-                    $info = ($devBranchPrefix + $packageName + '@' + $packageVersion)
+            $RemoteBranches = Get-RemoteBranches -repo $Config.Application.WindowsSoftware
 
-                    if (-Not $remoteBranches.Contains($info)) {
-                        Write-Log ([string](git add $path 2>&1))
-                        # Create new branch
-                        Write-Log ([string](git checkout -b $info 2>&1))
+            if (-Not $RemoteBranches.Contains($DevBranch)) {
+                Write-Log ([string](git -C $PackagesInboxRepoPath add $PackagePath 2>&1))
+                # Create new branch
+                Write-Log ([string](git -C $PackagesInboxRepoPath checkout -b $DevBranch 2>&1))
 
-                        # Check if we could checkout the correct branch
-                        if ((Get-CurrentBranchName) -ne $info) {
-                            Write-Log "Couldn't checkout $info. Trying to change to already existing branch now!" -Severity 2
-                            Write-Log ([string](git checkout $info 2>&1))
-
-                            if ((Get-CurrentBranchName) -ne $info) {
-                                Write-Log "Couldn't checkout $info. Exiting now!" -Severity 2
-                                exit 1
-                            }
-
-                            Write-Log "Successfully checkout $info on second try." -Severity 2
-                        }
-                        Write-Log ([string](git commit -m "Automated commit: Added $info" 2>&1))
-                        Write-Log ([string](git push -u origin $info 2>&1))
-                        Write-Log ([string](git checkout master 2>&1))
-
-                        # Create pull request from this branch
-                        $repo.CreatePullRequest($PackagesFilteredRepoName, $info, $WinSoftwareRepoName, $info)
-
-                    }
-                    else {
-                        # Branch with the same name already exists
-                        Write-Log "Remote branch $info already exists, nothing will be commited."
-                    }
-
-                    Set-Location ..
+                if ((Get-CurrentBranchName -Path $PackagesInboxRepoPath) -ne $DevBranch) {
+                    Write-Log -Message "The dev branch for this package could not be created" -Severity 3
                 }
-                else {
-                    Write-Log "$PathPackagesIncomingFiltered does not exist. Make sure to clone $PathPackagesIncomingFiltered" -Severity 3
-                    exit 1
-                }
+
+                Write-Log ([string](git -C $PackagesInboxRepoPath commit -m "Automated commit: Added $DevBranch" 2>&1))
+                Write-Log ([string](git -C $PackagesInboxRepoPath push -u origin $info 2>&1))
+                # Is this necessary?
+                Write-Log ([string](git -C $PackagesInboxRepoPath checkout master 2>&1))
+
+                New-PullRequest -SourceRepo $Config.Application.PackagesIncomingFiltered -SourceBranch $DevBranch -DestinationRepo $Config.Application.WindowsSoftware -DestinationBranch $DevBranch
+
             }
         }
-    }
-
-    end {
     }
 }

@@ -4,6 +4,8 @@ function Get-RemoteBranches {
         Returns all remote branches of a given repository
     .DESCRIPTION
         Returns all remote branches of a given repository by using Atlassian Bitbucket REST Api
+    .PARAMETER Repo
+        Name of the repository which the remote branchnames should fetched for
     #>
 
     [CmdletBinding()]
@@ -23,7 +25,7 @@ function Get-RemoteBranches {
         $r = Invoke-GetRequest $url
         $JSONbranches = $r.values
 
-        $JSONbranches | ForEach-Object { $branches.Add($_.displayID) }
+        $JSONbranches | ForEach-Object { $null = $branches.Add($_.displayID) }
         return $branches
     }
 }
