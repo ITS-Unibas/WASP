@@ -11,15 +11,15 @@ function Start-Workflow {
     begin {
         $config = Read-ConfigFile
 
-        $GitRepo = $config.Application.PackagesManual
-        $GitFile = $GitRepo.Substring($GitRepo.LastIndexOf("/") + 1, $GitRepo.Length - $GitRepo.LastIndexOf("/") - 1)
-        $GitFolderName = $GitFile.Replace(".git", "")
-        $PackagesManualPath = Join-Path -Path $config.Application.BaseDirectory -ChildPath $GitFolderName
-
         $GitRepo = $config.Application.PackagesInbox
         $GitFile = $GitRepo.Substring($GitRepo.LastIndexOf("/") + 1, $GitRepo.Length - $GitRepo.LastIndexOf("/") - 1)
         $GitFolderName = $GitFile.Replace(".git", "")
         $PackagesInboxPath = Join-Path -Path $config.Application.BaseDirectory -ChildPath $GitFolderName
+
+        $GitRepo = $config.Application.PackagesManual
+        $GitFile = $GitRepo.Substring($GitRepo.LastIndexOf("/") + 1, $GitRepo.Length - $GitRepo.LastIndexOf("/") - 1)
+        $GitFolderName = $GitFile.Replace(".git", "")
+        $PackagesManualPath = Join-Path -Path $PackagesInboxPath -ChildPath $GitFolderName
 
         $GitRepo = $config.Application.PackageGallery
         $GitFile = $GitRepo.Substring($GitRepo.LastIndexOf("/") + 1, $GitRepo.Length - $GitRepo.LastIndexOf("/") - 1)
