@@ -21,7 +21,7 @@ function Start-Workflow {
         $GitFolderName = $GitFile.Replace(".git", "")
         $PackagesInboxAutomaticPath = Join-Path -Path $config.Application.BaseDirectory -ChildPath $GitFolderName
 
-        $GitRepo = $config.Application.WindowsSoftware
+        $GitRepo = $config.Application.PackageGallery
         $GitFile = $GitRepo.Substring($GitRepo.LastIndexOf("/") + 1, $GitRepo.Length - $GitRepo.LastIndexOf("/") - 1)
         $GitFolderName = $GitFile.Replace(".git", "")
         $PackageGalleryPath = Join-Path -Path $config.Application.BaseDirectory -ChildPath $GitFolderName
@@ -31,7 +31,7 @@ function Start-Workflow {
         Remove-HandledBranches
 
         # Update the added submodules in the package-inbox-automatic repository
-        Update-Submodules $PackagesInboxAutomaticPath
+        Write-Log ([string](git -C $PackagesInboxAutomaticPath submodule update --remote --recursive 2>&1))
 
         # Get all the packages which are to accept and further processed
         $newPackages = @()

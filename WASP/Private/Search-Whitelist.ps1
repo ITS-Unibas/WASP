@@ -28,13 +28,13 @@ function Search-Whitelist {
     begin {
         $config = Read-ConfigFile
 
-        $GitRepo = $config.Application.$WindowsSoftware
+        $GitRepo = $config.Application.PackageGallery
         $GitFile = $GitRepo.Substring($GitRepo.LastIndexOf("/") + 1, $GitRepo.Length - $GitRepo.LastIndexOf("/") - 1)
         $GitFolderName = $GitFile.Replace(".git", "")
         $PackagesInbxFilteredPath = Join-Path -Path $config.Application.BaseDirectory -ChildPath $GitFolderName
         $wishlistPath = Join-Path -Path  $PackagesInbxFilteredPath -ChildPath "wishlist.txt"
 
-        $GitRepo = $config.Application.$PackagesInboxFiltered
+        $GitRepo = $config.Application.PackagesInboxFiltered
         $GitFile = $GitRepo.Substring($GitRepo.LastIndexOf("/") + 1, $GitRepo.Length - $GitRepo.LastIndexOf("/") - 1)
         $GitFolderName = $GitFile.Replace(".git", "")
         $PackagesInbxFilteredPath = Join-Path -Path $config.Application.BaseDirectory -ChildPath $GitFolderName

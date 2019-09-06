@@ -25,8 +25,9 @@ function Start-OverrideFunctionForPackage {
     }
 
     process {
-        Set-Location ([System.IO.Path]::GetDirectoryName($packToolInstallPath))
-        if (!(Test-Path $original)) {
+        # TODO: Check if a location switch is needed when executing chocos 'install' functions
+        # Set-Location $packToolInstallPath
+        if (-Not (Test-Path $original)) {
             Invoke-Expression -Command $packToolInstallPath
         }
         else {
