@@ -26,7 +26,7 @@ function Remove-LocalBranches {
     }
 
     process {
-        $remoteBranches = Get-RemoteBranches $Repository
+        $remoteBranches = Get-RemoteBranches $GitFolderName
 
         # Pull prod branch to get current branches
         Write-Log ([string] (git -C $RepositoryPath pull origin $config.Application.GitBranchPROD 2>&1))
