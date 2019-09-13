@@ -25,6 +25,11 @@ function Start-Workflow {
         $GitFile = $GitRepo.Substring($GitRepo.LastIndexOf("/") + 1, $GitRepo.Length - $GitRepo.LastIndexOf("/") - 1)
         $GitFolderName = $GitFile.Replace(".git", "")
         $PackageGalleryPath = Join-Path -Path $config.Application.BaseDirectory -ChildPath $GitFolderName
+
+        $GitRepo = $config.Application.PackagesWishlist
+        $GitFile = $GitRepo.Substring($GitRepo.LastIndexOf("/") + 1, $GitRepo.Length - $GitRepo.LastIndexOf("/") - 1)
+        $GitFolderName = $GitFile.Replace(".git", "")
+        $PackagesWishlistPath = Join-Path -Path $config.Application.BaseDirectory -ChildPath $GitFolderName
     }
 
     process {
@@ -59,7 +64,7 @@ function Start-Workflow {
         }
 
         # Commit and push changes to wishlist located in the path
-        Update-Wishlist $PackageGalleryPath $config.Application.GitBranchPROD
+        Update-Wishlist $PackagesWishlistPath $config.Application.GitBranchPROD
         Write-Log "Found the following new packages: $newPackages"
         if ($newPackages) {
             # Initialize branches for each new package
