@@ -11,7 +11,7 @@
         "PackagesManual": "git.its.unibas.ch/scm/csswcs/packages-manual.git",
         "PackagesInboxFiltered": "git.its.unibas.ch/scm/csswcs/packages-inbox-filtered.git",
         "PackageGallery": "git.its.unibas.ch/scm/csswcs/package-gallery.git",
-        "PackagesWishlist" : "git.its.unibas.ch/csswcs/packages-wishlist.git",
+        "PackagesWishlist" : "git.its.unibas.ch/scm/csswcs/packages-wishlist.git",
         "ChocoRepo": "github.com/chocolatey/choco.git",
         "JiraObserver": "git.its.unibas.ch/scm/sun/jira-observer.git",
         "BitBucketAPIToken": "",
