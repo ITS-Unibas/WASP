@@ -14,6 +14,7 @@ function Start-PackageDistribution() {
         $GitFile = $GitRepo.Substring($GitRepo.LastIndexOf("/") + 1, $GitRepo.Length - $GitRepo.LastIndexOf("/") - 1)
         $GitFolderName = $GitFile.Replace(".git", "")
         $PackageGalleryPath = Join-Path -Path $config.Application.BaseDirectory -ChildPath $GitFolderName
+        $OldWorkingDir = $PWD.Path
     }
 
     process {
@@ -121,5 +122,9 @@ function Start-PackageDistribution() {
                 }
             }
         }
+    }
+    
+    end {
+        Set-Location $OldWorkingDir
     }
 }

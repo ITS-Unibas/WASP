@@ -41,6 +41,7 @@ function Register-ChocolateyPackagingServer {
         # TODO: Why ist this repo cloned? When you install chocolatey you get all the helpers for free, will have further checks while going on with the refactoring
         # Request-GitRepo -User $Config.Application.GitServiceUser -GitRepo $Config.Application.ChocoRepo -CloneDirectory $Config.Application.BaseDirectory
         Request-GitRepo -User $Config.Application.GitServiceUser -GitRepo $Config.Application.JiraObserver -CloneDirectory $Config.Application.BaseDirectory
+        Request-GitRepo -User $Config.Application.GitServiceUser -GitRepo $Config.Application.PackagesWishlist -CloneDirectory $Config.Application.BaseDirectory
 
         # TODO: ErrorHandling
     } end {
