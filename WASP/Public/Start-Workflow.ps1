@@ -41,12 +41,13 @@ function Start-Workflow {
         # Get all the packages which are to accept and further processed
         $newPackages = @()
 
+        # TODO: aren't automatic and manual mixed up?
         # Manual updated packages
         $packagesManual = @(Get-ChildItem $PackagesManualPath)
         foreach ($package in $packagesManual) {
             # Use the latest created package as reference
             $latest = Get-ChildItem -Path $package.FullName | Sort-Object CreationTime -Descending | Select-Object -First 1
-            $version = (ExtractXMLValue $latest.FullName "version")
+            $version = (Get-NuspecXMLValue $latest.FullName "version")
 
             $newPackages += Search-Whitelist $package.Name $version
         }
@@ -64,7 +65,7 @@ function Start-Workflow {
         }
 
         # Commit and push changes to wishlist located in the path
-        Update-Wishlist $PackagesWishlistPath $config.Application.GitBranchPROD
+        Update-Wishlist $PackagesWishlistPath 'master'
         Write-Log "Found the following new packages: $newPackages"
         if ($newPackages) {
             # Initialize branches for each new package
