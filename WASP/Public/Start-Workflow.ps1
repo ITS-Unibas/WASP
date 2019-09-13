@@ -11,15 +11,15 @@ function Start-Workflow {
     begin {
         $config = Read-ConfigFile
 
-        $GitRepo = $config.Application.PackagesInboxManual
+        $GitRepo = $config.Application.PackagesInbox
         $GitFile = $GitRepo.Substring($GitRepo.LastIndexOf("/") + 1, $GitRepo.Length - $GitRepo.LastIndexOf("/") - 1)
         $GitFolderName = $GitFile.Replace(".git", "")
-        $PackagesInboxManualPath = Join-Path -Path $config.Application.BaseDirectory -ChildPath $GitFolderName
+        $PackagesInboxPath = Join-Path -Path $config.Application.BaseDirectory -ChildPath $GitFolderName
 
-        $GitRepo = $config.Application.PackagesInboxAutomatic
+        $GitRepo = $config.Application.PackagesManual
         $GitFile = $GitRepo.Substring($GitRepo.LastIndexOf("/") + 1, $GitRepo.Length - $GitRepo.LastIndexOf("/") - 1)
         $GitFolderName = $GitFile.Replace(".git", "")
-        $PackagesInboxAutomaticPath = Join-Path -Path $config.Application.BaseDirectory -ChildPath $GitFolderName
+        $PackagesManualPath = Join-Path -Path $PackagesInboxPath -ChildPath $GitFolderName
 
         $GitRepo = $config.Application.PackageGallery
         $GitFile = $GitRepo.Substring($GitRepo.LastIndexOf("/") + 1, $GitRepo.Length - $GitRepo.LastIndexOf("/") - 1)
@@ -31,13 +31,13 @@ function Start-Workflow {
         Remove-HandledBranches
 
         # Update the added submodules in the package-inbox-automatic repository
-        Write-Log ([string](git -C $PackagesInboxAutomaticPath submodule update --remote --recursive 2>&1))
+        Write-Log ([string](git -C $PackagesInboxPath submodule update --remote --recursive 2>&1))
 
         # Get all the packages which are to accept and further processed
         $newPackages = @()
 
         # Manual updated packages
-        $packagesManual = @(Get-ChildItem $PackagesInboxManualPath)
+        $packagesManual = @(Get-ChildItem $PackagesManualPath)
         foreach ($package in $packagesManual) {
             # Use the latest created package as reference
             $latest = Get-ChildItem -Path $package.FullName | Sort-Object CreationTime -Descending | Select-Object -First 1
@@ -47,9 +47,12 @@ function Start-Workflow {
         }
 
         # Automatic updated packages
-        $automaticRepositories = @(Get-ChildItem $PackagesInboxAutomaticPath)
+        $automaticRepositories = @(Get-ChildItem $PackagesInboxPath)
         foreach ($repository in $automaticRepositories) {
-            $packages = @(Get-ChildItem $repository)
+            if ($repository.Name -eq '.gitmodules' -or $repository.Name -like '*manual*') {
+                break
+            }
+            $packages = @(Get-ChildItem $repository.FullName)
             foreach ($package in $packages) {
                 $newPackages += Search-Whitelist $package.Name $version
             }
@@ -57,9 +60,11 @@ function Start-Workflow {
 
         # Commit and push changes to wishlist located in the path
         Update-Wishlist $PackageGalleryPath $config.Application.GitBranchPROD
-
-        # Initialize branches for each new package
-        Update-PackageInboxFiltered $newPackages
+        Write-Log "Found the following new packages: $newPackages"
+        if ($newPackages) {
+            # Initialize branches for each new package
+            Update-PackageInboxFiltered $newPackages
+        }
 
         <#
         Start distributing packages to choco servers and promote packages based on package issue position

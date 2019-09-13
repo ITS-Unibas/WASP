@@ -31,14 +31,15 @@ function Register-ChocolateyPackagingServer {
         }
 
         # Install chocolatey
+        # TODO: Check if chocolatey already installed before
         Invoke-Expression ((New-Object System.Net.WebClient).DownloadString('https://chocolatey.org/install.ps1')) | ForEach-Object { Write-Log $_ }
         # TODO: Check if chocolatey was installed
 
-        Request-GitRepo -User $Config.Application.GitServiceUser -GitRepo $Config.Application.PackagesInboxAutomatic -CloneDirectory $Config.Application.BaseDirectory -WithSubmodules
-        Request-GitRepo -User $Config.Application.GitServiceUser -GitRepo $Config.Application.PackagesInboxManual -CloneDirectory $Config.Application.BaseDirectory
+        Request-GitRepo -User $Config.Application.GitServiceUser -GitRepo $Config.Application.PackagesInbox -CloneDirectory $Config.Application.BaseDirectory -WithSubmodules
         Request-GitRepo -User $Config.Application.GitServiceUser -GitRepo $Config.Application.PackageGallery -CloneDirectory $Config.Application.BaseDirectory
+        Request-GitRepo -User $Config.Application.GitServiceUser -GitRepo $Config.Application.PackagesInboxFiltered -CloneDirectory $Config.Application.BaseDirectory
         # TODO: Why ist this repo cloned? When you install chocolatey you get all the helpers for free, will have further checks while going on with the refactoring
-        Request-GitRepo -User $Config.Application.GitServiceUser -GitRepo $Config.Application.ChocoRepo -CloneDirectory $Config.Application.BaseDirectory
+        # Request-GitRepo -User $Config.Application.GitServiceUser -GitRepo $Config.Application.ChocoRepo -CloneDirectory $Config.Application.BaseDirectory
         Request-GitRepo -User $Config.Application.GitServiceUser -GitRepo $Config.Application.JiraObserver -CloneDirectory $Config.Application.BaseDirectory
 
         # TODO: ErrorHandling

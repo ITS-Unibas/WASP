@@ -17,9 +17,10 @@ function Start-PackageDistribution() {
     }
 
     process {
+        Set-Location $PackageGalleryPath
         Switch-GitBranch $config.Application.GitBranchPROD
 
-        $remoteBranches = Get-RemoteBranches $PackageGalleryPath
+        $remoteBranches = Get-RemoteBranches $GitFolderName
 
         $nameAndVersionSeparator = '@'
         foreach ($branch in $remoteBranches) {
@@ -104,12 +105,13 @@ function Start-PackageDistribution() {
                 elseif ($branch -eq $config.Application.GitBranchTEST) {
                     $chocolateyDestinationServer = $config.Application.ChocoServerTEST
                 }
+                Set-Location $PackageGalleryPath
                 Switch-GitBranch $branch
 
-                $packagesList = Get-ChildItem $PathWindowsSoftwareRepo -Directory
+                $packagesList = Get-ChildItem $PackageGalleryPath -Directory
 
                 foreach ($package in $packagesList) {
-                    $packagePath = Join-Path $PathWindowsSoftwareRepo $package
+                    $packagePath = Join-Path $PackageGalleryPath $package
                     $versionsList = Get-ChildItem $packagePath -Directory
                     foreach ($version in $versionsList) {
                         $packageRootPath = Join-Path $packagePath $version

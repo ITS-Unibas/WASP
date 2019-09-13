@@ -28,8 +28,12 @@ function Get-RemoteBranchesByStatus {
         $branches = New-Object System.Collections.ArrayList
         $url = ("{0}/rest/api/1.0/projects/{1}/repos/{2}/pull-requests?state=$Status" -f $config.Application.GitBaseURL, $config.Application.GitProject, $Repo)
         $r = Invoke-GetRequest $url
-        $JSONbranches = $r.values
-        $JSONbranches | ForEach-Object { $null = $branches.Add($_.fromRef.displayID) }
+        try {
+            $JSONbranches = $r.values
+            $JSONbranches | ForEach-Object { $null = $branches.Add($_.fromRef.displayID) }
+        } catch {
+            Write-Log "Get request failed for $url" -Severity 3
+        }
         return $branches
     }
 }

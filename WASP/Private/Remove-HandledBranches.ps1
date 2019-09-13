@@ -28,7 +28,7 @@ function Remove-HandledBranches {
         # Get all branches which have open pull requests in windows software repo from packages incoming filtered
         $pullrequestsOpen = Get-RemoteBranchesByStatus $PackageGalleryRepositoryName 'Open'
         # Get all branches in packages incoming filtered repository
-        $PackagesInboxFilteredBranches = Get-RemoteBranches $Repository
+        $PackagesInboxFilteredBranches = Get-RemoteBranches $GitFolderName
         # Checkout master branch on packages-inbox-filtered to avoid beeing on a branch to delete
         Write-Log ([string](git -C $PackagesInboxFilteredPath checkout 'master' 2>&1))
         ForEach ($remoteBranch in $PackagesInboxFilteredBranches) {
