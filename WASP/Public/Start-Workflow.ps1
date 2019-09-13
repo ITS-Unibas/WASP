@@ -41,7 +41,6 @@ function Start-Workflow {
         # Get all the packages which are to accept and further processed
         $newPackages = @()
 
-        # TODO: aren't automatic and manual mixed up?
         # Manual updated packages
         $packagesManual = @(Get-ChildItem $PackagesManualPath)
         foreach ($package in $packagesManual) {
@@ -58,8 +57,11 @@ function Start-Workflow {
             if ($repository.Name -eq '.gitmodules' -or $repository.Name -like '*manual*') {
                 break
             }
+
             $packages = @(Get-ChildItem $repository.FullName)
             foreach ($package in $packages) {
+                $latest = Get-ChildItem -Path $package.FullName | Sort-Object CreationTime -Descending | Select-Object -First 1
+                $version = (Get-NuspecXMLValue $latest.FullName "version")
                 $newPackages += Search-Whitelist $package.Name $version
             }
         }
