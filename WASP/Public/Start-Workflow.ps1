@@ -25,6 +25,11 @@ function Start-Workflow {
         $GitFile = $GitRepo.Substring($GitRepo.LastIndexOf("/") + 1, $GitRepo.Length - $GitRepo.LastIndexOf("/") - 1)
         $GitFolderName = $GitFile.Replace(".git", "")
         $PackageGalleryPath = Join-Path -Path $config.Application.BaseDirectory -ChildPath $GitFolderName
+
+        $GitRepo = $config.Application.PackagesWishlist
+        $GitFile = $GitRepo.Substring($GitRepo.LastIndexOf("/") + 1, $GitRepo.Length - $GitRepo.LastIndexOf("/") - 1)
+        $GitFolderName = $GitFile.Replace(".git", "")
+        $PackagesWishlistPath = Join-Path -Path $config.Application.BaseDirectory -ChildPath $GitFolderName
     }
 
     process {
@@ -41,7 +46,7 @@ function Start-Workflow {
         foreach ($package in $packagesManual) {
             # Use the latest created package as reference
             $latest = Get-ChildItem -Path $package.FullName | Sort-Object CreationTime -Descending | Select-Object -First 1
-            $version = (ExtractXMLValue $latest.FullName "version")
+            $version = (Get-NuspecXMLValue $latest.FullName "version")
 
             $newPackages += Search-Whitelist $package.Name $version
         }
@@ -52,14 +57,17 @@ function Start-Workflow {
             if ($repository.Name -eq '.gitmodules' -or $repository.Name -like '*manual*') {
                 break
             }
+
             $packages = @(Get-ChildItem $repository.FullName)
             foreach ($package in $packages) {
+                $latest = Get-ChildItem -Path $package.FullName | Sort-Object CreationTime -Descending | Select-Object -First 1
+                $version = (Get-NuspecXMLValue $latest.FullName "version")
                 $newPackages += Search-Whitelist $package.Name $version
             }
         }
 
         # Commit and push changes to wishlist located in the path
-        Update-Wishlist $PackageGalleryPath $config.Application.GitBranchPROD
+        Update-Wishlist $PackagesWishlistPath 'master'
         Write-Log "Found the following new packages: $newPackages"
         if ($newPackages) {
             # Initialize branches for each new package

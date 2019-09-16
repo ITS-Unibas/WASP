@@ -48,8 +48,8 @@ function Request-GitRepo {
                 if ($WithSubmodules) {
                     Write-Log "Starting to init and update the submodules in $GitFolderName"
                     # TODO: git submodule seems to not provide any output. So maybe remove the Write-Log there
-                    Write-Log ([string] (git submodule init 2>&1))
-                    Write-Log ([string] (git submodule update 2>&1))
+                    Write-Log ([string] (git -C $GitPath submodule init 2>&1))
+                    Write-Log ([string] (git -C $GitPath submodule update 2>&1))
                 }
                 Write-Log "Finished cloning $GitFolderName"
             }

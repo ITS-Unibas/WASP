@@ -28,7 +28,7 @@ function Search-Whitelist {
     begin {
         $config = Read-ConfigFile
 
-        $GitRepo = $config.Application.PackageGallery
+        $GitRepo = $config.Application.PackagesWishlist
         $GitFile = $GitRepo.Substring($GitRepo.LastIndexOf("/") + 1, $GitRepo.Length - $GitRepo.LastIndexOf("/") - 1)
         $GitFolderName = $GitFile.Replace(".git", "")
         $PackagesInbxFilteredPath = Join-Path -Path $config.Application.BaseDirectory -ChildPath $GitFolderName
