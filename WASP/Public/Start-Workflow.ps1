@@ -48,7 +48,7 @@ function Start-Workflow {
             $latest = Get-ChildItem -Path $package.FullName | Sort-Object CreationTime -Descending | Select-Object -First 1
             $version = (Get-NuspecXMLValue $latest.FullName "version")
 
-            $newPackages += Search-Whitelist $package.Name $version
+            $newPackages += Search-Wishlist $package.Name $version
         }
 
         # Automatic updated packages
@@ -62,7 +62,7 @@ function Start-Workflow {
             foreach ($package in $packages) {
                 $latest = Get-ChildItem -Path $package.FullName | Sort-Object CreationTime -Descending | Select-Object -First 1
                 $version = (Get-NuspecXMLValue $latest.FullName "version")
-                $newPackages += Search-Whitelist $package.Name $version
+                $newPackages += Search-Wishlist $package.Name $version
             }
         }
 

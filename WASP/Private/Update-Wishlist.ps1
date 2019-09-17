@@ -1,9 +1,9 @@
 function Update-Wishlist {
     <#
     .SYNOPSIS
-        Add and commit changes made to the whitelist in given repository
+        Add and commit changes made to the wishlist in given repository
     .DESCRIPTION
-        Add and commit changes made to the whitelist in given repository where the whishlist is directly located
+        Add and commit changes made to the wishlist in given repository where the whishlist is directly located
     #>
     [CmdletBinding()]
     param (

@@ -1,7 +1,7 @@
-function Search-Whitelist {
+function Search-Wishelist {
     <#
     .SYNOPSIS
-        Search in the whitelist for a package Name
+        Search in the wishlist for a package Name
     .DESCRIPTION
         When the package name is found, the version will locally be added in this manner: "packageName@1.0.0.0"
     .EXAMPLE
@@ -28,7 +28,7 @@ function Search-Whitelist {
     begin {
         $config = Read-ConfigFile
 
-        $GitRepo = $config.Application.PackagesWishlist
+        $GitRepo = $config.Application.PackageGallery
         $GitFile = $GitRepo.Substring($GitRepo.LastIndexOf("/") + 1, $GitRepo.Length - $GitRepo.LastIndexOf("/") - 1)
         $GitFolderName = $GitFile.Replace(".git", "")
         $PackagesInbxFilteredPath = Join-Path -Path $config.Application.BaseDirectory -ChildPath $GitFolderName
@@ -48,7 +48,7 @@ function Search-Whitelist {
         Foreach ($line in $wishlist) {
             $origLine = $line
             if ($line -match "@") {
-                $packageNameWhitelist, $previousVersion = $line.split($nameAndVersionSeparator)
+                $packageNameWhishlist, $previousVersion = $line.split($nameAndVersionSeparator)
             }
             else {
                 $previousVersion = "0.0.0.0"
@@ -58,7 +58,7 @@ function Search-Whitelist {
                 continue
             }
 
-            if ($packageName -like $packageNameWhitelist.Trim()) {
+            if ($packageName -like $packageNameWhishlist.Trim()) {
                 Write-Log "Copying $communityPackName $version." -Severity 1
                 #Create directory structure if not existing
                 $destPath = $PackagesInbxFilteredPath + "\" + $packageName + "\" + $packageVersion
