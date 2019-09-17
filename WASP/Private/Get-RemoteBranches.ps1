@@ -11,6 +11,8 @@ function Get-RemoteBranches {
     [CmdletBinding()]
     param (
         # Name of repository
+        [Parameter(Mandatory = $true)]
+        [ValidateNotNullOrEmpty]
         [string]
         $repo
     )

@@ -28,6 +28,7 @@ function Write-Log {
         [Parameter(Mandatory = $true)]
         [AllowEmptyString()]
         [string]$Message,
+
         [Parameter()]
         [ValidateSet('0', '1', '2', '3')]
         [ValidateNotNull()]
