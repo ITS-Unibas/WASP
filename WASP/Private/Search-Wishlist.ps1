@@ -42,6 +42,8 @@ function Search-Wishlist {
         $PackagesInbxFilteredPath = Join-Path -Path $config.Application.BaseDirectory -ChildPath $GitFolderName
 
         $updatedPackages = @()
+
+        $NameAndVersionSeparator = $config.Application.WishlistSeperatorChar
     }
 
     process {
@@ -50,7 +52,7 @@ function Search-Wishlist {
         Foreach ($line in $wishlist) {
             $origLine = $line
             if ($line -match "@") {
-                $packageNameWhishlist, $previousVersion = $line.split($nameAndVersionSeparator)
+                $packageNameWhishlist, $previousVersion = $line.split($NameAndVersionSeparator)
             }
             else {
                 $previousVersion = "0.0.0.0"
@@ -68,7 +70,7 @@ function Search-Wishlist {
 
                 Copy-Item $package.FullName -Destination $destPath -Recurse
 
-                $SetContentComm = (Get-Content -Path $wishlistPath) -replace $origLine, ($packageName + $nameAndVersionSeparator + $packageVersion) | Set-Content $wishlistPath
+                $SetContentComm = (Get-Content -Path $wishlistPath) -replace $origLine, ($packageName + $NameAndVersionSeparator + $packageVersion) | Set-Content $wishlistPath
                 # Return list of destPaths
                 $tmp = @{'path' = $destPath; 'name' = $packageName; 'version' = $packageVersion }
                 $updatedPackages += , $tmp
