@@ -1,4 +1,4 @@
-function Search-Wishelist {
+function Search-Wishlist {
     <#
     .SYNOPSIS
         Search in the wishlist for a package Name
