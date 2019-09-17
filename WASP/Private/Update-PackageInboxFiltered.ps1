@@ -31,10 +31,10 @@ function Update-PackageInboxFiltered {
             $PackageName = $Package.name
             $PackageVersion = $Package.version
 
-            Write-Log "Starting update routin for package $Package"
+            Write-Log "Starting update routine for package $Package"
             $DevBranch = "$($Config.GitBranchDEV)$($PackageName)@$PackageVersion"
 
-            $RemoteBranches = Get-RemoteBranches -repo $Config.Application.WindowsSoftware
+            $RemoteBranches = Get-RemoteBranches -repo $Config.Application.PackageGallery
 
             if (-Not $RemoteBranches.Contains($DevBranch)) {
                 Write-Log ([string](git -C $PackagesInboxRepoPath add $PackagePath 2>&1))
@@ -50,7 +50,7 @@ function Update-PackageInboxFiltered {
                 # Is this necessary?
                 Write-Log ([string](git -C $PackagesInboxRepoPath checkout master 2>&1))
 
-                New-PullRequest -SourceRepo $Config.Application.PackagesIncomingFiltered -SourceBranch $DevBranch -DestinationRepo $Config.Application.WindowsSoftware -DestinationBranch $DevBranch
+                New-PullRequest -SourceRepo $Config.Application.PackagesIncomingFiltered -SourceBranch $DevBranch -DestinationRepo $Config.Application.PackageGallery -DestinationBranch $DevBranch
 
             }
         }
