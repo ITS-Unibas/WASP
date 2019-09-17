@@ -16,11 +16,13 @@ function Search-Wishlist {
     #>
     [CmdletBinding()]
     param (
-        # Mandatory
+        [Parameter(Mandatory = $true)]
+        [ValidateNotNullOrEmpty()]
         [string]
         $packageName,
 
-        # Mandatory
+        [Parameter(Mandatory = $true)]
+        [ValidateNotNullOrEmpty()]
         [string]
         $packageVersion
     )
@@ -28,11 +30,11 @@ function Search-Wishlist {
     begin {
         $config = Read-ConfigFile
 
-        $GitRepo = $config.Application.PackageGallery
+        $GitRepo = $config.Application.PackagesWishlist
         $GitFile = $GitRepo.Substring($GitRepo.LastIndexOf("/") + 1, $GitRepo.Length - $GitRepo.LastIndexOf("/") - 1)
         $GitFolderName = $GitFile.Replace(".git", "")
-        $PackagesInbxFilteredPath = Join-Path -Path $config.Application.BaseDirectory -ChildPath $GitFolderName
-        $wishlistPath = Join-Path -Path  $PackagesInbxFilteredPath -ChildPath "wishlist.txt"
+        $PackagesWishlistPath = Join-Path -Path $config.Application.BaseDirectory -ChildPath $GitFolderName
+        $wishlistPath = Join-Path -Path  $PackagesWishlistPath -ChildPath "wishlist.txt"
 
         $GitRepo = $config.Application.PackagesInboxFiltered
         $GitFile = $GitRepo.Substring($GitRepo.LastIndexOf("/") + 1, $GitRepo.Length - $GitRepo.LastIndexOf("/") - 1)
@@ -52,6 +54,7 @@ function Search-Wishlist {
             }
             else {
                 $previousVersion = "0.0.0.0"
+                $packageNameWhishlist = $line.Trim()
             }
 
             if (([version]$packageVersion) -le ([version]$previousVersion)) {
