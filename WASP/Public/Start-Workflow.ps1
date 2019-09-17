@@ -59,7 +59,7 @@ function Start-Workflow {
             }
 
             $automatic = $false
-            $packages = @(Get-ChildItem $repository.FullName)
+            $packages = @(Get-ChildItem $repository.FullName | Where-Object { $_.PSIsContainer })
             foreach ($package in $packages) {
                 if ($package.Name -like '*automatic*') {
                     $automatic = $true
@@ -68,7 +68,7 @@ function Start-Workflow {
 
             if ($automatic) {
                 $automaticPath = Join-Path -Path $repository.FullName -ChildPath 'automatic'
-                $automaticPackages = @(Get-ChildItem $automaticPath)
+                $automaticPackages = @(Get-ChildItem $automaticPath | Where-Object { $_.PSIsContainer })
                 foreach ($package in $automaticPackages) {
                     $string = "Looking at package: $package in " + $package.FullName
                     Write-Log $string -Severity 0

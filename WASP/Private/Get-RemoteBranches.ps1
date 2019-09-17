@@ -12,7 +12,7 @@ function Get-RemoteBranches {
     param (
         # Name of repository
         [Parameter(Mandatory = $true)]
-        [ValidateNotNullOrEmpty]
+        [ValidateNotNullOrEmpty()]
         [string]
         $repo
     )
