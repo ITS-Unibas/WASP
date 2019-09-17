@@ -52,23 +52,45 @@ function Start-Workflow {
         }
 
         # Automatic updated packages
-        $automaticRepositories = @(Get-ChildItem $PackagesInboxPath)
-        foreach ($repository in $automaticRepositories) {
+        $externalRepositories = @(Get-ChildItem $PackagesInboxPath)
+        foreach ($repository in $externalRepositories) {
             if ($repository.Name -eq '.gitmodules' -or $repository.Name -like '*manual*') {
-                break
+                continue
             }
 
+            $automatic = $false
             $packages = @(Get-ChildItem $repository.FullName)
             foreach ($package in $packages) {
-                $latest = Get-ChildItem -Path $package.FullName | Sort-Object CreationTime -Descending | Select-Object -First 1
-                $version = (Get-NuspecXMLValue $latest.FullName "version")
-                $newPackages += Search-Wishlist $package.Name $version
+                if ($package.Name -like '*automatic*') {
+                    $automatic = $true
+                }
+            }
+
+            if ($automatic) {
+                $automaticPath = Join-Path -Path $repository.FullName -ChildPath 'automatic'
+                $automaticPackages = @(Get-ChildItem $automaticPath)
+                foreach ($package in $automaticPackages) {
+                    $string = "Looking at package: $package in " + $package.FullName
+                    Write-Log $string -Severity 0
+                    $nuspec = Get-ChildItem -Path $package.FullName -recurse | Where-Object { $_.Extension -like "*nuspec*" }
+                    $version = (Get-NuspecXMLValue $nuspec.FullName "version")
+                    $newPackages += Search-Wishlist $package $version
+                }
+            }
+            else {
+                foreach ($package in $packages) {
+                    $string = "Looking at package: $package in " + $package.FullName
+                    Write-Log $string -Severity 0
+                    $nuspec = Get-ChildItem -Path $package.FullName -recurse | Where-Object { $_.Extension -like "*nuspec*" }
+                    $version = (Get-NuspecXMLValue $nuspec.FullName "version")
+                    $newPackages += Search-Wishlist $package $version
+                }
             }
         }
 
         # Commit and push changes to wishlist located in the path
         Update-Wishlist $PackagesWishlistPath 'master'
-        Write-Log "Found the following new packages: $newPackages"
+        Write-Log "Found the following new packages: $newPackages" -Severity 3
         if ($newPackages) {
             # Initialize branches for each new package
             Update-PackageInboxFiltered $newPackages
