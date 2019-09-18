@@ -78,7 +78,7 @@ function Start-Workflow {
                     $version = (Get-NuspecXMLValue $nuspec.FullName "version")
                     $FoundPackagesAutomatic = Search-Wishlist $package $version
                     if ($FoundPackagesAutomatic.Count -gt 0) {
-                        $newPackages.Add($FoundPackages)
+                        $newPackages.Add($FoundPackagesAutomatic)
                     }
                 }
             }
