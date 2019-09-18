@@ -72,7 +72,7 @@ function Search-Wishlist {
 
                 $SetContentComm = (Get-Content -Path $wishlistPath) -replace $origLine, ($packageName + $NameAndVersionSeparator + $packageVersion) | Set-Content $wishlistPath
                 # Return list of destPaths
-                $tmp = @{'path' = $destPath; 'name' = $packageName; 'version' = $packageVersion }
+                $tmp = New-Object psobject @{'path' = $destPath; 'name' = $packageName; 'version' = $packageVersion}
                 #$updatedPackages += , $tmp
                 $null = $updatedPackages.Add($tmp)
             }

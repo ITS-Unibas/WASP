@@ -17,7 +17,10 @@ function Update-PackageInboxFiltered {
 
     begin {
         $Config = Read-ConfigFile
-        $PackagesInboxRepoPath = Join-Path -Path $Config.Application.BaseDirectory -ChildPath $Config.Application.PackagesIncomingFiltered
+        $GitRepo = $Config.Application.PackagesIncomingFiltered
+        $GitFile = $GitRepo.Substring($GitRepo.LastIndexOf("/") + 1, $GitRepo.Length - $GitRepo.LastIndexOf("/") - 1)
+        $GitFolder = $GitFile.Replace(".git", "")
+        $PackagesInboxRepoPath = Join-Path -Path $Config.Application.BaseDirectory -ChildPath $GitFolder
     }
     process {
 
@@ -31,10 +34,12 @@ function Update-PackageInboxFiltered {
             $PackageName = $Package.name
             $PackageVersion = $Package.version
 
-            Write-Log "Starting update routine for package $Package"
-            $DevBranch = "$($Config.GitBranchDEV)$($PackageName)@$PackageVersion"
-
-            $RemoteBranches = Get-RemoteBranches -repo $Config.Application.PackageGallery
+            Write-Log "Starting update routine for package $PackageName"
+            $DevBranch = "$($Config.Application.GitBranchDEV)$($PackageName)@$PackageVersion"
+            $GitRepo = $Config.Application.PackageGallery
+            $GitFile = $GitRepo.Substring($GitRepo.LastIndexOf("/") + 1, $GitRepo.Length - $GitRepo.LastIndexOf("/") - 1)
+            $Repo = $GitFile.Replace(".git", "")
+            $RemoteBranches = Get-RemoteBranches -repo $Repo
 
             if (-Not $RemoteBranches.Contains($DevBranch)) {
                 Write-Log ([string](git -C $PackagesInboxRepoPath add $PackagePath 2>&1))
@@ -50,7 +55,7 @@ function Update-PackageInboxFiltered {
                 # Is this necessary?
                 Write-Log ([string](git -C $PackagesInboxRepoPath checkout master 2>&1))
 
-                New-PullRequest -SourceRepo $Config.Application.PackagesIncomingFiltered -SourceBranch $DevBranch -DestinationRepo $Config.Application.PackageGallery -DestinationBranch $DevBranch
+                New-PullRequest -SourceRepo $Config.Application.PackagesIncomingFiltered -SourceBranch $DevBranch -DestinationRepo $Config.Application.WindowsSoftware -DestinationBranch $DevBranch
 
             }
         }
