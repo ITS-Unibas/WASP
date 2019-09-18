@@ -17,7 +17,7 @@ function Update-PackageInboxFiltered {
 
     begin {
         $Config = Read-ConfigFile
-        $GitRepo = $Config.Application.PackagesIncomingFiltered
+        $GitRepo = $Config.Application.PackagesInboxFiltered
         $GitFile = $GitRepo.Substring($GitRepo.LastIndexOf("/") + 1, $GitRepo.Length - $GitRepo.LastIndexOf("/") - 1)
         $GitFolder = $GitFile.Replace(".git", "")
         $PackagesInboxRepoPath = Join-Path -Path $Config.Application.BaseDirectory -ChildPath $GitFolder
