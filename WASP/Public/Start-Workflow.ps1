@@ -47,8 +47,8 @@ function Start-Workflow {
             # Use the latest created package as reference
             $latest = Get-ChildItem -Path $package.FullName | Sort-Object CreationTime -Descending | Select-Object -First 1
             $version = (Get-NuspecXMLValue $latest.FullName "version")
-
-            $newPackages += Search-Wishlist $package.Name $version
+            $FoundPackages = Search-Wishlist $package.Name $version
+            $newPackages.AddRange($FoundPackages)
         }
 
         # Automatic updated packages
@@ -74,7 +74,8 @@ function Start-Workflow {
                     Write-Log $string -Severity 0
                     $nuspec = Get-ChildItem -Path $package.FullName -recurse | Where-Object { $_.Extension -like "*nuspec*" }
                     $version = (Get-NuspecXMLValue $nuspec.FullName "version")
-                    $newPackages += Search-Wishlist $package $version
+                    $FoundPackages = Search-Wishlist $package $version
+                    $newPackages.AddRange($FoundPackages)
                 }
             }
             else {
@@ -83,7 +84,8 @@ function Start-Workflow {
                     Write-Log $string -Severity 0
                     $nuspec = Get-ChildItem -Path $package.FullName -recurse | Where-Object { $_.Extension -like "*nuspec*" }
                     $version = (Get-NuspecXMLValue $nuspec.FullName "version")
-                    $newPackages += Search-Wishlist $package $version
+                    $FoundPackages = Search-Wishlist $package $version
+                    $newPackages.AddRange($FoundPackages)
                 }
             }
         }

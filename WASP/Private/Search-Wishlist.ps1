@@ -41,7 +41,7 @@ function Search-Wishlist {
         $GitFolderName = $GitFile.Replace(".git", "")
         $PackagesInbxFilteredPath = Join-Path -Path $config.Application.BaseDirectory -ChildPath $GitFolderName
 
-        $updatedPackages = @()
+        $updatedPackages = New-Object System.Collections.ArrayList
 
         $NameAndVersionSeparator = $config.Application.WishlistSeperatorChar
     }
@@ -73,7 +73,8 @@ function Search-Wishlist {
                 $SetContentComm = (Get-Content -Path $wishlistPath) -replace $origLine, ($packageName + $NameAndVersionSeparator + $packageVersion) | Set-Content $wishlistPath
                 # Return list of destPaths
                 $tmp = @{'path' = $destPath; 'name' = $packageName; 'version' = $packageVersion }
-                $updatedPackages += , $tmp
+                #$updatedPackages += , $tmp
+                $null = $updatedPackages.Add($tmp)
             }
         }
     }
