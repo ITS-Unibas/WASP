@@ -11,7 +11,7 @@ function Update-PackageInboxFiltered {
     param (
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
-        [array]
+        [System.Collections.ArrayList]
         $NewPackages
     )
 

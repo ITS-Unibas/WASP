@@ -39,7 +39,7 @@ function Start-Workflow {
         Write-Log ([string](git -C $PackagesInboxPath submodule update --remote --recursive 2>&1))
 
         # Get all the packages which are to accept and further processed
-        $newPackages = @()
+        $newPackages = New-Object System.Collections.ArrayList
 
         # Manual updated packages
         $packagesManual = @(Get-ChildItem $PackagesManualPath)
