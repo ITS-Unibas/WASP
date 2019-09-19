@@ -63,6 +63,7 @@ function New-PullRequest {
         $SourceUrl = ("{0}/rest/api/1.0/projects/{1}/repos/{2}/commits?until=refs%2Fheads%2F$SourceBranch" -f $Config.Application.GitBaseUrl, $Config.Application.GitProject, $SourceRepo)
         # Integrated GetLastCommitMessage directly in this Cmdlet, because this needed just in here
         try {
+            Write-Log "Getting last commit message for $SourceBranch from $SourceUrl"
             $GetRequest = Invoke-GetRequest $SourceUrl
             $LastCommitMessage = $GetRequest.values[0].replace('Automated commit: Added ', '')
         }
@@ -90,7 +91,7 @@ function New-PullRequest {
             "toRef"               = @{
                 "id"         = "refs/heads/$DestinationBranch"
                 "repository" = @{
-                    "slug"    = $DestinationRepository
+                    "slug"    = $DestinationRepo
                     "project" = @{
                         "key" = $Config.Application.GitProject
                     }
