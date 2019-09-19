@@ -65,10 +65,10 @@ function New-PullRequest {
         try {
             Write-Log "Getting last commit message for $SourceBranch from $SourceUrl"
             $GetRequest = Invoke-GetRequest $SourceUrl
-            $LastCommitMessage = $GetRequest.values[0].replace('Automated commit: Added ', '')
+            $LastCommitMessage = $GetRequest.values[0].message.replace('Automated commit: Added ', '')
         }
         catch {
-            Write-Log "We were not able to fetch the last commit message for repository $SourceRepo and branch $SourceBranch" -Severity 3
+            Write-Log "We were not able to fetch the last commit message for repository $SourceRepo and branch $SourceBranch. It failed with the following error`n$($_.Exception.Message)" -Severity 3
             # Should exit function here. Not sure if correct
             # https://social.technet.microsoft.com/Forums/windowsserver/en-US/7d9f4a00-ff20-4517-8e87-8b93218d93a7/powershell-return-function-after-an-error-question?forum=winserverpowershell
             continue
