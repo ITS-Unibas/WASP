@@ -48,6 +48,7 @@ function Update-PackageInboxFiltered {
 
                 if ((Get-CurrentBranchName -Path $PackagesInboxRepoPath) -ne $DevBranch) {
                     Write-Log -Message "The dev branch for this package could not be created" -Severity 3
+                    continue
                 }
 
                 Write-Log ([string](git -C $PackagesInboxRepoPath commit -m "Automated commit: Added $DevBranch" 2>&1))

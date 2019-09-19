@@ -49,7 +49,7 @@ function Start-Workflow {
             $version = (Get-NuspecXMLValue $latest.FullName "version")
             $FoundPackagesManual = Search-Wishlist $package.Name $version
             if ($FoundPackagesManual.Count -gt 0) {
-                $newPackages.Add($FoundPackagesManual)
+                $null = $newPackages.Add($FoundPackagesManual)
             }
         }
 
@@ -78,7 +78,7 @@ function Start-Workflow {
                     $version = (Get-NuspecXMLValue $nuspec.FullName "version")
                     $FoundPackagesAutomatic = Search-Wishlist $package $version
                     if ($FoundPackagesAutomatic.Count -gt 0) {
-                        $newPackages.Add($FoundPackagesAutomatic)
+                        $null = $newPackages.Add($FoundPackagesAutomatic)
                     }
                 }
             }
@@ -90,7 +90,7 @@ function Start-Workflow {
                     $version = (Get-NuspecXMLValue $nuspec.FullName "version")
                     $FoundPackages = Search-Wishlist $package $version
                     if ($FoundPackages.Count -gt 0) {
-                        $newPackages.Add($FoundPackages)
+                        $null = $newPackages.Add($FoundPackages)
                     }
                 }
             }
