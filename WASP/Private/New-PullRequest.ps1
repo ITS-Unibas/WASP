@@ -67,7 +67,7 @@ function New-PullRequest {
             $LastCommitMessage = $GetRequest.values[0].replace('Automated commit: Added ', '')
         }
         catch {
-            Write-Log "We were not able to fetch the last commit message for repository $SourceRepository and branch $SourceBranch" -Severity 3
+            Write-Log "We were not able to fetch the last commit message for repository $SourceRepo and branch $SourceBranch" -Severity 3
             # Should exit function here. Not sure if correct
             # https://social.technet.microsoft.com/Forums/windowsserver/en-US/7d9f4a00-ff20-4517-8e87-8b93218d93a7/powershell-return-function-after-an-error-question?forum=winserverpowershell
             continue
