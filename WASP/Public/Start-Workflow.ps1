@@ -30,6 +30,12 @@ function Start-Workflow {
         $GitFile = $GitRepo.Substring($GitRepo.LastIndexOf("/") + 1, $GitRepo.Length - $GitRepo.LastIndexOf("/") - 1)
         $GitFolderName = $GitFile.Replace(".git", "")
         $PackagesWishlistPath = Join-Path -Path $config.Application.BaseDirectory -ChildPath $GitFolderName
+
+        # Load Helper Function from chocolatey in curren session
+        # TODO: Path to variable
+        Get-ChildItem "C:\ProgramData\chocolatey\helpers\functions" -Filter "Install*" | Foreach-Object {Rename-Item $_.FullName "$($_.FullName).old"}
+        Import-Module "C:\ProgramData\chocolatey\helpers\chocolateyInstaller.psm1" -Force
+        Get-ChildItem "C:\ProgramData\chocolatey\helpers\functions" -Filter "Install*" | Foreach-Object {Rename-Item $_.FullName "$($_.FullName.replace('.old', ''))"}
     }
 
     process {

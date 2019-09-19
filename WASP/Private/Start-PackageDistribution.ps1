@@ -32,7 +32,7 @@ function Start-PackageDistribution() {
 
                 $packageName, $packageVersion = $branch.split($nameAndVersionSeparator)
                 $packageName = $packageName -Replace $config.Application.GitBranchDEV, ''
-                $packageRootPath = (Join-Path $packageName $packageVersion)
+                $packageRootPath = Join-Path $PackageGalleryPath (Join-Path $packageName $packageVersion)
                 if (-Not (Test-Path $packageRootPath)) {
                     Write-Log "PR for $packageName was not yet merged. Continuing .." -Severity 1
                     continue
@@ -47,14 +47,19 @@ function Start-PackageDistribution() {
 
                 # Call Override Function with the wanted package to override
                 try {
+                    Set-Location "$PackageGalleryPath\$packageName\$packageVersion"
+                    $nuspecFile = (Get-ChildItem -Path $packageRootPath -Recurse | Where-Object { $_.FullName -match ".nuspec" }).FullName
+                    $pkgNameNuspec = Get-NuspecXMLValue $nuspecFile "id"
+                    $pkgVersionNuspec = Get-NuspecXMLValue $nuspecFile "version"
+                    $env:ChocolateyPackageName = $pkgNameNuspec
+                    $env:ChocolateyPackageVersion = $pkgVersionNuspec
                     Start-OverrideFunctionForPackage ( Join-Path $toolsPath "chocolateyInstall.ps1")
                     if ($LASTEXITCODE -eq 1) {
                         Write-Log "Override-Function terminated with an error. Exiting.." -Severity 3
                         exit 1
                     }
                     # Check if a nupkg already exists
-                    $nupkg = (Get-ChildItem -Path $packageRootPath | Where-Object { $_.FullName -match ".nupkg" }).FullName
-                    $nuspecFile = (Get-ChildItem -Path $packageRootPath | Where-Object { $_.FullName -match ".nuspec" }).FullName
+                    $nupkg = (Get-ChildItem -Path $packageRootPath -Recurse | Where-Object { $_.FullName -match ".nupkg" }).FullName
 
                     if (-Not $nuspecFile) {
                         Write-Log "No nuspec file in package $packageName $packageVersion. Continuing with next package" -Severity 2
@@ -93,7 +98,7 @@ function Start-PackageDistribution() {
                     Send-NupkgToServer $packageRootPath $config.Application.ChocoServerDEV
                 }
                 catch [Exception] {
-                    $ChocolateyPackageName = Get-NuspecXMLValue $packageRootPath "id"
+                    $ChocolateyPackageName = Get-NuspecXMLValue $nuspecFile "id"
                     Write-Log ("Package " + $ChocolateyPackageName + " override process crashed. Skipping it.") -Severity 3
                     Write-Log ($_.Exception | Format-List -force | Out-String) -Severity 3
                 }
@@ -123,7 +128,6 @@ function Start-PackageDistribution() {
             }
         }
     }
-    
     end {
         Set-Location $OldWorkingDir
     }
