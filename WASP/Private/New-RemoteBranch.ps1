@@ -24,7 +24,7 @@ function New-RemoteBranch {
 
     begin {
         $RemoteBranches = Get-RemoteBranches -Repo $Repository
-        $Config = Read-Config
+        $Config = Read-ConfigFile
     }
 
     process {

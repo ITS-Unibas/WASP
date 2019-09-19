@@ -38,7 +38,7 @@ function New-PullRequest {
     )
 
     begin {
-        $Config = Read-Config
+        $Config = Read-ConfigFile
         $Reviewers = $Config.Application.Reviewers
         $ReviewersJson = New-Object System.Collections.ArrayList
     }
@@ -60,7 +60,7 @@ function New-PullRequest {
 
         New-RemoteBranch -Repository $DestinationRepo -BranchName $DestinationBranch
         $DestUrl = ("{0}/rest/api/1.0/projects/{1}/repos/{2}/pull-requests" -f $Config.Application.GitBaseUrl, $Config.Application.GitProject, $DestinationRepo)
-        $SourceUrl = ("{0}/rest/api/1.0/projects/{1}/repos/{2}/commits?until=refs%2Fheads%2F$SourceBranch" -f $Config.Application.GitBaseUrl, $Config.Application.GitProject, $DestinationRepo)
+        $SourceUrl = ("{0}/rest/api/1.0/projects/{1}/repos/{2}/commits?until=refs%2Fheads%2F$SourceBranch" -f $Config.Application.GitBaseUrl, $Config.Application.GitProject, $SourceRepo)
         # Integrated GetLastCommitMessage directly in this Cmdlet, because this needed just in here
         try {
             $GetRequest = Invoke-GetRequest $SourceUrl

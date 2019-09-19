@@ -40,10 +40,7 @@ function Update-PackageInboxFiltered {
 
             Write-Log "Starting update routine for package $PackageName"
             $DevBranch = "$($Config.Application.GitBranchDEV)$($PackageName)@$PackageVersion"
-            $GitRepo = $Config.Application.PackageGallery
-            $GitFile = $GitRepo.Substring($GitRepo.LastIndexOf("/") + 1, $GitRepo.Length - $GitRepo.LastIndexOf("/") - 1)
-            $Repo = $GitFile.Replace(".git", "")
-            $RemoteBranches = Get-RemoteBranches -repo $Repo
+            $RemoteBranches = Get-RemoteBranches -repo $GitRepoPackageGallery
 
             if (-Not $RemoteBranches.Contains($DevBranch)) {
                 Write-Log ([string](git -C $PackagesInboxRepoPath add $PackagePath 2>&1))
