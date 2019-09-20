@@ -15,7 +15,7 @@
         "WishlistSeperatorChar" : "@",
         "ChocoRepo": "github.com/chocolatey/choco.git",
         "JiraObserver": "git.its.unibas.ch/scm/sun/jira-observer.git",
-        "BitBucketAPIToken": "",
+        "BitBucketAPIToken": "NjExODAxOTgzMTA3OqQkz5YbYAF/O5hLsKigL7V1w7qe",
         "PreAdditionalScripts": [
             "InitialScript.ps1"
         ],
