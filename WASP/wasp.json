@@ -1,7 +1,7 @@
 {
     "Application": {
         "BaseDirectory": "C:\\ProgramData\\Unibasel\\wasp",
-        "GitServiceUser": "schaefek",
+        "GitServiceUser": "d-its-wcs-de",
         "GitBaseUrl": "https://git.its.unibas.ch",
         "GitProject": "csswcs",
         "GitBranchDEV": "dev/",
@@ -27,8 +27,7 @@
         "ChocoServerPROD": "https://its-wcs-choco1.its.unibas.ch/prod/chocolatey",
         "Reviewers": [
             "burmax00",
-            "schaefek",
-            "stoecklb"
+            "schaefek"
         ]
     },
     "Logger": {

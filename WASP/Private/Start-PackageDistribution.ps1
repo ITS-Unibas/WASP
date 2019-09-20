@@ -92,10 +92,11 @@ function Start-PackageDistribution() {
                     Write-Log ([string] (git -C $packageRootPath add . 2>&1))
                     Write-Log ([string] (git -C $packageRootPath commit -m "Created override for $packageName $packageVersion" 2>&1))
                     Write-Log ([string] (git -C $packageRootPath push 2>&1))
-                    # Remove all uncommited files, so no left over files will be moved to prod branch. Or else it will be pushed from choco to all instances
-                    Write-Log ([string] (git -C $packageRootPath checkout -- * 2>&1))
-
                     Send-NupkgToServer $packageRootPath $config.Application.ChocoServerDEV
+
+                    # Remove all uncommited files, so no left over files will be moved to prod branch. Or else it will be pushed from choco to all instances
+                    Remove-BuildFiles $packageRootPath
+
                 }
                 catch [Exception] {
                     $ChocolateyPackageName = Get-NuspecXMLValue $nuspecFile "id"
