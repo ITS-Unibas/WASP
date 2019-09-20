@@ -34,7 +34,7 @@ function Remove-BuildFiles {
     process {
         $GitIgnoreContent = Get-Content $GitIgnorePath
         foreach($Line in $GitIgnoreContent) {
-            Remove-Item -Path (Join-Path $PackagePath $Line)
+            Remove-Item -Path (Join-Path $PackagePath $Line) -ErrorAction SilentlyContinue
         }
     }
 
