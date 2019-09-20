@@ -65,7 +65,8 @@ function Search-Wishlist {
                 }
             }
             catch [System.Management.Automation.RuntimeException] {
-                Write-Log "The verison $packageVersion could not be parsed" -Severity 2
+                Write-Log "The version $packageVersion could not be parsed" -Severity 2
+                # TODO: Handle versions with characters in it
             }
 
             if ($packageName -like $packageNameWhishlist.Trim()) {
