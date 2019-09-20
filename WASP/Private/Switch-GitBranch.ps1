@@ -27,6 +27,6 @@ function Switch-GitBranch {
             Write-Log "Couldn't checkout $branch in $path. Make sure the location to the repository path was set and the branch does exist" -Severity 3
         }
 
-        Write-Log ([string] (git pull 2>&1))
+        Write-Log ([string] (git -C $path pull 2>&1))
     }
 }
