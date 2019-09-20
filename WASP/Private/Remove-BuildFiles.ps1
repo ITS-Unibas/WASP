@@ -34,7 +34,7 @@ function Remove-BuildFiles {
     process {
         $GitIgnoreContent = Get-Content $GitIgnorePath
         foreach ($Line in $GitIgnoreContent) {
-            if ($Line -notlike "*nupgk*") {
+            if ($Line -notlike "*nupkg*") {
                 Remove-Item -Path (Join-Path $PackagePath $Line) -ErrorAction SilentlyContinue
             }
         }
