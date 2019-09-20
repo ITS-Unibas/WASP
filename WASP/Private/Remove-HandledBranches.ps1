@@ -32,9 +32,10 @@ function Remove-HandledBranches {
         # Checkout master branch on packages-inbox-filtered to avoid beeing on a branch to delete
         Write-Log ([string](git -C $PackagesInboxFilteredPath checkout 'master' 2>&1))
         ForEach ($remoteBranch in $PackagesInboxFilteredBranches) {
-            if ((-Not ($remoteBranch -eq 'master')) -and ((-Not $pullrequestsOpen.contains($remoteBranch)) -or $pullrequestsOpen.length -eq 0)) {
+            if ((-Not ($remoteBranch -eq 'master')) -and (($pullrequestsOpen.length -eq 0 -or -Not $pullrequestsOpen.contains($remoteBranch)))) {
                 Write-Log "PR for $remoteBranch is not open anymore. Deleting branch from our filtered packages, because it was merged or declined..."
                 # Remove remote package branch in filtered repository
+                # TODO: Shouldn't we remove the remote branches from package gallery as well?
                 Remove-RemoteBranch $PackagesInboxFilteredRepoName $remoteBranch
                 # Delete the local branch
                 Write-Log ([string](git -C $PackagesInboxFilteredPath branch -D $remoteBranch 2>&1))
