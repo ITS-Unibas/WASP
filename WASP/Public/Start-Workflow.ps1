@@ -86,6 +86,9 @@ function Start-Workflow {
                     $string = "Looking at package: $package in " + $package.FullName
                     Write-Log $string -Severity 0
                     $nuspec = Get-ChildItem -Path $package.FullName -recurse | Where-Object { $_.Extension -like "*nuspec*" }
+                    if(-Not $nuspec) {
+                        continue
+                    }
                     $version = (Get-NuspecXMLValue $nuspec.FullName "version")
                     $FoundPackagesAutomatic = Search-Wishlist $package $version
                     if ($FoundPackagesAutomatic.Count -gt 0) {
@@ -98,6 +101,9 @@ function Start-Workflow {
                     $string = "Looking at package: $package in " + $package.FullName
                     Write-Log $string -Severity 0
                     $nuspec = Get-ChildItem -Path $package.FullName -recurse | Where-Object { $_.Extension -like "*nuspec*" }
+                    if(-Not $nuspec) {
+                        continue
+                    }
                     $version = (Get-NuspecXMLValue $nuspec.FullName "version")
                     $FoundPackages = Search-Wishlist $package $version
                     if ($FoundPackages.Count -gt 0) {
