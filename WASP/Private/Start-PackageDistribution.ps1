@@ -80,7 +80,7 @@ function Start-PackageDistribution() {
                             # There were changes in the package, so iterate the version of the nuspec.
                             Set-NewReleaseVersion $false $nuspecFile
                             # Because the later new build package has a different version and therefore a new nupkg will be created we have to remove the old not anymore used nupkg
-                            Remove-Item -Path ".\*.nupkg"
+                            Remove-Item -Path "$packageRootPath\*.nupkg"
                         }
                     }
                     else {
@@ -92,6 +92,8 @@ function Start-PackageDistribution() {
                     Write-Log ([string] (git -C $packageRootPath add . 2>&1))
                     Write-Log ([string] (git -C $packageRootPath commit -m "Created override for $packageName $packageVersion" 2>&1))
                     Write-Log ([string] (git -C $packageRootPath push 2>&1))
+                    # Remove all uncommited files, so no left over files will be moved to prod branch. Or else it will be pushed from choco to all instances
+                    Write-Log ([string] (git -C $packageRootPath checkout -- * 2>&1))
 
                     Send-NupkgToServer $packageRootPath $config.Application.ChocoServerDEV
                 }
@@ -109,7 +111,7 @@ function Start-PackageDistribution() {
                 elseif ($branch -eq $config.Application.GitBranchTEST) {
                     $chocolateyDestinationServer = $config.Application.ChocoServerTEST
                 }
-                
+
                 Switch-GitBranch $PackageGalleryPath $branch
 
                 $packagesList = Get-ChildItem $PackageGalleryPath -Directory
