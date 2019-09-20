@@ -42,6 +42,8 @@ function Start-Workflow {
         Remove-HandledBranches
 
         # Update the added submodules in the package-inbox-automatic repository
+        Write-Log ([string](git -C $PackagesInboxPath pull 2>&1))
+		Write-Log ([string](git -C $PackagesInboxPath submodule init 2>&1))
         Write-Log ([string](git -C $PackagesInboxPath submodule update --remote --recursive 2>&1))
 
         # Commit and push changes to wishlist located in the path
