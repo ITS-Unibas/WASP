@@ -93,7 +93,7 @@ function Start-PackageDistribution() {
                     Write-Log ([string] (git -C $packageRootPath commit -m "Created override for $packageName $packageVersion" 2>&1))
                     Write-Log ([string] (git -C $packageRootPath push 2>&1))
                     Send-NupkgToServer $packageRootPath $config.Application.ChocoServerDEV
-
+                    Set-Location $OldWorkingDir
                     # Remove all uncommited files, so no left over files will be moved to prod branch. Or else it will be pushed from choco to all instances
                     Remove-BuildFiles $packageRootPath
 
@@ -121,7 +121,7 @@ function Start-PackageDistribution() {
                     $packagePath = Join-Path $PackageGalleryPath $package
                     $nupkg = (Get-ChildItem -Path $packagePath -Recurse | Where-Object { $_.FullName -match ".nupkg" }).FullName
                     if(-Not $nupkg) {
-                        Remove-Item $packagePath -Recurse -Force
+                        #Remove-Item $packagePath -Recurse -Force
                         continue
                     }
                     $versionsList = Get-ChildItem $packagePath -Directory
@@ -135,6 +135,6 @@ function Start-PackageDistribution() {
         }
     }
     end {
-        Set-Location $OldWorkingDir
+        #Set-Location $OldWorkingDir
     }
 }
