@@ -24,7 +24,7 @@ function Edit-ChocolateyInstaller {
 
         [Parameter()]
         [string]
-        $UnzipPath,
+        $UnzipPath
 
     )
 
