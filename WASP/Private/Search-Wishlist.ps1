@@ -59,8 +59,13 @@ function Search-Wishlist {
                 $packageNameWhishlist = $line.Trim()
             }
 
-            if (([version]$packageVersion) -le ([version]$previousVersion)) {
-                continue
+            try {
+                if (([version]$packageVersion) -le ([version]$previousVersion)) {
+                    continue
+                }
+            }
+            catch [System.Management.Automation.RuntimeException] {
+                Write-Log "The verison $packageVersion could not be parsed" -Severity 2
             }
 
             if ($packageName -like $packageNameWhishlist.Trim()) {
@@ -72,7 +77,7 @@ function Search-Wishlist {
 
                 $SetContentComm = (Get-Content -Path $wishlistPath) -replace $origLine, ($packageName + $NameAndVersionSeparator + $packageVersion) | Set-Content $wishlistPath
                 # Return list of destPaths
-                $tmp = New-Object psobject @{'path' = $destPath; 'name' = $packageName; 'version' = $packageVersion}
+                $tmp = New-Object psobject @{'path' = $destPath; 'name' = $packageName; 'version' = $packageVersion }
                 #$updatedPackages += , $tmp
                 $null = $updatedPackages.Add($tmp)
             }
