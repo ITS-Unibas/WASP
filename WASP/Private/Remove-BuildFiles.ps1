@@ -16,7 +16,7 @@ function Remove-BuildFiles {
     #>
     [CmdletBinding()]
     param (
-        [Parameter(Mandatory=$true)]
+        [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
         [string]
         $PackagePath
@@ -33,8 +33,10 @@ function Remove-BuildFiles {
 
     process {
         $GitIgnoreContent = Get-Content $GitIgnorePath
-        foreach($Line in $GitIgnoreContent) {
-            Remove-Item -Path (Join-Path $PackagePath $Line) -ErrorAction SilentlyContinue
+        foreach ($Line in $GitIgnoreContent) {
+            if ($Line -notlike "*nupgk*") {
+                Remove-Item -Path (Join-Path $PackagePath $Line) -ErrorAction SilentlyContinue
+            }
         }
     }
 
