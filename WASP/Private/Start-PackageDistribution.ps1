@@ -119,11 +119,6 @@ function Start-PackageDistribution() {
 
                 foreach ($package in $packagesList) {
                     $packagePath = Join-Path $PackageGalleryPath $package
-                    $nupkg = (Get-ChildItem -Path $packagePath -Recurse | Where-Object { $_.FullName -match ".nupkg" }).FullName
-                    if(-Not $nupkg) {
-                        #Remove-Item $packagePath -Recurse -Force
-                        continue
-                    }
                     $versionsList = Get-ChildItem $packagePath -Directory
                     foreach ($version in $versionsList) {
                         $packageRootPath = Join-Path $packagePath $version
