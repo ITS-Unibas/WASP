@@ -22,28 +22,21 @@ function Edit-ChocolateyInstaller {
         [string]
         $FileName,
 
-        [Parameter(Mandatory = $true)]
-        [string]
-        $PackagePath,
-
         [Parameter()]
         [string]
         $UnzipPath,
 
-        [Parameter(Mandatory = $true)]
-        [string[]]
-        $PreAdditionalScripts,
-
-        [Parameter(Mandatory = $true)]
-        [string[]]
-        $PostAddtionalScripts
     )
 
     begin {
+        $PackagePath = Get-Item $FileName | Select-Object -ExpandProperty Directory
         $ChocolateyPackageFolder = Join-Path -Path $PackagePath -ChildPath 'tools'
         $NewFile = Join-Path -Path $ChocolateyPackageFolder -ChildPath "chocolateyInstall.ps1"
         $OriginalFile = Join-Path -Path $ChocolateyPackageFolder -ChildPath "chocolateyInstall_old.ps1"
         $ParentSWDirectory = Split-Path -Path $PackagePath
+        $Config = Read-ConfigFile
+        $PreAdditionalScripts = $Config.Application.PreAdditionalScripts
+        $PostAddtionalScripts = $Config.Application.PostAdditionalScripts
     } process {
         Copy-Item -Path $NewFile -Destination $OriginalFile
         #Regex
