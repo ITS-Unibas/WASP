@@ -33,9 +33,9 @@ function Start-Workflow {
 
         # Load Helper Function from chocolatey in curren session
         # TODO: Path to variable
-        Get-ChildItem "C:\ProgramData\chocolatey\helpers\functions" -Filter "Install*" | Foreach-Object {Rename-Item $_.FullName "$($_.FullName).old"}
+        Get-ChildItem "C:\ProgramData\chocolatey\helpers\functions" -Filter "Install*" | Foreach-Object { Rename-Item $_.FullName "$($_.FullName).old" }
         Import-Module "C:\ProgramData\chocolatey\helpers\chocolateyInstaller.psm1" -Force
-        Get-ChildItem "C:\ProgramData\chocolatey\helpers\functions" -Filter "Install*" | Foreach-Object {Rename-Item $_.FullName "$($_.FullName.replace('.old', ''))"}
+        Get-ChildItem "C:\ProgramData\chocolatey\helpers\functions" -Filter "Install*" | Foreach-Object { Rename-Item $_.FullName "$($_.FullName.replace('.old', ''))" }
     }
 
     process {
@@ -43,6 +43,9 @@ function Start-Workflow {
 
         # Update the added submodules in the package-inbox-automatic repository
         Write-Log ([string](git -C $PackagesInboxPath submodule update --remote --recursive 2>&1))
+
+        # Commit and push changes to wishlist located in the path
+        Switch-GitBranch $PackagesWishlistPath 'master'
 
         # Get all the packages which are to accept and further processed
         $newPackages = New-Object System.Collections.ArrayList

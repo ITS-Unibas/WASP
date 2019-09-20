@@ -18,8 +18,7 @@ function Start-PackageDistribution() {
     }
 
     process {
-        Set-Location $PackageGalleryPath
-        Switch-GitBranch $config.Application.GitBranchPROD
+        Switch-GitBranch $PackageGalleryPath $config.Application.GitBranchPROD
 
         $remoteBranches = Get-RemoteBranches $GitFolderName
 
@@ -27,8 +26,7 @@ function Start-PackageDistribution() {
         foreach ($branch in $remoteBranches) {
             if (-Not($branch -eq $config.Application.GitBranchPROD) -and -Not ($branch -eq $config.Application.GitBranchTEST)) {
                 # Check for new packages on remote branches, that contain 'dev/' in their names
-                Set-Location $PackageGalleryPath
-                Switch-GitBranch $branch
+                Switch-GitBranch $PackageGalleryPath $branch
 
                 $packageName, $packageVersion = $branch.split($nameAndVersionSeparator)
                 $packageName = $packageName -Replace $config.Application.GitBranchDEV, ''
@@ -111,8 +109,8 @@ function Start-PackageDistribution() {
                 elseif ($branch -eq $config.Application.GitBranchTEST) {
                     $chocolateyDestinationServer = $config.Application.ChocoServerTEST
                 }
-                Set-Location $PackageGalleryPath
-                Switch-GitBranch $branch
+                
+                Switch-GitBranch $PackageGalleryPath $branch
 
                 $packagesList = Get-ChildItem $PackageGalleryPath -Directory
 
