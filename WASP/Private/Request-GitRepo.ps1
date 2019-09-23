@@ -36,6 +36,7 @@ function Request-GitRepo {
         $GitFile = $GitRepo.Substring($GitRepo.LastIndexOf("/") + 1, $GitRepo.Length - $GitRepo.LastIndexOf("/") - 1)
         $GitFolderName = $GitFile.Replace(".git", "")
         $GitPath = Join-Path -Path $CloneDirectory -ChildPath $GitFolderName
+
         if (-Not (Test-Path $GitPath)) {
             Write-Log "$GitFolderName is missing. Starting to clone it." -Severity 1
             if ($User) {
@@ -47,7 +48,6 @@ function Request-GitRepo {
             if (Test-Path $GitPath) {
                 if ($WithSubmodules) {
                     Write-Log "Starting to init and update the submodules in $GitFolderName"
-                    # TODO: git submodule seems to not provide any output. So maybe remove the Write-Log there
                     Write-Log ([string] (git -C $GitPath submodule init 2>&1))
                     Write-Log ([string] (git -C $GitPath submodule update 2>&1))
                 }
