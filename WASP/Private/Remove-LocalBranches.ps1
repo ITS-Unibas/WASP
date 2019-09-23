@@ -28,16 +28,9 @@ function Remove-LocalBranches {
     process {
         $remoteBranches = Get-RemoteBranches $GitFolderName
 
-        # Pull prod branch to get current branches
-        Write-Log ([string] (git -C $RepositoryPath pull origin $config.Application.GitBranchPROD 2>&1))
         $localBranches = git -C $RepositoryPath branch
 
         ForEach ($local in $localBranches) {
-            # TODO: Investigate what this does
-            if ($local -match "\*") {
-                # Skip currently checked out prod branch
-                continue
-            }
             if (-Not ($remoteBranches.Contains($local.Trim()))) {
                 # local branch not anymore a remote branch, so it can be deleted locally
                 Write-Log ([string] (git -C $RepositoryPath branch -D $local.Trim() 2>&1))
