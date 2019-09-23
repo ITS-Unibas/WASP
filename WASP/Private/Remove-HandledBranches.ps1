@@ -35,14 +35,13 @@ function Remove-HandledBranches {
             if ((-Not ($remoteBranch -eq 'master')) -and (($pullrequestsOpen.Count -eq 0 -or -Not $pullrequestsOpen.contains($remoteBranch)))) {
                 Write-Log "The pull request for $remoteBranch is was either declined or merged and can therefore be deleted."
                 # Remove remote package branch in filtered repository
-                # TODO: Shouldn't we remove the remote branches from package gallery as well?
                 Remove-RemoteBranch $PackagesInboxFilteredRepoName $remoteBranch
-                # Delete the local branch
-                Write-Log ([string](git -C $PackagesInboxFilteredPath branch -D $remoteBranch 2>&1))
             }
         }
+        # Remove local branches from inbox filtered where the corresponding remote branch does not exist anymore
+        Remove-LocalBranches $config.Application.PackagesInboxFiltered
 
-        # Remove local branches from package-gallery where the remote branch does not exist anymore
+        # Remove local branches from package-gallery where the corresponding remote branch does not exist anymore
         Remove-LocalBranches $config.Application.PackageGallery
     }
 }

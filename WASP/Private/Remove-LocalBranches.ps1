@@ -19,7 +19,7 @@ function Remove-LocalBranches {
     begin {
         $config = Read-ConfigFile
 
-        $GitRepo = $repository
+        $GitRepo = $Repository
         $GitFile = $GitRepo.Substring($GitRepo.LastIndexOf("/") + 1, $GitRepo.Length - $GitRepo.LastIndexOf("/") - 1)
         $GitFolderName = $GitFile.Replace(".git", "")
         $RepositoryPath = Join-Path -Path $config.Application.BaseDirectory -ChildPath $GitFolderName
