@@ -9,6 +9,9 @@ function Start-Workflow {
     )
 
     begin {
+        Write-Log "Starting Workflow"
+        $StartTime = Get-Date
+
         $config = Read-ConfigFile
 
         $GitRepo = $config.Application.PackagesInbox
@@ -124,5 +127,7 @@ function Start-Workflow {
     }
 
     end {
+        $Duration = New-TimeSpan -Start $StartTime -End (Get-Date)
+        Write-Log "The process took $Duration"
     }
 }
