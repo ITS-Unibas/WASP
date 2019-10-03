@@ -44,7 +44,7 @@ function Set-NewReleaseVersion() {
                     $null = $versionList.Add($ver)
                 } else {
                     # prevent version malforming (hope so)
-                    break
+                    $null = $versionList.Add("0")
                 }
             }
             $version = $versionList -join "."
