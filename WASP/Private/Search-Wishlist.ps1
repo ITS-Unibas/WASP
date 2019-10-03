@@ -59,18 +59,19 @@ function Search-Wishlist {
                 $packageNameWhishlist = $line.Trim()
             }
 
-            try {
-                if (([version]$packageVersion) -le ([version]$previousVersion)) {
-                    continue
-                }
-            }
-            catch [System.Management.Automation.RuntimeException] {
-                Write-Log "The version $packageVersion could not be parsed" -Severity 2
-                # TODO: Handle versions with characters in it
-            }
-
             if ($packageName -like $packageNameWhishlist.Trim()) {
-                Write-Log "Copying $communityPackName $version." -Severity 1
+
+                try {
+                    if (([version]$packageVersion) -le ([version]$previousVersion)) {
+                        continue
+                    }
+                }
+                catch [System.Management.Automation.RuntimeException] {
+                    Write-Log "The version $packageVersion could not be parsed" -Severity 2
+                    # TODO: Handle versions with characters in it
+                }
+
+                Write-Log "Copying $communityPackName $packageVersion." -Severity 1
                 #Create directory structure if not existing
                 $destPath = $PackagesInbxFilteredPath + "\" + $packageName + "\" + $packageVersion
 
