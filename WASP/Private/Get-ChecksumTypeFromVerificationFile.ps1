@@ -10,6 +10,12 @@ function Get-ChecksumTypeFromVerificationFile() {
     .OUTPUTS
         The checksumType will be returned as a string.
     #>
+    param(
+        [Parameter(Mandatory=$true)]
+        [string]
+        $packageName
+    )
+
     $Config = Read-ConfigFile
     $GitRepo = $config.Application.PackageGallery
     $GitFile = $GitRepo.Substring($GitRepo.LastIndexOf("/") + 1, $GitRepo.Length - $GitRepo.LastIndexOf("/") - 1)

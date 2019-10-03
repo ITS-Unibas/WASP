@@ -22,10 +22,16 @@ function Get-UrlFromVerificationFile() {
     #>
     param(
         [parameter(Mandatory = $true)][bool] $searchFor32BitUrl,
-        [parameter(Mandatory = $true)][bool] $searchFor64BitUrl
+        [parameter(Mandatory = $true)][bool] $searchFor64BitUrl,
+        [parameter(Mandatory = $true)][string] $packageName
+
     )
 
-    $verificationPath = "..\legal\VERIFICATION.txt"
+    $Config = Read-ConfigFile
+    $GitRepo = $config.Application.PackageGallery
+    $GitFile = $GitRepo.Substring($GitRepo.LastIndexOf("/") + 1, $GitRepo.Length - $GitRepo.LastIndexOf("/") - 1)
+    $GitFolderName = $GitFile.Replace(".git", "")
+    $PackageGalleryPath = Join-Path -Path $config.Application.BaseDirectory -ChildPath $GitFolderName
     # Now search for a given url with one of the follwing patterns:
     # "x32: http...", "x86: http...", "32-bit: <http...>", "64-bit: <http...>"
     $regex32 = '(x32:\s.*|32-Bit:\s<.*>|x86:\s.*|32-Bit software:\s<.*>)'
