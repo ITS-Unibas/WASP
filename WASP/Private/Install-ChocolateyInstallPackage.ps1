@@ -45,7 +45,6 @@ function Install-ChocolateyInstallPackage() {
             $searchArgs = @{
                 searchFor32BitUrl = $False
                 searchFor64BitUrl = $True
-                packageName = $packageName
             }
             $url64bit = Get-UrlFromVerificationFile @searchArgs
             if (-Not $url64bit) {
@@ -55,7 +54,6 @@ function Install-ChocolateyInstallPackage() {
             $searchArgs = @{
                 searchFor32BitChecksum = $False
                 searchFor64BitChecksum = $True
-                packageName = $packageName
             }
             $checksum64 = Get-ChecksumFromVerificationFile @searchArgs
         }

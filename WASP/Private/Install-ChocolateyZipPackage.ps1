@@ -54,14 +54,12 @@ function Install-ChocolateyZipPackage() {
             $searchArgs = @{
                 searchFor32BitUrl = $True
                 searchFor64BitUrl = $False
-                packageName = $packageName
             }
             $url = Get-UrlFromVerificationFile @searchArgs
 
             $searchArgs = @{
                 searchFor32BitChecksum = $True
                 searchFor64BitChecksum = $False
-                packageName = $packageName
             }
             $checksum = Get-ChecksumFromVerificationFile @searchArgs
         }
