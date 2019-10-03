@@ -174,4 +174,5 @@ function Install-ChocolateyInstallPackage() {
         $outputFile = Split-Path $downloadFilePath -leaf
     }
     Edit-ChocolateyInstaller $outputFile
+    exit 0
 }

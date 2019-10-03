@@ -57,4 +57,5 @@ function Install-ChocolateyPackage() {
     else {
         Write-Log "No url in install script of $packageName found. We can continue."
     }
+    exit 0
 }
