@@ -28,7 +28,7 @@ function Get-VerificationFilePath {
     }
 
     process {
-        $branch = Get-CurrentBranchName -$PackageGalleryPath
+        $branch = Get-CurrentBranchName $PackageGalleryPath
         $packageName, $packageVersion = $branch.split($nameAndVersionSeparator)
         $packageName = $packageName -Replace $config.Application.GitBranchDEV, ''
         $PackagePath = Join-Path -Path $PackageGalleryPath -ChildPath $packageName
