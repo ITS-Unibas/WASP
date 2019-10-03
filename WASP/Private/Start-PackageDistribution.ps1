@@ -103,6 +103,7 @@ function Start-PackageDistribution() {
                     Write-Log ("Package " + $ChocolateyPackageName + " override process crashed. Skipping it.") -Severity 3
                     Write-Log ($_.Exception | Format-List -force | Out-String) -Severity 3
                     git -C $packageRootPath checkout -- *
+                    git -C $packageRootPath clean -f
                 }
             }
             elseif (($branch -eq $config.Application.GitBranchPROD) -or ($branch -eq $config.Application.GitBranchTEST)) {
