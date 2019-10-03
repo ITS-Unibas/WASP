@@ -127,5 +127,4 @@ function Install-ChocolateyZipPackage() {
         Write-Log ($($packageName) + ":" + " " + $_.Exception.toString()) -Severity 3
         exit 1
     }
-    exit 0
 }
