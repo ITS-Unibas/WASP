@@ -152,7 +152,7 @@ function Install-ChocolateyInstallPackage() {
     }
 
     $downloadFilePath = Join-Path (Get-Item -Path ".\").FullName "$($packageName)Install.$fileType"
-    $checksumType = Get-ChecksumTypeFromVerificationFile -packageName $packageName
+    $checksumType = Get-ChecksumTypeFromVerificationFile -Checksum $checksum
     $checksumType64 = $checksumType
     $filePath = $null
     if ($url -or $url64bit) {

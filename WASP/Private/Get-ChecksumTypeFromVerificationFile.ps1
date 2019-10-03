@@ -10,6 +10,10 @@ function Get-ChecksumTypeFromVerificationFile() {
     .OUTPUTS
         The checksumType will be returned as a string.
     #>
+    param(
+        [string]
+        $Checksum
+    )
 
     $verificationPath = Get-VerificationFilePath
     # Now search for a given url with one of the follwing patterns:
@@ -20,6 +24,14 @@ function Get-ChecksumTypeFromVerificationFile() {
         if ($checksumTypeMatches) {
             $checksumType = $checksumTypeMatches -Replace 'checksum\stype:[\s]*', ''
             return $checksumType
+        } else {
+            if ($Checksum.Length -eq 64) {
+                return "SHA256"
+            } elseif($Checksum.Length -eq 128) {
+                return "SHA512"
+            } elseif ($Checksum.Length -eq 40) {
+                return "SHA1"
+            }
         }
     }
     return 'md5'
