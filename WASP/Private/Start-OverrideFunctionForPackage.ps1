@@ -21,7 +21,8 @@ function Start-OverrideFunctionForPackage {
     )
 
     begin {
-        $original = '.\chocolateyInstall_original.ps1'
+        $toolPath = Get-Item $packToolInstallPath | Select-Object -ExpandProperty DirectoryName
+        $original = Join-Path -Path $toolPath -ChildPath 'chocolateyInstall_old.ps1'
     }
 
     process {
