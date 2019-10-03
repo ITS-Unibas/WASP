@@ -62,6 +62,14 @@ function Search-Wishlist {
             if ($packageName -like $packageNameWhishlist.Trim()) {
 
                 try {
+                    # Make Version parsable so we can compare with '-le'
+                    if (-Not ($packageVersion -match "^(\d+\.)?(\d+\.)?(\d+\.)?(\*|\d+)$")) {
+                        Write-Log "The version $packageVersion / $previousVersion will not able to be parsed. Going to format it"
+                        $packageVersion = Format-VersionString -VersionString $packageVersion
+                        $previousVersion = Format-VersionString -VersionString $previousVersion
+                        Write-Log "Formatted versions now $packageVersion / $previousVersion"
+                    }
+
                     if (([version]$packageVersion) -le ([version]$previousVersion)) {
                         continue
                     }

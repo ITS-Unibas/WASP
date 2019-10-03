@@ -37,17 +37,7 @@ function Set-NewReleaseVersion() {
     process {
         # remove characters from a version
         if (-Not ($version -match "^(\d+\.)?(\d+\.)?(\d+\.)?(\*|\d+)$")) {
-            $versionSplit = $version.split(".")
-            $versionList = New-Object System.Collections.ArrayList
-            foreach($ver in $versionSplit) {
-                if($ver -match "^(\d*)$") {
-                    $null = $versionList.Add($ver)
-                } else {
-                    # prevent version malforming (hope so)
-                    $null = $versionList.Add("0")
-                }
-            }
-            $version = $versionList -join "."
+            $version = Format-VersionString -VersionString $version
         }
 
         $versionOld = $version
