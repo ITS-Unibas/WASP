@@ -45,8 +45,7 @@ function Update-PackageInboxFiltered {
             if (-Not $RemoteBranches.Contains($DevBranch)) {
                 Write-Log ([string](git -C $PackagesInboxRepoPath add $PackagePath 2>&1))
                 # Create new branch
-                # TODO: if branch already exist it will fail.
-                Write-Log ([string](git -C $PackagesInboxRepoPath checkout -b $DevBranch 2>&1))
+                New-LocalBranch $PackagesInboxRepoPath $DevBranch
 
                 if ((Get-CurrentBranchName -Path $PackagesInboxRepoPath) -ne $DevBranch) {
                     Write-Log -Message "The dev branch for this package could not be created" -Severity 3
