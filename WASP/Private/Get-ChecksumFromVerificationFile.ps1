@@ -21,10 +21,16 @@ function Get-ChecksumFromVerificationFile() {
     #>
     param(
         [parameter(Mandatory = $True)][bool] $searchFor32BitChecksum,
-        [parameter(Mandatory = $True)][bool] $searchFor64BitChecksum
+        [parameter(Mandatory = $True)][bool] $searchFor64BitChecksum,
+        [parameter(Mandatory = $True)][string] $packageName
     )
+    $Config = Read-ConfigFile
+    $GitRepo = $config.Application.PackageGallery
+    $GitFile = $GitRepo.Substring($GitRepo.LastIndexOf("/") + 1, $GitRepo.Length - $GitRepo.LastIndexOf("/") - 1)
+    $GitFolderName = $GitFile.Replace(".git", "")
+    $PackageGalleryPath = Join-Path -Path $config.Application.BaseDirectory -ChildPath $GitFolderName
 
-    $verificationPath = "..\legal\VERIFICATION.txt"
+    $verificationPath = Join-Path -Path $PackageGalleryPath -ChildPath (Join-Path -Path $packageName -ChildPath "legal\VERIFICATION.txt")
     # Now search for a given checksum with one of the follwing patterns:
     # "(checksum32:\s[\w]+)", "(checksum64:\s[\w]+)"
     $regexChecksum32 = '(checksum32:\s[\w]+|checksum:\s[\w]+)'

@@ -54,7 +54,7 @@ function Start-PackageDistribution() {
                     Start-OverrideFunctionForPackage ( Join-Path $toolsPath "chocolateyInstall.ps1")
                     if ($LASTEXITCODE -eq 1) {
                         Write-Log "Override-Function terminated with an error. Exiting.." -Severity 3
-                        exit 1
+                        return
                     }
                     # Check if a nupkg already exists
                     $nupkg = (Get-ChildItem -Path $packageRootPath -Recurse | Where-Object { $_.FullName -match ".nupkg" }).FullName
