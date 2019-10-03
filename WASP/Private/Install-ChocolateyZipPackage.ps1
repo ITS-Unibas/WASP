@@ -108,7 +108,7 @@ function Install-ChocolateyZipPackage() {
         }
     }
     else {
-        $checksumType = Get-ChecksumTypeFromVerificationFile -Checksum $checksum
+        $checksumType = Get-ChecksumTypeFromVerificationFile -Checksums $checksum, $checksum64
         $checksumType64 = $checksumType
     }
 

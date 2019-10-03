@@ -11,8 +11,8 @@ function Get-ChecksumTypeFromVerificationFile() {
         The checksumType will be returned as a string.
     #>
     param(
-        [string]
-        $Checksum
+        [string[]]
+        $Checksums
     )
 
     $verificationPath = Get-VerificationFilePath
@@ -25,12 +25,14 @@ function Get-ChecksumTypeFromVerificationFile() {
             $checksumType = $checksumTypeMatches -Replace 'checksum\stype:[\s]*', ''
             return $checksumType
         } else {
-            if ($Checksum.Length -eq 64) {
-                return "SHA256"
-            } elseif($Checksum.Length -eq 128) {
-                return "SHA512"
-            } elseif ($Checksum.Length -eq 40) {
-                return "SHA1"
+            foreach($Checksum in $Checksums) {
+                if ($Checksum.Length -eq 64) {
+                    return "SHA256"
+                } elseif($Checksum.Length -eq 128) {
+                    return "SHA512"
+                } elseif ($Checksum.Length -eq 40) {
+                    return "SHA1"
+                }
             }
         }
     }
