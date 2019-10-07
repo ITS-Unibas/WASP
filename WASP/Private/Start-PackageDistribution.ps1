@@ -82,6 +82,10 @@ function Start-PackageDistribution() {
                             # Because the later new build package has a different version and therefore a new nupkg will be created we have to remove the old not anymore used nupkg
                             Remove-Item -Path "$packageRootPath\*.nupkg"
                         }
+                        else {
+                            Write-Log "No changes detected for package $packageName." -Severity 2
+                            continue
+                        }
                     }
                     else {
                         # No new package has been build yet, append the release version 000 in the nuspec

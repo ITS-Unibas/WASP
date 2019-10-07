@@ -110,8 +110,8 @@ function Start-Workflow {
 
         # Commit and push changes to wishlist located in the path
         Update-Wishlist $PackagesWishlistPath 'master'
-        Write-Log "Found the following new packages: $($newPackages.ForEach({$_.name}))" -Severity 3
         if ($newPackages) {
+            Write-Log "Found the following new packages: $($newPackages.ForEach({$_.name}))" -Severity 2
             # Initialize branches for each new package
             Update-PackageInboxFiltered $newPackages
         }
