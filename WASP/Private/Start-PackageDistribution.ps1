@@ -83,7 +83,7 @@ function Start-PackageDistribution() {
                             Remove-Item -Path "$packageRootPath\*.nupkg"
                         }
                         else {
-                            Write-Log "No changes detected for package $packageName." -Severity 2
+                            Write-Log "No changes detected for package $packageName." -Severity 1
                             continue
                         }
                     }
