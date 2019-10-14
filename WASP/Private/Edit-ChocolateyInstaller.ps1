@@ -20,7 +20,7 @@ function Edit-ChocolateyInstaller {
     param(
         [Parameter(Mandatory = $true)]
         [string]
-        $FileName,
+        $ToolsPath,
 
         [Parameter()]
         [string]
@@ -29,12 +29,9 @@ function Edit-ChocolateyInstaller {
     )
 
     begin {
-        $PackagePath = Get-Item $FileName | Select-Object -ExpandProperty Directory
-        $ChocolateyPackageFolder = Join-Path -Path $PackagePath -ChildPath 'tools'
-        $NewFile = Join-Path -Path $ChocolateyPackageFolder -ChildPath "chocolateyInstall.ps1"
-        $OriginalFile = Join-Path -Path $ChocolateyPackageFolder -ChildPath "chocolateyInstall_old.ps1"
-        $ParentSWDirectory = Split-Path -Path $PackagePath
-        $Config = Read-ConfigFile
+        $NewFile = Join-Path -Path $ToolsPath -ChildPath "chocolateyInstall.ps1"
+        $OriginalFile = Join-Path -Path $ToolsPath -ChildPath "chocolateyInstall_old.ps1"
+        $ParentSWDirectory = Split-Path (Split-Path -Path $ToolsPath)
         $PreAdditionalScripts = $Config.Application.PreAdditionalScripts
         $PostAddtionalScripts = $Config.Application.PostAdditionalScripts
     } process {
@@ -57,7 +54,7 @@ function Edit-ChocolateyInstaller {
         }
         # if filepath is not already present, we have to set the filepath
         if (-Not $script:FilePathPresent) {
-            Write-Log "Calling Set File Path with path $FileName" -Severity 1
+            Write-Log "Calling Set File Path with path $ToolsPath" -Severity 1
             $script:ToolsPathPresent = $false
             $script:ToolsDirPresent = $false
             $InstallerContent | ForEach-Object {
@@ -73,13 +70,13 @@ function Edit-ChocolateyInstaller {
                 $_
                 if ($_ -match "packageArgs = @") {
                     if ($script:ToolsPathPresent) {
-                        "  file          = (Join-Path `$toolsPath '$FileName')"
+                        "  file          = (Join-Path `$toolsPath '$ToolsPath')"
                     }
                     elseif ($script:ToolsDirPresent) {
-                        "  file          = (Join-Path `$toolsDir '$FileName')"
+                        "  file          = (Join-Path `$toolsDir '$ToolsPath')"
                     }
                     else {
-                        "  file          = (Join-Path `$PSScriptRoot '$FileName')"
+                        "  file          = (Join-Path `$PSScriptRoot '$ToolsPath')"
                     }
                 }
             }
@@ -87,8 +84,7 @@ function Edit-ChocolateyInstaller {
 
         if ($UnzipPath) {
             Write-Log "Calling set unzip location and remove installzip, got unzip location $UnzipPath" -Severity 1
-            $ChocolateyPackageFolder = Join-Path -Path $PackagePath -ChildPath 'tools'
-            $InstallerContent -Replace ".*unzipLocation[\s]*=[\s]*Get-PackageCacheLocation", "unzipLocation = $ChocolateyPackageFolder"
+            $InstallerContent -Replace ".*unzipLocation[\s]*=[\s]*Get-PackageCacheLocation", "unzipLocation = $UnzipPath"
             $InstallerContent -Replace "Install-ChocolateyZipPackage[\s]*=[\s]@packageArgs", ""
         }
 
@@ -121,7 +117,7 @@ function Edit-ChocolateyInstaller {
             $LastVersionPath = Join-Path -Path $ParentSWDirectory -ChildPath "$LastVersion\tools"
             foreach ($AdditionalScript in $AdditionalScripts) {
                 $SourcePath = Join-Path -Path $LastVersionPath -ChildPath $AdditionalScript
-                $DestinationPath = Join-Path -Path $ChocolateyPackageFolder -ChildPath $AdditionalScript
+                $DestinationPath = Join-Path -Path $ToolsPath -ChildPath $AdditionalScript
                 if (Test-Path $SourcePath -ErrorAction SilentlyContinue) {
                     Copy-Item -Path $SourcePath -Destination $DestinationPath -Force
                 }
@@ -132,7 +128,7 @@ function Edit-ChocolateyInstaller {
         }
         else {
             foreach ($AdditionalScript in $AdditionalScripts) {
-                $ScriptPath = Join-Path -Path $ChocolateyPackageFolder -ChildPath $AdditionalScript
+                $ScriptPath = Join-Path -Path $ToolsPath -ChildPath $AdditionalScript
                 $null = New-Item -Path $ScriptPath -ErrorAction SilentlyContinue
             }
         }

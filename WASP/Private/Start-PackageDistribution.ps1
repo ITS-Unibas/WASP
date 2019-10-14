@@ -83,7 +83,7 @@ function Start-PackageDistribution() {
                             Remove-Item -Path "$packageRootPath\*.nupkg"
                         }
                         else {
-                            Write-Log "No changes detected for package $packageName." -Severity 1
+                            Write-Log "No changes detected for package $packageName."
                             continue
                         }
                     }
@@ -106,8 +106,8 @@ function Start-PackageDistribution() {
                     $ChocolateyPackageName = Get-NuspecXMLValue $nuspecFile "id"
                     Write-Log ("Package " + $ChocolateyPackageName + " override process crashed. Skipping it.") -Severity 3
                     Write-Log ($_.Exception | Format-List -force | Out-String) -Severity 3
-                    git -C $packageRootPath checkout -- *
-                    git -C $packageRootPath clean -f
+                    Write-Log ([string] (git -C $packageRootPath checkout -- * 2>&1))
+                    Write-Log ([string] (git -C $packageRootPath clean -f 2>&1))
                 }
             }
             elseif (($branch -eq $config.Application.GitBranchPROD) -or ($branch -eq $config.Application.GitBranchTEST)) {

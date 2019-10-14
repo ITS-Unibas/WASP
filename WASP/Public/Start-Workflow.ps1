@@ -29,7 +29,7 @@ function Start-Workflow {
         $GitFolderName = $GitFile.Replace(".git", "")
         $PackagesWishlistPath = Join-Path -Path $config.Application.BaseDirectory -ChildPath $GitFolderName
 
-        # Load Helper Function from chocolatey in curren session
+        # Load Helper Function from chocolatey in current session
         Initialize-Prerequisites
     }
 
