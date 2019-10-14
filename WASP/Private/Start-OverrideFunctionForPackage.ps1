@@ -17,7 +17,10 @@ function Start-OverrideFunctionForPackage {
     [CmdletBinding()]
     param (
         [string]
-        $packToolInstallPath
+        $packToolInstallPath,
+
+        [switch]
+        $force
     )
 
     begin {
@@ -26,15 +29,18 @@ function Start-OverrideFunctionForPackage {
     }
 
     process {
-        # TODO: Check if a location switch is needed when executing chocos 'install' functions
-        # Set-Location $packToolInstallPath
-        if (-Not (Test-Path $original)) {
+        if ($force) {
             Invoke-Expression -Command $packToolInstallPath
         }
         else {
-            # Script has already been executed
-            Write-Log "Scripts were already overridden, no need to do it again."
-            return
+            if (-Not (Test-Path $original)) {
+                Invoke-Expression -Command $packToolInstallPath
+            }
+            else {
+                # Script has already been executed
+                Write-Log "Scripts were already overridden, no need to do it again."
+                return
+            }
         }
     }
 

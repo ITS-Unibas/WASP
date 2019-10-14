@@ -7,6 +7,13 @@ function Start-PackageDistribution() {
         This function iteares over all development branches and builds a new package or a package which was build previously, but modified, and pushes it to the development server.
         If a package has been approved for testing or production, the packages on the appropriate git branches will be pushed to their corresponding choco servers.
     #>
+
+    [CmdletBinding()]
+    param (
+        [switch]
+        $ForcedDownload
+    )
+
     begin {
         $config = Read-ConfigFile
 
@@ -53,7 +60,7 @@ function Start-PackageDistribution() {
                     $pkgVersionNuspec = Get-NuspecXMLValue $nuspecFile "version"
                     $env:ChocolateyPackageName = $pkgNameNuspec
                     $env:ChocolateyPackageVersion = $pkgVersionNuspec
-                    Start-OverrideFunctionForPackage ( Join-Path $toolsPath "chocolateyInstall.ps1")
+                    Start-OverrideFunctionForPackage ( Join-Path $toolsPath "chocolateyInstall.ps1") $force
                     if ($LASTEXITCODE -eq 1) {
                         Write-Log "Override-Function terminated with an error. Exiting.." -Severity 3
                         return
