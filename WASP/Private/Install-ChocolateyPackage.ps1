@@ -50,9 +50,8 @@ function Install-ChocolateyPackage() {
             -ChecksumType64 $checksumType64 `
             -Options $options `
             -GetOriginalFileName
-        $outputFile = Split-Path $filePath -leaf
         Write-Log "Starting editiing chocolateyInstall at $filePath."
-        Edit-ChocolateyInstaller $outputFile
+        Edit-ChocolateyInstaller (Join-Path (Get-Item -Path ".\").FullName "tools")
     }
     else {
         Write-Log "No url in install script of $packageName found. We can continue."
