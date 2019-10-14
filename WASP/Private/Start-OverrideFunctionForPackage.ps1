@@ -19,8 +19,8 @@ function Start-OverrideFunctionForPackage {
         [string]
         $packToolInstallPath,
 
-        [switch]
-        $force
+        [bool]
+        $ForcedDownload
     )
 
     begin {
@@ -29,7 +29,7 @@ function Start-OverrideFunctionForPackage {
     }
 
     process {
-        if ($force) {
+        if ($ForcedDownload) {
             Invoke-Expression -Command $packToolInstallPath
         }
         else {

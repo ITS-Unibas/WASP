@@ -10,7 +10,7 @@ function Start-PackageDistribution() {
 
     [CmdletBinding()]
     param (
-        [switch]
+        [bool]
         $ForcedDownload
     )
 

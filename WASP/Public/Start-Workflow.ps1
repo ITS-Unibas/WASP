@@ -6,7 +6,7 @@ function Start-Workflow {
     #>
     [CmdletBinding()]
     param (
-        [switch] $force = $false
+        [switch] $ForcedDownload = $false
     )
 
     begin {
@@ -117,7 +117,7 @@ function Start-Workflow {
         Start distributing packages to choco servers and promote packages based on package issue position
         on assicuated atlassian jira kanban board
         #>
-        Start-PackageDistribution $force
+        Start-PackageDistribution -ForcedDownload $ForcedDownload
     }
 
     end {
