@@ -60,7 +60,7 @@ function Start-PackageDistribution() {
                     $pkgVersionNuspec = Get-NuspecXMLValue $nuspecFile "version"
                     $env:ChocolateyPackageName = $pkgNameNuspec
                     $env:ChocolateyPackageVersion = $pkgVersionNuspec
-                    Start-OverrideFunctionForPackage ( Join-Path $toolsPath "chocolateyInstall.ps1") $force
+                    Start-OverrideFunctionForPackage ( Join-Path $toolsPath "chocolateyInstall.ps1") $ForcedDownload
                     if ($LASTEXITCODE -eq 1) {
                         Write-Log "Override-Function terminated with an error. Exiting.." -Severity 3
                         return
