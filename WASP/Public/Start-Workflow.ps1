@@ -78,7 +78,6 @@ function Start-Workflow {
                 $automaticPath = Join-Path -Path $repository.FullName -ChildPath 'automatic'
                 $automaticPackages = @(Get-ChildItem $automaticPath | Where-Object { $_.PSIsContainer })
                 foreach ($package in $automaticPackages) {
-                    $string = "Looking at package: $package in " + $package.FullName
                     Write-Log $string -Severity 0
                     $nuspec = Get-ChildItem -Path $package.FullName -recurse | Where-Object { $_.Extension -like "*nuspec*" }
                     if(-Not $nuspec -or $nuspec.GetType().ToString() -eq "System.Object[]") {
@@ -93,7 +92,6 @@ function Start-Workflow {
             }
             else {
                 foreach ($package in $packages) {
-                    $string = "Looking at package: $package in " + $package.FullName
                     Write-Log $string -Severity 0
                     $nuspec = Get-ChildItem -Path $package.FullName -recurse | Where-Object { $_.Extension -like "*nuspec*" }
                     if(-Not $nuspec -or $nuspec.GetType().ToString() -eq "System.Object[]") {

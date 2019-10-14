@@ -18,6 +18,8 @@ function Start-PackageDistribution() {
     }
 
     process {
+        Write-Log "--- Starting package distribution ---"
+
         Switch-GitBranch $PackageGalleryPath $config.Application.GitBranchPROD
 
         $remoteBranches = Get-RemoteBranches $GitFolderName
@@ -136,6 +138,6 @@ function Start-PackageDistribution() {
         }
     }
     end {
-        #Set-Location $OldWorkingDir
+        Set-Location $OldWorkingDir
     }
 }
