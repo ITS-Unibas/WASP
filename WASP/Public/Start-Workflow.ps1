@@ -38,7 +38,7 @@ function Start-Workflow {
 
         # Update the added submodules in the package-inbox-automatic repository
         Write-Log ([string](git -C $PackagesInboxPath pull 2>&1))
-		Write-Log ([string](git -C $PackagesInboxPath submodule init 2>&1))
+        Write-Log ([string](git -C $PackagesInboxPath submodule init 2>&1))
         Write-Log ([string](git -C $PackagesInboxPath submodule update --remote --recursive 2>&1))
 
         # Commit and push changes to wishlist located in the path
@@ -78,9 +78,8 @@ function Start-Workflow {
                 $automaticPath = Join-Path -Path $repository.FullName -ChildPath 'automatic'
                 $automaticPackages = @(Get-ChildItem $automaticPath | Where-Object { $_.PSIsContainer })
                 foreach ($package in $automaticPackages) {
-                    Write-Log $string -Severity 0
                     $nuspec = Get-ChildItem -Path $package.FullName -recurse | Where-Object { $_.Extension -like "*nuspec*" }
-                    if(-Not $nuspec -or $nuspec.GetType().ToString() -eq "System.Object[]") {
+                    if (-Not $nuspec -or $nuspec.GetType().ToString() -eq "System.Object[]") {
                         continue
                     }
                     $version = (Get-NuspecXMLValue $nuspec.FullName "version")
@@ -92,9 +91,8 @@ function Start-Workflow {
             }
             else {
                 foreach ($package in $packages) {
-                    Write-Log $string -Severity 0
                     $nuspec = Get-ChildItem -Path $package.FullName -recurse | Where-Object { $_.Extension -like "*nuspec*" }
-                    if(-Not $nuspec -or $nuspec.GetType().ToString() -eq "System.Object[]") {
+                    if (-Not $nuspec -or $nuspec.GetType().ToString() -eq "System.Object[]") {
                         continue
                     }
                     $version = (Get-NuspecXMLValue $nuspec.FullName "version")
