@@ -1,7 +1,7 @@
 {
     "Application": {
         "BaseDirectory": "C:\\ProgramData\\Unibasel\\wasp",
-        "GitServiceUser": "schaefek",
+        "GitServiceUser": "d-its-wcs-de",
         "GitBaseUrl": "https://git.its.unibas.ch",
         "GitProject": "csswcs",
         "GitBranchDEV": "dev/",
@@ -12,9 +12,10 @@
         "PackagesInboxFiltered": "git.its.unibas.ch/scm/csswcs/packages-inbox-filtered.git",
         "PackageGallery": "git.its.unibas.ch/scm/csswcs/package-gallery.git",
         "PackagesWishlist" : "git.its.unibas.ch/scm/csswcs/packages-wishlist.git",
+        "WishlistSeperatorChar" : "@",
         "ChocoRepo": "github.com/chocolatey/choco.git",
         "JiraObserver": "git.its.unibas.ch/scm/sun/jira-observer.git",
-        "BitBucketAPIToken": "",
+        "BitBucketAPIToken": "NjExODAxOTgzMTA3OqQkz5YbYAF/O5hLsKigL7V1w7qe",
         "PreAdditionalScripts": [
             "InitialScript.ps1"
         ],
@@ -26,8 +27,7 @@
         "ChocoServerPROD": "https://its-wcs-choco1.its.unibas.ch/prod/chocolatey",
         "Reviewers": [
             "burmax00",
-            "schaefek",
-            "stoecklb"
+            "schaefek"
         ]
     },
     "Logger": {

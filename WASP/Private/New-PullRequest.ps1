@@ -38,7 +38,7 @@ function New-PullRequest {
     )
 
     begin {
-        $Config = Read-Config
+        $Config = Read-ConfigFile
         $Reviewers = $Config.Application.Reviewers
         $ReviewersJson = New-Object System.Collections.ArrayList
     }
@@ -60,14 +60,15 @@ function New-PullRequest {
 
         New-RemoteBranch -Repository $DestinationRepo -BranchName $DestinationBranch
         $DestUrl = ("{0}/rest/api/1.0/projects/{1}/repos/{2}/pull-requests" -f $Config.Application.GitBaseUrl, $Config.Application.GitProject, $DestinationRepo)
-        $SourceUrl = ("{0}/rest/api/1.0/projects/{1}/repos/{2}/commits?until=refs%2Fheads%2F$SourceBranch" -f $Config.Application.GitBaseUrl, $Config.Application.GitProject, $DestinationRepo)
+        $SourceUrl = ("{0}/rest/api/1.0/projects/{1}/repos/{2}/commits?until=refs%2Fheads%2F$SourceBranch" -f $Config.Application.GitBaseUrl, $Config.Application.GitProject, $SourceRepo)
         # Integrated GetLastCommitMessage directly in this Cmdlet, because this needed just in here
         try {
+            Write-Log "Getting last commit message for $SourceBranch from $SourceUrl"
             $GetRequest = Invoke-GetRequest $SourceUrl
-            $LastCommitMessage = $GetRequest.values[0].replace('Automated commit: Added ', '')
+            $LastCommitMessage = $GetRequest.values[0].message.replace('Automated commit: Added ', '')
         }
         catch {
-            Write-Log "We were not able to fetch the last commit message for repository $SourceRepository and branch $SourceBranch" -Severity 3
+            Write-Log "We were not able to fetch the last commit message for repository $SourceRepo and branch $SourceBranch. It failed with the following error`n$($_.Exception.Message)" -Severity 3
             # Should exit function here. Not sure if correct
             # https://social.technet.microsoft.com/Forums/windowsserver/en-US/7d9f4a00-ff20-4517-8e87-8b93218d93a7/powershell-return-function-after-an-error-question?forum=winserverpowershell
             continue
@@ -90,7 +91,7 @@ function New-PullRequest {
             "toRef"               = @{
                 "id"         = "refs/heads/$DestinationBranch"
                 "repository" = @{
-                    "slug"    = $DestinationRepository
+                    "slug"    = $DestinationRepo
                     "project" = @{
                         "key" = $Config.Application.GitProject
                     }
@@ -100,11 +101,10 @@ function New-PullRequest {
         } | ConvertTo-Json -Depth 3
 
         try {
-            Invoke-PullRequest -Url $DestUrl -Body $json
+            $null = Invoke-PostRequest -Url $DestUrl -Body $json
         }
         catch {
-            Write-Log "The error '$_.Exception.Message' occurred while creating a pull request for $DestinationRepo from $SourceRepo `
-                (Sourcebranch: $SourceBranch, Destinationbranch: $DestinationBranch)" -Severity 3
+            Write-Log "The error '$_.Exception.Message' occurred while creating a pull request for $DestinationRepo from $SourceRepo (Sourcebranch: $SourceBranch, Destinationbranch: $DestinationBranch)" -Severity 3
         }
     }
 

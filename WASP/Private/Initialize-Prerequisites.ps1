@@ -23,7 +23,10 @@ function Initialize-Prerequisites {
         }
 
         $ChocoHelperPath = Join-Path -Path $ChocoPath -ChildPath "helpers"
-        Get-ChildItem -Path $ChocoHelperPath -Filter "*.psm1" | ForEach-Object { Import-Module $_.FullName }
+        $ChocoFunctionsPath = Join-Path -Path $ChocoHelperPath -ChildPath "functions"
+        Get-ChildItem $ChocoFunctionsPath -Filter "Install*" | Foreach-Object { Rename-Item $_.FullName "$($_.FullName).old" }
+        Import-Module "$ChocoHelperPath\chocolateyInstaller.psm1" -Force
+        Get-ChildItem $ChocoFunctionsPath -Filter "Install*" | Foreach-Object { Rename-Item $_.FullName "$($_.FullName.replace('.old', ''))" }
         [Net.ServicePointManager]::SecurityProtocol = 'tls12, tls11, tls'
     }
 

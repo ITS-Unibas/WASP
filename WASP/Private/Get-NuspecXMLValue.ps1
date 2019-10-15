@@ -45,7 +45,7 @@ function Get-NuspecXMLValue {
             return $Value.Trim()
         }
         catch {
-            Write-Log "The tag was not found in the specified file. Please provide a valid nuspec file." -Severity 3
+            Write-Log "The tag was not found in the specified file: $NuspecFile. Please provide a valid nuspec file." -Severity 3
         }
     }
 

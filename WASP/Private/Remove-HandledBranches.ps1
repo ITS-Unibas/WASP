@@ -15,8 +15,8 @@ function Remove-HandledBranches {
 
         $GitRepo = $config.Application.PackagesInboxFiltered
         $GitFile = $GitRepo.Substring($GitRepo.LastIndexOf("/") + 1, $GitRepo.Length - $GitRepo.LastIndexOf("/") - 1)
-        $GitFolderName = $GitFile.Replace(".git", "")
-        $PackagesInboxFilteredPath = Join-Path -Path $config.Application.BaseDirectory -ChildPath $GitFolderName
+        $PackagesInboxFilteredRepoName = $GitFile.Replace(".git", "")
+        $PackagesInboxFilteredPath = Join-Path -Path $config.Application.BaseDirectory -ChildPath $PackagesInboxFilteredRepoName
 
         $GitRepo = $config.Application.PackageGallery
         $GitFile = $GitRepo.Substring($GitRepo.LastIndexOf("/") + 1, $GitRepo.Length - $GitRepo.LastIndexOf("/") - 1)
@@ -28,20 +28,20 @@ function Remove-HandledBranches {
         # Get all branches which have open pull requests in windows software repo from packages incoming filtered
         $pullrequestsOpen = Get-RemoteBranchesByStatus $PackageGalleryRepositoryName 'Open'
         # Get all branches in packages incoming filtered repository
-        $PackagesInboxFilteredBranches = Get-RemoteBranches $GitFolderName
+        $PackagesInboxFilteredBranches = Get-RemoteBranches $PackagesInboxFilteredRepoName
         # Checkout master branch on packages-inbox-filtered to avoid beeing on a branch to delete
-        Write-Log ([string](git -C $PackagesInboxFilteredPath checkout 'master' 2>&1))
+        Switch-GitBranch $PackagesInboxFilteredPath 'master'
         ForEach ($remoteBranch in $PackagesInboxFilteredBranches) {
-            if ((-Not ($remoteBranch -eq 'master')) -and ((-Not $pullrequestsOpen.contains($remoteBranch)) -or $pullrequestsOpen.length -eq 0)) {
-                Write-Log "PR for $remoteBranch is not open anymore. Deleting branch from our filtered packages, because it was merged or declined..."
+            if ((-Not ($remoteBranch -eq 'master')) -and (($pullrequestsOpen.Count -eq 0 -or -Not $pullrequestsOpen.contains($remoteBranch)))) {
+                Write-Log "The pull request for $remoteBranch is was either declined or merged and can therefore be deleted."
                 # Remove remote package branch in filtered repository
-                Remove-RemoteBranch $PackagesFilteredRepoName $remoteBranch
-                # Delete the local branch
-                Write-Log ([string](git -C $PackagesInboxFilteredPath branch -D $remoteBranch 2>&1))
+                Remove-RemoteBranch $PackagesInboxFilteredRepoName $remoteBranch
             }
         }
+        # Remove local branches from inbox filtered where the corresponding remote branch does not exist anymore
+        Remove-LocalBranches $config.Application.PackagesInboxFiltered
 
-        # Remove local branches from package-gallery where the remote branch does not exist anymore
+        # Remove local branches from package-gallery where the corresponding remote branch does not exist anymore
         Remove-LocalBranches $config.Application.PackageGallery
     }
 }

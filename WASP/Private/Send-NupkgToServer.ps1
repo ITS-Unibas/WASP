@@ -24,15 +24,17 @@ function Send-NupkgToServer {
     )
 
     process {
+        $nupkg = (Get-ChildItem -Path $nuspecFolder | Where-Object { $_.FullName -match ".nupkg" }).FullName
+        $nuspecFile = (Get-ChildItem -Path $nuspecFolder | Where-Object { $_.FullName -match ".nuspec" }).FullName
+        # Test-Path on a null valued path will always result in an error, so just test if there was found anything
+        if (-Not $nuspecFile -or -Not $nupkg) {
+            Write-Log ("No nupkg to push, skipping package " + $nupkg)
+            return
+        }
         try {
-            $nupkg = (Get-ChildItem -Path $nuspecFolder | Where-Object { $_.FullName -match ".nupkg" }).FullName
-            if (-Not (Test-Path ($nupkg)) -or -Not ($nupkg -match ".nupkg")) {
-                Write-Log ("No nupkg to push, skipping package " + $_.FullName)
-                return
-            }
             # Try to push the package to the dev choco server
             Invoke-Expression -Command ("choco push " + $nupkg + " -s " + $url + " -f --api-key=chocolateyrocks")
-            Write-Log ("Pushed package " + $_.FullName + " successfully to server.") -Severity 1
+            Write-Log ("Pushed package " + $nupkg + " successfully to server.") -Severity 1
         }
         catch {
             Write-Log ("Package " + $nupkg + " could not be pushed.") -Severity 3

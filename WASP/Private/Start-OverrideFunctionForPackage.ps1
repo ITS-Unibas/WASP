@@ -17,23 +17,30 @@ function Start-OverrideFunctionForPackage {
     [CmdletBinding()]
     param (
         [string]
-        $packToolInstallPath
+        $packToolInstallPath,
+
+        [bool]
+        $ForcedDownload
     )
 
     begin {
-        $original = '.\chocolateyInstall_original.ps1'
+        $toolPath = Get-Item $packToolInstallPath | Select-Object -ExpandProperty DirectoryName
+        $original = Join-Path -Path $toolPath -ChildPath 'chocolateyInstall_old.ps1'
     }
 
     process {
-        # TODO: Check if a location switch is needed when executing chocos 'install' functions
-        # Set-Location $packToolInstallPath
-        if (-Not (Test-Path $original)) {
+        if ($ForcedDownload) {
             Invoke-Expression -Command $packToolInstallPath
         }
         else {
-            # Script has already been executed
-            Write-Log "Scripts were already overridden, no need to do it again."
-            return
+            if (-Not (Test-Path $original)) {
+                Invoke-Expression -Command $packToolInstallPath
+            }
+            else {
+                # Script has already been executed
+                Write-Log "Scripts were already overridden, no need to do it again."
+                return
+            }
         }
     }
 

@@ -11,13 +11,20 @@ function Update-PackageInboxFiltered {
     param (
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
-        [array]
+        [System.Collections.ArrayList]
         $NewPackages
     )
 
     begin {
         $Config = Read-ConfigFile
-        $PackagesInboxRepoPath = Join-Path -Path $Config.Application.BaseDirectory -ChildPath $Config.Application.PackagesIncomingFiltered
+        $GitRepo = $Config.Application.PackagesInboxFiltered
+        $GitFile = $GitRepo.Substring($GitRepo.LastIndexOf("/") + 1, $GitRepo.Length - $GitRepo.LastIndexOf("/") - 1)
+        $GitRepoInbox = $GitFile.Replace(".git", "")
+        $PackagesInboxRepoPath = Join-Path -Path $Config.Application.BaseDirectory -ChildPath $GitRepoInbox
+
+        $GitRepo = $Config.Application.PackageGallery
+        $GitFile = $GitRepo.Substring($GitRepo.LastIndexOf("/") + 1, $GitRepo.Length - $GitRepo.LastIndexOf("/") - 1)
+        $GitRepoPackageGallery = $GitFile.Replace(".git", "")
     }
     process {
 
@@ -31,26 +38,26 @@ function Update-PackageInboxFiltered {
             $PackageName = $Package.name
             $PackageVersion = $Package.version
 
-            Write-Log "Starting update routin for package $Package"
-            $DevBranch = "$($Config.GitBranchDEV)$($PackageName)@$PackageVersion"
-
-            $RemoteBranches = Get-RemoteBranches -repo $Config.Application.WindowsSoftware
+            Write-Log "Starting update routine for package $PackageName"
+            $DevBranch = "$($Config.Application.GitBranchDEV)$($PackageName)@$PackageVersion"
+            $RemoteBranches = Get-RemoteBranches -repo $GitRepoPackageGallery
 
             if (-Not $RemoteBranches.Contains($DevBranch)) {
                 Write-Log ([string](git -C $PackagesInboxRepoPath add $PackagePath 2>&1))
                 # Create new branch
-                Write-Log ([string](git -C $PackagesInboxRepoPath checkout -b $DevBranch 2>&1))
+                New-LocalBranch $PackagesInboxRepoPath $DevBranch
 
                 if ((Get-CurrentBranchName -Path $PackagesInboxRepoPath) -ne $DevBranch) {
                     Write-Log -Message "The dev branch for this package could not be created" -Severity 3
+                    continue
                 }
 
                 Write-Log ([string](git -C $PackagesInboxRepoPath commit -m "Automated commit: Added $DevBranch" 2>&1))
-                Write-Log ([string](git -C $PackagesInboxRepoPath push -u origin $info 2>&1))
+                Write-Log ([string](git -C $PackagesInboxRepoPath push -u origin $DevBranch 2>&1))
                 # Is this necessary?
                 Write-Log ([string](git -C $PackagesInboxRepoPath checkout master 2>&1))
 
-                New-PullRequest -SourceRepo $Config.Application.PackagesIncomingFiltered -SourceBranch $DevBranch -DestinationRepo $Config.Application.WindowsSoftware -DestinationBranch $DevBranch
+                New-PullRequest -SourceRepo $GitRepoInbox -SourceBranch $DevBranch -DestinationRepo $GitRepoPackageGallery -DestinationBranch $DevBranch
 
             }
         }

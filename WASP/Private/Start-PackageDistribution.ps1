@@ -7,6 +7,13 @@ function Start-PackageDistribution() {
         This function iteares over all development branches and builds a new package or a package which was build previously, but modified, and pushes it to the development server.
         If a package has been approved for testing or production, the packages on the appropriate git branches will be pushed to their corresponding choco servers.
     #>
+
+    [CmdletBinding()]
+    param (
+        [bool]
+        $ForcedDownload
+    )
+
     begin {
         $config = Read-ConfigFile
 
@@ -18,8 +25,9 @@ function Start-PackageDistribution() {
     }
 
     process {
-        Set-Location $PackageGalleryPath
-        Switch-GitBranch $config.Application.GitBranchPROD
+        Write-Log "--- Starting package distribution ---"
+
+        Switch-GitBranch $PackageGalleryPath $config.Application.GitBranchPROD
 
         $remoteBranches = Get-RemoteBranches $GitFolderName
 
@@ -27,12 +35,11 @@ function Start-PackageDistribution() {
         foreach ($branch in $remoteBranches) {
             if (-Not($branch -eq $config.Application.GitBranchPROD) -and -Not ($branch -eq $config.Application.GitBranchTEST)) {
                 # Check for new packages on remote branches, that contain 'dev/' in their names
-                Set-Location $PackageGalleryPath
-                Switch-GitBranch $branch
+                Switch-GitBranch $PackageGalleryPath $branch
 
                 $packageName, $packageVersion = $branch.split($nameAndVersionSeparator)
                 $packageName = $packageName -Replace $config.Application.GitBranchDEV, ''
-                $packageRootPath = (Join-Path $packageName $packageVersion)
+                $packageRootPath = Join-Path $PackageGalleryPath (Join-Path $packageName $packageVersion)
                 if (-Not (Test-Path $packageRootPath)) {
                     Write-Log "PR for $packageName was not yet merged. Continuing .." -Severity 1
                     continue
@@ -47,14 +54,19 @@ function Start-PackageDistribution() {
 
                 # Call Override Function with the wanted package to override
                 try {
-                    Start-OverrideFunctionForPackage ( Join-Path $toolsPath "chocolateyInstall.ps1")
+                    Set-Location "$PackageGalleryPath\$packageName\$packageVersion"
+                    $nuspecFile = (Get-ChildItem -Path $packageRootPath -Recurse | Where-Object { $_.FullName -match ".nuspec" }).FullName
+                    $pkgNameNuspec = Get-NuspecXMLValue $nuspecFile "id"
+                    $pkgVersionNuspec = Get-NuspecXMLValue $nuspecFile "version"
+                    $env:ChocolateyPackageName = $pkgNameNuspec
+                    $env:ChocolateyPackageVersion = $pkgVersionNuspec
+                    Start-OverrideFunctionForPackage ( Join-Path $toolsPath "chocolateyInstall.ps1") $ForcedDownload
                     if ($LASTEXITCODE -eq 1) {
                         Write-Log "Override-Function terminated with an error. Exiting.." -Severity 3
-                        exit 1
+                        return
                     }
                     # Check if a nupkg already exists
-                    $nupkg = (Get-ChildItem -Path $packageRootPath | Where-Object { $_.FullName -match ".nupkg" }).FullName
-                    $nuspecFile = (Get-ChildItem -Path $packageRootPath | Where-Object { $_.FullName -match ".nuspec" }).FullName
+                    $nupkg = (Get-ChildItem -Path $packageRootPath -Recurse | Where-Object { $_.FullName -match ".nupkg" }).FullName
 
                     if (-Not $nuspecFile) {
                         Write-Log "No nuspec file in package $packageName $packageVersion. Continuing with next package" -Severity 2
@@ -77,7 +89,11 @@ function Start-PackageDistribution() {
                             # There were changes in the package, so iterate the version of the nuspec.
                             Set-NewReleaseVersion $false $nuspecFile
                             # Because the later new build package has a different version and therefore a new nupkg will be created we have to remove the old not anymore used nupkg
-                            Remove-Item -Path ".\*.nupkg"
+                            Remove-Item -Path "$packageRootPath\*.nupkg"
+                        }
+                        else {
+                            Write-Log "No changes detected for package $packageName."
+                            continue
                         }
                     }
                     else {
@@ -86,16 +102,21 @@ function Start-PackageDistribution() {
                     }
                     #Build the package
                     Invoke-Expression -Command ("choco pack $nuspecFile -s $packageRootPath")
+                    Send-NupkgToServer $packageRootPath $config.Application.ChocoServerDEV
+                    Set-Location $OldWorkingDir
+                    # Remove all uncommited files, so no left over files will be moved to prod branch. Or else it will be pushed from choco to all instances
                     Write-Log ([string] (git -C $packageRootPath add . 2>&1))
                     Write-Log ([string] (git -C $packageRootPath commit -m "Created override for $packageName $packageVersion" 2>&1))
                     Write-Log ([string] (git -C $packageRootPath push 2>&1))
+                    Remove-BuildFiles $packageRootPath
 
-                    Send-NupkgToServer $packageRootPath $config.Application.ChocoServerDEV
                 }
                 catch [Exception] {
-                    $ChocolateyPackageName = Get-NuspecXMLValue $packageRootPath "id"
+                    $ChocolateyPackageName = Get-NuspecXMLValue $nuspecFile "id"
                     Write-Log ("Package " + $ChocolateyPackageName + " override process crashed. Skipping it.") -Severity 3
                     Write-Log ($_.Exception | Format-List -force | Out-String) -Severity 3
+                    Write-Log ([string] (git -C $packageRootPath checkout -- * 2>&1))
+                    Write-Log ([string] (git -C $packageRootPath clean -f 2>&1))
                 }
             }
             elseif (($branch -eq $config.Application.GitBranchPROD) -or ($branch -eq $config.Application.GitBranchTEST)) {
@@ -106,8 +127,8 @@ function Start-PackageDistribution() {
                 elseif ($branch -eq $config.Application.GitBranchTEST) {
                     $chocolateyDestinationServer = $config.Application.ChocoServerTEST
                 }
-                Set-Location $PackageGalleryPath
-                Switch-GitBranch $branch
+
+                Switch-GitBranch $PackageGalleryPath $branch
 
                 $packagesList = Get-ChildItem $PackageGalleryPath -Directory
 
@@ -123,7 +144,6 @@ function Start-PackageDistribution() {
             }
         }
     }
-    
     end {
         Set-Location $OldWorkingDir
     }

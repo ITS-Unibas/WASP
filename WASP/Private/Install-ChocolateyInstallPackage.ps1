@@ -137,26 +137,24 @@ function Install-ChocolateyInstallPackage() {
             }
         }
         else {
-            # We found a 32bit url which means we need to search for a 64bit checksum
+            # We found a 32bit url which means we need to search for a 32bit checksum
             $searchArgs = @{
                 searchFor32BitChecksum = $True
                 searchFor64BitChecksum = $False
             }
             $checksum = Get-ChecksumFromVerificationFile @searchArgs
             if (-Not $checksum) {
-                # In case we couldn't find a 64bit checksum we try to find a 32bit one
                 Write-Log "$($packageName): Could not find a checksum for 32 bit" -Severity 3
                 exit 1
             }
         }
     }
 
-    $downloadFilePath = Join-Path (Get-Item -Path ".\").FullName "$($packageName)Install.$fileType"
-    $checksumType = Get-ChecksumTypeFromVerificationFile
+    $downloadFilePath = Join-Path (Join-Path (Get-Item -Path ".\").FullName "tools") "$($packageName)Install.$fileType"
+    $checksumType = Get-ChecksumTypeFromVerificationFile -Checksums $checksum, $checksum64
     $checksumType64 = $checksumType
-    $filePath = $null
     if ($url -or $url64bit) {
-        $filePath = Get-ChocolateyWebFile -PackageName $packageName `
+        Get-ChocolateyWebFile -PackageName $packageName `
             -FileFullPath $downloadFilePath `
             -Url $url `
             -Url64bit $url64bit `
@@ -167,12 +165,6 @@ function Install-ChocolateyInstallPackage() {
             -Options $options `
             -GetOriginalFileName
     }
-    if ($filePath) {
-        $outputFile = Split-Path $filePath -leaf
-    }
-    else {
-        $outputFile = Split-Path $downloadFilePath -leaf
-    }
-    Edit-ChocolateyInstaller $outputFile
+    Edit-ChocolateyInstaller (Join-Path (Get-Item -Path ".\").FullName "tools")
     exit 0
 }

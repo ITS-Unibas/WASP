@@ -108,20 +108,24 @@ function Install-ChocolateyZipPackage() {
         }
     }
     else {
-        $checksumType = Get-ChecksumTypeFromVerificationFile
+        $checksumType = Get-ChecksumTypeFromVerificationFile -Checksums $checksum, $checksum64
         $checksumType64 = $checksumType
     }
 
     try {
-        $filePath = Get-ChocolateyWebFile $packageName $downloadFilePath $url $url64bit -checkSum $checksum -checksumType $checksumType -checkSum64 $checksum64 -checksumType64 $checksumType64 -options $options -getOriginalFileName
-
-        # Set Choco env variable needed by the Unzipper
-        # TODO Remove hardcoded itunes path with generic package location
-        $env:ChocolateyPackageFolder = "$env:ChocoCommunityRepoPath\automatic\$packageName\tools"
-        $unzipLocation = $env:ChocolateyPackageFolder
+        $filePath = Get-ChocolateyWebFile -PackageName $packageName `
+            -FileFullPath $downloadFilePath `
+            -Url $url `
+            -Url64bit $url64bit `
+            -Checksum $checksum `
+            -ChecksumType $checksumType `
+            -Checksum64 $checksum64 `
+            -ChecksumType64 $checksumType64 `
+            -Options $options `
+            -GetOriginalFileName
+        $unzipLocation = (Join-Path (Get-Item -Path ".\").FullName "tools")
         Get-ChocolateyUnzip "$filePath" $unzipLocation $specificFolder $packageName
-        $outputFile = Split-Path $filePath -leaf
-        Edit-ChocolateyInstaller $outputFile $unzipLocation
+        Edit-ChocolateyInstaller (Join-Path (Get-Item -Path ".\").FullName "tools") $unzipLocation
     }
     catch {
         Write-Log ($($packageName) + ":" + " " + $_.Exception.toString()) -Severity 3

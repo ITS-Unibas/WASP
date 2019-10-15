@@ -31,12 +31,20 @@ function Set-NewReleaseVersion() {
 
     begin {
         $version = Get-NuspecXMLValue $nuspecPath "version"
-        $versionOld = $version
-        $versionTag = "<version>" + $version + "</version>"
-        $hasFourSegments = [regex]::Match($versionTag, "<version>(\w|\d)+\.(\w|\d)+\.(\w|\d)+\.(\w|\d)+<\/version>").Success
+
     }
 
     process {
+        # remove characters from a version
+        if (-Not ($version -match "^(\d+\.)?(\d+\.)?(\d+\.)?(\*|\d+)$")) {
+            $version = Format-VersionString -VersionString $version
+        }
+
+        $versionOld = $version
+
+        $versionTag = "<version>" + $version + "</version>"
+        $hasFourSegments = [regex]::Match($versionTag, "<version>(\w|\d)+\.(\w|\d)+\.(\w|\d)+\.(\w|\d)+<\/version>").Success
+
         if ($hasFourSegments -eq $true -or (($hasFourSegments -eq $false) -and ($firstReleaseVersion -eq $false))) {
             $versionSplit = $version.split(".")
             $versionSplit = $versionSplit[0..($versionSplit.Length - 2)]
@@ -45,6 +53,7 @@ function Set-NewReleaseVersion() {
 
         if ($firstReleaseVersion -eq $true) {
             # This is the first time this package will be build so we append the release version 000
+            # TODO: If there is already .0000 set, but process failed, the 0000 will be chained with each run. for example 13.0.0.0000.0000.0000
             $set = (Get-Content $nuspecPath) -replace "<version>.*</version>", ("<version>" + $version + ".000" + "</version>") | Set-Content $nuspecPath
         }
         else {

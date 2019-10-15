@@ -10,7 +10,12 @@ function Get-ChecksumTypeFromVerificationFile() {
     .OUTPUTS
         The checksumType will be returned as a string.
     #>
-    $verificationPath = "..\legal\VERIFICATION.txt"
+    param(
+        [string[]]
+        $Checksums
+    )
+
+    $verificationPath = Get-VerificationFilePath
     # Now search for a given url with one of the follwing patterns:
     # "x32: http...", "x86: http...", "32-bit: <http...>", "64-bit: <http...>"
     $regexChecksumType = '(checksum\stype:[\s]*[\w]+)'
@@ -19,6 +24,16 @@ function Get-ChecksumTypeFromVerificationFile() {
         if ($checksumTypeMatches) {
             $checksumType = $checksumTypeMatches -Replace 'checksum\stype:[\s]*', ''
             return $checksumType
+        } else {
+            foreach($Checksum in $Checksums) {
+                if ($Checksum.Length -eq 64) {
+                    return "SHA256"
+                } elseif($Checksum.Length -eq 128) {
+                    return "SHA512"
+                } elseif ($Checksum.Length -eq 40) {
+                    return "SHA1"
+                }
+            }
         }
     }
     return 'md5'
