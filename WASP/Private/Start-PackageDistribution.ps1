@@ -133,13 +133,12 @@ function Start-PackageDistribution() {
                 Switch-GitBranch $PackageGalleryPath $branch
 
                 $packagesList = Get-ChildItem $PackageGalleryPath -Directory
-                $remotePackageList = Get-RemoteFolders $GitFolderName $branch
 
                 foreach ($package in $packagesList) {
-                    if ($remotePackageList.contains($package)) {
-                        $packagePath = Join-Path $PackageGalleryPath $package
-                        $versionsList = Get-ChildItem $packagePath -Directory
-                        foreach ($version in $versionsList) {
+                    $packagePath = Join-Path $PackageGalleryPath $package
+                    $versionsList = Get-ChildItem $packagePath -Directory
+                    foreach ($version in $versionsList) {
+                        if (Test-RemoteFolder $GitFolderName $package $version $branch) {
                             $packageRootPath = Join-Path $packagePath $version
                             # TODO: Only send nupkg to server when it does not exist there yet
                             Send-NupkgToServer $packageRootPath $chocolateyDestinationServer
