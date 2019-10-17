@@ -55,7 +55,7 @@ function Write-Log {
             }
             1 {
                 $EntryType = "Information"
-                $ForegroundColor = "Blue"
+                $ForegroundColor = "Magenta"
             }
             2 {
                 $EntryType = "Warning"

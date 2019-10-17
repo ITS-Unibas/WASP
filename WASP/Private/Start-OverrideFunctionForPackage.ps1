@@ -45,6 +45,7 @@ function Start-OverrideFunctionForPackage {
                     return
                 }
                 else {
+                    Write-Log "No binaries were found, start override."
                     Invoke-Expression -Command $packToolInstallPath
                 }
             }
