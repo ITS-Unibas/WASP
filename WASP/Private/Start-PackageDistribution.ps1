@@ -31,6 +31,8 @@ function Start-PackageDistribution() {
 
         $remoteBranches = Get-RemoteBranches $GitFolderName
 
+        Write-Log "The following branches were found: $remoteBranches"
+
         $nameAndVersionSeparator = '@'
         foreach ($branch in $remoteBranches) {
             if (-Not($branch -eq $config.Application.GitBranchPROD) -and -Not ($branch -eq $config.Application.GitBranchTEST)) {
