@@ -48,6 +48,10 @@ function Write-Log {
 
     } process {
 
+        if ($Message -eq "") {
+            return
+        }
+
         switch ($Severity) {
             0 {
                 $EntryType = "Debug"
