@@ -38,7 +38,7 @@ function Get-RemoteFolders {
         try {
             $r = Invoke-GetRequest $url
             $JSONbranches = $r.values
-            $JSONbranches | ForEach-Object { $null = $folders.Add($_.displayID) }
+            $JSONbranches | ForEach-Object { $null = $folders.Add($_.path.components[0]) }
             # Check if file type is DIRECTORY
 
             <# Example output
@@ -91,6 +91,9 @@ function Get-RemoteFolders {
         catch {
             Write-Log "Get request failed for $url" -Severity 3
         }
+
+        Write-Log "Found remote folders: $folders"
+
         return $folders
     }
 
