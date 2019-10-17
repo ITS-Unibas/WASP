@@ -31,7 +31,7 @@ function Start-PackageDistribution() {
 
         $remoteBranches = Get-RemoteBranches $GitFolderName
 
-        Write-Log "The following branches were found: $remoteBranches"
+        Write-Log "The following remote branches were found: $remoteBranches"
 
         $nameAndVersionSeparator = '@'
         foreach ($branch in $remoteBranches) {
@@ -133,14 +133,17 @@ function Start-PackageDistribution() {
                 Switch-GitBranch $PackageGalleryPath $branch
 
                 $packagesList = Get-ChildItem $PackageGalleryPath -Directory
+                $remotePackageList = Get-RemoteFolders $GitFolderName $branch
 
                 foreach ($package in $packagesList) {
-                    $packagePath = Join-Path $PackageGalleryPath $package
-                    $versionsList = Get-ChildItem $packagePath -Directory
-                    foreach ($version in $versionsList) {
-                        $packageRootPath = Join-Path $packagePath $version
-                        # TODO: Only send nupkg to server when it does not exist there yet
-                        Send-NupkgToServer $packageRootPath $chocolateyDestinationServer
+                    if ($remotePackageList.contains($package)) {
+                        $packagePath = Join-Path $PackageGalleryPath $package
+                        $versionsList = Get-ChildItem $packagePath -Directory
+                        foreach ($version in $versionsList) {
+                            $packageRootPath = Join-Path $packagePath $version
+                            # TODO: Only send nupkg to server when it does not exist there yet
+                            Send-NupkgToServer $packageRootPath $chocolateyDestinationServer
+                        }
                     }
                 }
             }
