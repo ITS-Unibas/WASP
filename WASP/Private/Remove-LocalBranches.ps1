@@ -31,9 +31,11 @@ function Remove-LocalBranches {
         $localBranches = git -C $RepositoryPath branch
 
         ForEach ($local in $localBranches) {
-            if (-Not ($remoteBranches.Contains($local.Trim()))) {
+            $localAsterixRemoved = $local -replace "\*", ""
+            $localAsterixRemoved = $localAsterixRemoved.Trim()
+            if (-Not ($remoteBranches.Contains($localAsterixRemoved))) {
                 # local branch not anymore a remote branch, so it can be deleted locally
-                Write-Log ([string] (git -C $RepositoryPath branch -D $local.Trim() 2>&1))
+                Write-Log ([string] (git -C $RepositoryPath branch -D $localAsterixRemoved 2>&1))
             }
         }
     }
