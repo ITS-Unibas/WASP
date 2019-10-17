@@ -38,8 +38,15 @@ function Start-OverrideFunctionForPackage {
             }
             else {
                 # Script has already been executed
-                Write-Log "Scripts were already overridden, no need to do it again."
-                return
+                # Check if binary files exist, invoke expression to download otherwise
+                $extendedToolsPath = Join-Path $packToolInstallPath '*'
+                if ((Test-Path -Path $extendedToolsPath -Filter *.exe) -or (Test-Path -Path $extendedToolsPath -Filter *.msi) -or (Test-Path -Path $extendedToolsPath -Filter *.zip)) {
+                    Write-Log "Scripts were already overridden, no need to do it again."
+                    return
+                }
+                else {
+                    Invoke-Expression -Command $packToolInstallPath
+                }
             }
         }
     }
