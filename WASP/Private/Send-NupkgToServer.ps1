@@ -28,7 +28,7 @@ function Send-NupkgToServer {
         $nuspecFile = (Get-ChildItem -Path $nuspecFolder | Where-Object { $_.FullName -match ".nuspec" }).FullName
         # Test-Path on a null valued path will always result in an error, so just test if there was found anything
         if (-Not $nuspecFile -or -Not $nupkg) {
-            Write-Log ("No nupkg to push, skipping package " + $nupkg)
+            Write-Log ("No nupkg or nuspec found in " + $nuspecFolder)
             return
         }
         try {

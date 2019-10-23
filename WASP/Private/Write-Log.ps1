@@ -48,6 +48,10 @@ function Write-Log {
 
     } process {
 
+        if ($Message -eq "") {
+            return
+        }
+
         switch ($Severity) {
             0 {
                 $EntryType = "Debug"
@@ -55,7 +59,7 @@ function Write-Log {
             }
             1 {
                 $EntryType = "Information"
-                $ForegroundColor = "Blue"
+                $ForegroundColor = "Magenta"
             }
             2 {
                 $EntryType = "Warning"

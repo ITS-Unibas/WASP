@@ -31,6 +31,8 @@ function Start-PackageDistribution() {
 
         $remoteBranches = Get-RemoteBranches $GitFolderName
 
+        Write-Log "The following remote branches were found: $remoteBranches"
+
         $nameAndVersionSeparator = '@'
         foreach ($branch in $remoteBranches) {
             if (-Not($branch -eq $config.Application.GitBranchPROD) -and -Not ($branch -eq $config.Application.GitBranchTEST)) {
@@ -115,8 +117,8 @@ function Start-PackageDistribution() {
                     $ChocolateyPackageName = Get-NuspecXMLValue $nuspecFile "id"
                     Write-Log ("Package " + $ChocolateyPackageName + " override process crashed. Skipping it.") -Severity 3
                     Write-Log ($_.Exception | Format-List -force | Out-String) -Severity 3
-                    Write-Log ([string] (git -C $packageRootPath checkout -- * 2>&1))
-                    Write-Log ([string] (git -C $packageRootPath clean -f 2>&1))
+                    git -C $packageRootPath checkout -- *
+                    git -C $packageRootPath clean -f
                 }
             }
             elseif (($branch -eq $config.Application.GitBranchPROD) -or ($branch -eq $config.Application.GitBranchTEST)) {
@@ -136,9 +138,11 @@ function Start-PackageDistribution() {
                     $packagePath = Join-Path $PackageGalleryPath $package
                     $versionsList = Get-ChildItem $packagePath -Directory
                     foreach ($version in $versionsList) {
-                        $packageRootPath = Join-Path $packagePath $version
-                        # TODO: Only send nupkg to server when it does not exist there yet
-                        Send-NupkgToServer $packageRootPath $chocolateyDestinationServer
+                        if (Test-RemoteFolder $GitFolderName $package $version $branch) {
+                            $packageRootPath = Join-Path $packagePath $version
+                            # TODO: Only send nupkg to server when it does not exist there yet
+                            Send-NupkgToServer $packageRootPath $chocolateyDestinationServer
+                        }
                     }
                 }
             }
