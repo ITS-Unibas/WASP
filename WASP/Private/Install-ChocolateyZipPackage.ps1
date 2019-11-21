@@ -38,14 +38,12 @@ function Install-ChocolateyZipPackage() {
     $fileType = 'zip'
     $downloadFilePath = Join-Path (Get-Item -Path ".\").FullName "$($packageName)Install.$fileType"
 
-    $urlWasSetToFile = $False
 
     if ($url -eq '' -or $url -eq $null) {
         if ($file -and (Test-Path $file)) {
             # first check whether we already have our zip file
             Write-Log "$($packageName): The zip32 package is already present and no download is needed"
             $url = $file
-            $urlWasSetToFile = $True
         }
         else {
             # we do not have the file, so we need to get the download url from
@@ -70,7 +68,6 @@ function Install-ChocolateyZipPackage() {
             # first check whether we already have our zip file
             Write-Log "$($packageName): The zip64 package is already present and no download is needed"
             $url64bit = $file64
-            $urlWasSetToFile = $True
         }
         else {
             # we do not have the file, so we need to get the download url from
@@ -90,11 +87,11 @@ function Install-ChocolateyZipPackage() {
         }
     }
     # Check if any urls were found
-    if (-Not $urlWasSetToFile -And (($url -and $checksum) -or ($url64bit -and $checksum64))) {
+    if (($url -and $checksum) -or ($url64bit -and $checksum64)) {
         Write-Log "$($packageName): Urls found! $url $url64bit" -Severity 1
     }
     else {
-        Write-Log "$($packageName): No urls found! Exiting..." -Severity 3
+        Write-Log "$($packageName): Wether url nor checksum found! Exiting..." -Severity 3
         exit 1
     }
 
