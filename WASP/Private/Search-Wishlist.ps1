@@ -24,7 +24,12 @@ function Search-Wishlist {
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
         [string]
-        $packageVersion
+        $packageVersion,
+
+        [Parameter()]
+        [switch]
+        $manual
+
     )
 
     begin {
@@ -78,8 +83,14 @@ function Search-Wishlist {
                 }
 
                 Write-Log "Copying $communityPackName $packageVersion." -Severity 1
+
                 #Create directory structure if not existing
-                $destPath = $PackagesInbxFilteredPath + "\" + $packageName + "\" + $packageVersion
+                if ($manual) {
+                    $destPath = Join-Path $PackagesInbxFilteredPath $packageName
+                }
+                else {
+                    $destPath = Join-Path $PackagesInbxFilteredPath (Join-Path $packageName $packageVersion)
+                }
 
                 Copy-Item $package.FullName -Destination $destPath -Recurse -Force
 
