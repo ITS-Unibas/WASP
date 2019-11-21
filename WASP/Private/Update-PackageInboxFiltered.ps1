@@ -25,6 +25,15 @@ function Update-PackageInboxFiltered {
         $GitRepo = $Config.Application.PackageGallery
         $GitFile = $GitRepo.Substring($GitRepo.LastIndexOf("/") + 1, $GitRepo.Length - $GitRepo.LastIndexOf("/") - 1)
         $GitRepoPackageGallery = $GitFile.Replace(".git", "")
+
+        $GitRepo = $config.Application.PackagesWishlist
+        $GitFile = $GitRepo.Substring($GitRepo.LastIndexOf("/") + 1, $GitRepo.Length - $GitRepo.LastIndexOf("/") - 1)
+        $GitFolderName = $GitFile.Replace(".git", "")
+        $PackagesWishlistPath = Join-Path -Path $config.Application.BaseDirectory -ChildPath $GitFolderName
+        $wishlistPath = Join-Path -Path  $PackagesWishlistPath -ChildPath "wishlist.txt"
+
+        $NameAndVersionSeparator = $config.Application.WishlistSeperatorChar
+
     }
     process {
 
@@ -58,6 +67,24 @@ function Update-PackageInboxFiltered {
                 Write-Log ([string](git -C $PackagesInboxRepoPath checkout master 2>&1))
 
                 New-PullRequest -SourceRepo $GitRepoInbox -SourceBranch $DevBranch -DestinationRepo $GitRepoPackageGallery -DestinationBranch $DevBranch -ErrorAction Stop
+
+                $wishlist = Get-Content -Path $wishlistPath | Where-Object { $_ -notlike "#*" }
+
+                Foreach ($line in $wishlist) {
+                    $origLine = $line
+                    if ($line -match "@") {
+                        $packageNameWhishlist, $previousVersion = $line.split($NameAndVersionSeparator)
+                    }
+                    else {
+                        $previousVersion = "0.0.0.0"
+                        $packageNameWhishlist = $line.Trim()
+                    }
+
+                    if ($PackageName -like $packageNameWhishlist.Trim()) {
+                        $SetContentComm = (Get-Content -Path $wishlistPath) -replace $origLine, ($PackageName + $NameAndVersionSeparator + $PackageVersion) | Set-Content $wishlistPath
+                    }
+                }
+
 
             }
         }
