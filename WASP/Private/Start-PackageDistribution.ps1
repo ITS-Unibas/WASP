@@ -51,7 +51,7 @@ function Start-PackageDistribution() {
 
                 if (-Not (Test-Path $toolsPath)) {
                     Write-Log ("No tools folder, skipping package $packageName $packageVersion") -Severity 2
-                    return
+                    continue
                 }
 
                 # Call Override Function with the wanted package to override
@@ -65,7 +65,7 @@ function Start-PackageDistribution() {
                     Start-OverrideFunctionForPackage ( Join-Path $toolsPath "chocolateyInstall.ps1") $ForcedDownload
                     if ($LASTEXITCODE -eq 1) {
                         Write-Log "Override-Function terminated with an error. Exiting.." -Severity 3
-                        return
+                        continue
                     }
                     # Check if a nupkg already exists
                     $nupkg = (Get-ChildItem -Path $packageRootPath -Recurse | Where-Object { $_.FullName -match ".nupkg" }).FullName
