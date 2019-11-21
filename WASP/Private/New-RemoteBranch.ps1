@@ -39,10 +39,10 @@ function New-RemoteBranch {
         $json = @{"name" = $BranchName; "startPoint" = "refs/heads/{0}" -f $Config.Application.GitBranchPROD } | ConvertTo-Json
         try {
             $null = Invoke-PostRequest -Url $url -Body $json
+            Write-Log "Branch $BranchName was successfully created for $Repository"
         } catch {
-            Write-Log "We were not able to create a new branch named $BranchName for repository $Repository" -Severity 3
+            Write-Log "We were not able to create a new branch named $BranchName for repository $Repository`nThe following error occurred $($_.Exception.Message)" -Severity 3
         }
-        Write-Log "Branch $BranchName was successfully created for $Repository"
 
     }
 }

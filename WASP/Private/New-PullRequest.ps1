@@ -104,7 +104,7 @@ function New-PullRequest {
             $null = Invoke-PostRequest -Url $DestUrl -Body $json
         }
         catch {
-            Write-Log "The error '$_.Exception.Message' occurred while creating a pull request for $DestinationRepo from $SourceRepo (Sourcebranch: $SourceBranch, Destinationbranch: $DestinationBranch)" -Severity 3
+            Write-Log "The error '$($_.Exception.Message)' occurred while creating a pull request for $DestinationRepo from $SourceRepo (Sourcebranch: $SourceBranch, Destinationbranch: $DestinationBranch)" -Severity 3
         }
     }
 

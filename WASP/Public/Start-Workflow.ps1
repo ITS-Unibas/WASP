@@ -53,7 +53,7 @@ function Start-Workflow {
         foreach ($package in $packagesManual) {
             # Use the latest created package as reference
             $latest = Get-ChildItem -Path $package.FullName | Sort-Object CreationTime -Descending | Select-Object -First 1
-            $version = (Get-NuspecXMLValue $latest.FullName "version")
+            $version = (Get-NuspecXMLValue (Join-Path $latest.FullName "$package.nuspec") "version")
             $FoundPackagesManual = Search-Wishlist $package.Name $version
             if ($FoundPackagesManual.Count -gt 0) {
                 $null = $newPackages.Add($FoundPackagesManual)
