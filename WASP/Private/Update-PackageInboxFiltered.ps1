@@ -57,7 +57,7 @@ function Update-PackageInboxFiltered {
                 # Is this necessary?
                 Write-Log ([string](git -C $PackagesInboxRepoPath checkout master 2>&1))
 
-                New-PullRequest -SourceRepo $GitRepoInbox -SourceBranch $DevBranch -DestinationRepo $GitRepoPackageGallery -DestinationBranch $DevBranch
+                New-PullRequest -SourceRepo $GitRepoInbox -SourceBranch $DevBranch -DestinationRepo $GitRepoPackageGallery -DestinationBranch $DevBranch -ErrorAction Stop
 
             }
         }

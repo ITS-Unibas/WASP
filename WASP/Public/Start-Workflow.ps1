@@ -113,7 +113,7 @@ function Start-Workflow {
                 Update-PackageInboxFiltered $newPackages
                 Update-Wishlist $PackagesWishlistPath 'master'
             } catch {
-                Write-Log "Error occurred in Update-PackageInboxFiltered workflow or while updating the wishlist. Please check above for further error messages." -Severity 3
+                Write-Log "Error occurred in Update-PackageInboxFiltered workflow or while updating the wishlist. The following error occurred:`n$($_.Exception.Message)." -Severity 3
             }
         }
 
