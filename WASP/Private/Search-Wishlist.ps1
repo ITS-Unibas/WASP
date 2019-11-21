@@ -81,7 +81,7 @@ function Search-Wishlist {
                 #Create directory structure if not existing
                 $destPath = $PackagesInbxFilteredPath + "\" + $packageName + "\" + $packageVersion
 
-                Copy-Item $package.FullName -Destination $destPath -Recurse
+                Copy-Item $package.FullName -Destination $destPath -Recurse -Force
 
                 # Return list of destPaths
                 $tmp = New-Object psobject @{'path' = $destPath; 'name' = $packageName; 'version' = $packageVersion }
