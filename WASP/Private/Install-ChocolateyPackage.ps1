@@ -37,7 +37,7 @@ function Install-ChocolateyPackage() {
         [parameter(ValueFromRemainingArguments = $true)][Object[]] $ignoredArguments
     )
 
-    $downloadFilePath = Join-Path (Get-Item -Path ".\").FullName "$($packageName)Install.$fileType"
+    $downloadFilePath = Join-Path (Join-Path (Get-Item -Path ".\").FullName "tools") "$($packageName)Install.$fileType"
 
     if ($url -or $url64bit) {
         $filePath = Get-ChocolateyWebFile -PackageName $packageName `
