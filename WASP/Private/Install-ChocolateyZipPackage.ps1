@@ -122,7 +122,8 @@ function Install-ChocolateyZipPackage() {
             -GetOriginalFileName
         $unzipLocation = (Join-Path (Get-Item -Path ".\").FullName "tools")
         Get-ChocolateyUnzip "$filePath" $unzipLocation $specificFolder $packageName
-        Edit-ChocolateyInstaller (Join-Path (Get-Item -Path ".\").FullName "tools") $unzipLocation
+        $FileName = Get-item $FilePath | Select-Object -ExpandProperty Name
+        Edit-ChocolateyInstaller -ToolsPath (Join-Path (Get-Item -Path ".\").FullName "tools") -FileName $FileName -UnzipPath $unzipLocation
     }
     catch {
         Write-Log ($($packageName) + ":" + " " + $_.Exception.toString()) -Severity 3

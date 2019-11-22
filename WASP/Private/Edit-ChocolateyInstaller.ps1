@@ -22,6 +22,10 @@ function Edit-ChocolateyInstaller {
         [string]
         $ToolsPath,
 
+        [Parameter(Mandatory = $true)]
+        [string]
+        $FileName,
+
         [Parameter()]
         [string]
         $UnzipPath
@@ -70,13 +74,13 @@ function Edit-ChocolateyInstaller {
                 $_
                 if ($_ -match "packageArgs = @") {
                     if ($script:ToolsPathPresent) {
-                        "  file          = (Join-Path `$toolsPath '$ToolsPath')"
+                        "  file          = (Join-Path `$toolsPath '$FileName')"
                     }
                     elseif ($script:ToolsDirPresent) {
-                        "  file          = (Join-Path `$toolsDir '$ToolsPath')"
+                        "  file          = (Join-Path `$toolsDir '$FileName')"
                     }
                     else {
-                        "  file          = (Join-Path `$PSScriptRoot '$ToolsPath')"
+                        "  file          = (Join-Path `$PSScriptRoot '$FileName')"
                     }
                 }
             }
