@@ -49,6 +49,7 @@ function Edit-ChocolateyInstaller {
         # Remove all comments in the template
         $InstallerContent = $InstallerContent | Where-Object { $_ -notmatch "^\s*#" } | ForEach-Object { $_ -replace '(^.*?)\s*?[^``]#.*', '$1' } #| Set-Content -Path $NewFile
         $InstallerContent = $InstallerContent | Where-Object { $_ -notmatch $URLRegex -and $_ -notmatch $ChecksumRegex }  #| Set-Content -Path $NewFile
+        $InstallerContent = $InstallerContent | Where-Object { $_.trim() -ne "" }
         $script:FilePathPresent = $false
         # Check if filepath already present
         $InstallerContent | ForEach-Object {

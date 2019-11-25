@@ -45,7 +45,7 @@ function Set-NewReleaseVersion() {
         $versionTag = "<version>" + $version + "</version>"
         $hasFourSegments = [regex]::Match($versionTag, "<version>(\w|\d)+\.(\w|\d)+\.(\w|\d)+\.(\w|\d)+<\/version>").Success
 
-        if ($hasFourSegments -eq $true -or (($hasFourSegments -eq $false) -and ($firstReleaseVersion -eq $false))) {
+        if (($hasFourSegments -eq $true) -or ($firstReleaseVersion -eq $false)) {
             $versionSplit = $version.split(".")
             $versionSplit = $versionSplit[0..($versionSplit.Length - 2)]
             $version = $versionSplit -join "."
@@ -53,8 +53,10 @@ function Set-NewReleaseVersion() {
 
         if ($firstReleaseVersion -eq $true) {
             # This is the first time this package will be build so we append the release version 000
-            # TODO: If there is already .0000 set, but process failed, the 0000 will be chained with each run. for example 13.0.0.0000.0000.0000
-            $set = (Get-Content $nuspecPath) -replace "<version>.*</version>", ("<version>" + $version + ".000" + "</version>") | Set-Content $nuspecPath
+            # This check will prevent adding .000 to version.
+            if (-not($version -match "(0{3})$")) {
+                $set = (Get-Content $nuspecPath) -replace "<version>.*</version>", ("<version>" + $version + ".000" + "</version>") | Set-Content $nuspecPath
+            }
         }
         else {
             $releaseVersion = [int]($versionOld.Substring($versionOld.length - 3))
