@@ -22,6 +22,12 @@ function Start-PackageDistribution() {
         $GitFolderName = $GitFile.Replace(".git", "")
         $PackageGalleryPath = Join-Path -Path $config.Application.BaseDirectory -ChildPath $GitFolderName
         $OldWorkingDir = $PWD.Path
+
+        $GitRepo = $config.Application.PackagesWishlist
+        $GitFile = $GitRepo.Substring($GitRepo.LastIndexOf("/") + 1, $GitRepo.Length - $GitRepo.LastIndexOf("/") - 1)
+        $GitFolderName = $GitFile.Replace(".git", "")
+        $PackagesWishlistPath = Join-Path -Path $config.Application.BaseDirectory -ChildPath $GitFolderName
+        $wishlistPath = Join-Path -Path  $PackagesWishlistPath -ChildPath "wishlist.txt"
     }
 
     process {
@@ -33,6 +39,8 @@ function Start-PackageDistribution() {
 
         Write-Log "The following remote branches were found: $remoteBranches"
 
+        $wishlist = Get-Content -Path $wishlistPath | Where-Object { $_ -notlike "#*" }
+
         $nameAndVersionSeparator = '@'
         foreach ($branch in $remoteBranches) {
             if (-Not($branch -eq $config.Application.GitBranchPROD) -and -Not ($branch -eq $config.Application.GitBranchTEST)) {
@@ -41,6 +49,17 @@ function Start-PackageDistribution() {
 
                 $packageName, $packageVersion = $branch.split($nameAndVersionSeparator)
                 $packageName = $packageName -Replace $config.Application.GitBranchDEV, ''
+
+                $foundInWishlist = $false
+                foreach ($line in $wishlist) {
+                    if ($line -match "$packageName@$packageVersion") {
+                        $foundInWishlist = $true
+                    }
+                }
+                if (!$foundInWishlist) {
+                    Write-Log "Skipping package $packageName, because it is not in wishlist."
+                    continue
+                }
                 $packageRootPath = Join-Path $PackageGalleryPath (Join-Path $packageName $packageVersion)
                 if (-Not (Test-Path $packageRootPath)) {
                     Write-Log "PR for $packageName was not yet merged. Continuing .." -Severity 1
