@@ -54,7 +54,7 @@ function Install-ChocolateyPackage() {
         $FileName = $FileName.Name
         if ($FileItem.Extension -eq '.zip') {
             # If it is a zip package the file param should be provided but not as fullpath, just the main packages name
-            $FileName = $file
+            $FileName = Join-Path (Join-Path (Get-Item -Path ".\").FullName "tools") $file
         }
         Write-Log "Starting editing chocolateyInstall at $filePath."
         Edit-ChocolateyInstaller -ToolsPath (Join-Path (Get-Item -Path ".\").FullName "tools") -FileName $FileName
