@@ -50,8 +50,13 @@ function Install-ChocolateyPackage() {
             -ChecksumType64 $checksumType64 `
             -Options $options `
             -GetOriginalFileName
-        $FileName = Get-item $filePath | Select-Object -ExpandProperty Name
-        Write-Log "Starting editiing chocolateyInstall at $filePath."
+        $FileItem = Get-item $filePath
+        $FileName = $FileName.Name
+        if ($FileItem.Extension -eq '.zip') {
+            # If it is a zip package the file param should be provided but not as fullpath, just the main packages name
+            $FileName = $file
+        }
+        Write-Log "Starting editing chocolateyInstall at $filePath."
         Edit-ChocolateyInstaller -ToolsPath (Join-Path (Get-Item -Path ".\").FullName "tools") -FileName $FileName
     }
     else {
