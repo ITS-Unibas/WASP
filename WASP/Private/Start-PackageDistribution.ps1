@@ -76,7 +76,7 @@ function Start-PackageDistribution() {
                 # Call Override Function with the wanted package to override
                 try {
                     Set-Location "$PackageGalleryPath\$packageName\$packageVersion"
-                    $nuspecFile = (Get-ChildItem -Path $packageRootPath -Recurse | Where-Object { $_.FullName -match ".nuspec" }).FullName
+                    $nuspecFile = (Get-ChildItem -Path $packageRootPath -Recurse -Filter *.nuspec).FullName
                     $pkgNameNuspec = Get-NuspecXMLValue $nuspecFile "id"
                     $pkgVersionNuspec = Get-NuspecXMLValue $nuspecFile "version"
                     $env:ChocolateyPackageName = $pkgNameNuspec
@@ -86,8 +86,9 @@ function Start-PackageDistribution() {
                         Write-Log "Override-Function terminated with an error. Exiting.." -Severity 3
                         continue
                     }
+                    Write-Log "Check if nupkg already exists."
                     # Check if a nupkg already exists
-                    $nupkg = (Get-ChildItem -Path $packageRootPath -Recurse | Where-Object { $_.FullName -match ".nupkg" }).FullName
+                    $nupkg = (Get-ChildItem -Path $packageRootPath -Recurse -Filter *.nupkg).FullName
 
                     if (-Not $nuspecFile) {
                         Write-Log "No nuspec file in package $packageName $packageVersion. Continuing with next package" -Severity 2
@@ -95,16 +96,18 @@ function Start-PackageDistribution() {
                     }
 
                     if ($nupkg) {
+                        Write-Log "Nupkg already exists $nupkg."
                         # Nupkg exists already, now we have to check if anything has changed and if yes we have to add a release version into the nuspec
-                        # Get hash of the existing nupkg and save the version of the existing nupkg
-                        $hashOldNupkg = Get-NupkgHash $nupkg $packageRootPath
+                        # Get hash of the newest existing nupkg and save the version of the existing nupkg
+                        $hashOldNupkg = Get-NupkgHash $nupkg[-1] $packageRootPath
                         # Build the package to compare it to the old one
                         Invoke-Expression -Command ("choco pack " + $nuspecFile + " -s .")
-                        $nupkgNew = (Get-ChildItem -Path $packageRootPath | Where-Object { $_.FullName -match ".nupkg" }).FullName
+                        $nupkgNew = (Get-ChildItem -Path $packageRootPath -Recurse -Filter *.nupkg).FullName
                         if (-Not $nupkgNew) {
                             Write-Log "Choco pack process of package $packageName $packageVersion failed. Continuing with next package." -Severity 3
                             continue
                         }
+                        Write-Log "Calculating hash for nupkg: $nupkgNew."
                         $hashNewNupkg = Get-NupkgHash $nupkgNew $packageRootPath
                         if (-Not ($hashNewNupkg -eq $hashOldNupkg)) {
                             # There were changes in the package, so iterate the version of the nuspec.
@@ -118,6 +121,7 @@ function Start-PackageDistribution() {
                         }
                     }
                     else {
+                        Write-Log "No nupkg exists."
                         # No new package has been build yet, append the release version 000 in the nuspec
                         Set-NewReleaseVersion $true $nuspecFile
                     }
@@ -136,6 +140,7 @@ function Start-PackageDistribution() {
                     $ChocolateyPackageName = Get-NuspecXMLValue $nuspecFile "id"
                     Write-Log ("Package " + $ChocolateyPackageName + " override process crashed. Skipping it.") -Severity 3
                     Write-Log ($_.Exception | Format-List -force | Out-String) -Severity 3
+                    Remove-Item -Path "$packageRootPath\unzipedNupkg"
                     git -C $packageRootPath checkout -- *
                     git -C $packageRootPath clean -f
                 }
