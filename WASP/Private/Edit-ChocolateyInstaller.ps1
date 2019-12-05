@@ -19,14 +19,17 @@ function Edit-ChocolateyInstaller {
     #>
     param(
         [Parameter(Mandatory = $true)]
+        [ValidateNotNullOrEmpty()]
         [string]
         $ToolsPath,
 
         [Parameter(Mandatory = $true)]
+        [ValidateNotNullOrEmpty()]
         [string]
         $FileName,
 
         [Parameter()]
+        [ValidateNotNullOrEmpty()]
         [string]
         $UnzipPath
 

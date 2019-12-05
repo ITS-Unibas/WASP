@@ -51,7 +51,7 @@ function Install-ChocolateyPackage() {
             -Options $options `
             -GetOriginalFileName
         $FileItem = Get-item $filePath
-        $FileName = $FileName.Name
+        $FileName = $FileItem.Name
         if ($FileItem.Extension -eq '.zip') {
             # If it is a zip package the file param should be provided but not as fullpath, just the main packages name
             $FileName = $file
