@@ -37,7 +37,7 @@ function Install-ChocolateyPackage() {
         [parameter(ValueFromRemainingArguments = $true)][Object[]] $ignoredArguments
     )
 
-    $downloadFilePath = Join-Path (Get-Item -Path ".\").FullName "$($packageName)Install.$fileType"
+    $downloadFilePath = Join-Path (Join-Path (Get-Item -Path ".\").FullName "tools") "$($packageName)Install.$fileType"
 
     if ($url -or $url64bit) {
         $filePath = Get-ChocolateyWebFile -PackageName $packageName `
@@ -50,8 +50,14 @@ function Install-ChocolateyPackage() {
             -ChecksumType64 $checksumType64 `
             -Options $options `
             -GetOriginalFileName
-        Write-Log "Starting editiing chocolateyInstall at $filePath."
-        Edit-ChocolateyInstaller (Join-Path (Get-Item -Path ".\").FullName "tools")
+        $FileItem = Get-item $filePath
+        $FileName = $FileName.Name
+        if ($FileItem.Extension -eq '.zip') {
+            # If it is a zip package the file param should be provided but not as fullpath, just the main packages name
+            $FileName = $file
+        }
+        Write-Log "Starting editing chocolateyInstall at $filePath."
+        Edit-ChocolateyInstaller -ToolsPath (Join-Path (Get-Item -Path ".\").FullName "tools") -FileName $FileName
     }
     else {
         Write-Log "No url in install script of $packageName found. We can continue."

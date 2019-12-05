@@ -22,6 +22,10 @@ function Edit-ChocolateyInstaller {
         [string]
         $ToolsPath,
 
+        [Parameter(Mandatory = $true)]
+        [string]
+        $FileName,
+
         [Parameter()]
         [string]
         $UnzipPath
@@ -45,6 +49,7 @@ function Edit-ChocolateyInstaller {
         # Remove all comments in the template
         $InstallerContent = $InstallerContent | Where-Object { $_ -notmatch "^\s*#" } | ForEach-Object { $_ -replace '(^.*?)\s*?[^``]#.*', '$1' } #| Set-Content -Path $NewFile
         $InstallerContent = $InstallerContent | Where-Object { $_ -notmatch $URLRegex -and $_ -notmatch $ChecksumRegex }  #| Set-Content -Path $NewFile
+        $InstallerContent = $InstallerContent | Where-Object { $_.trim() -ne "" }
         $script:FilePathPresent = $false
         # Check if filepath already present
         $InstallerContent | ForEach-Object {
@@ -70,13 +75,13 @@ function Edit-ChocolateyInstaller {
                 $_
                 if ($_ -match "packageArgs = @") {
                     if ($script:ToolsPathPresent) {
-                        "  file          = (Join-Path `$toolsPath '$ToolsPath')"
+                        "  file          = (Join-Path `$toolsPath '$FileName')"
                     }
                     elseif ($script:ToolsDirPresent) {
-                        "  file          = (Join-Path `$toolsDir '$ToolsPath')"
+                        "  file          = (Join-Path `$toolsDir '$FileName')"
                     }
                     else {
-                        "  file          = (Join-Path `$PSScriptRoot '$ToolsPath')"
+                        "  file          = (Join-Path `$PSScriptRoot '$FileName')"
                     }
                 }
             }

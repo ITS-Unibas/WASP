@@ -53,8 +53,8 @@ function Start-Workflow {
         foreach ($package in $packagesManual) {
             # Use the latest created package as reference
             $latest = Get-ChildItem -Path $package.FullName | Sort-Object CreationTime -Descending | Select-Object -First 1
-            $version = (Get-NuspecXMLValue $latest.FullName "version")
-            $FoundPackagesManual = Search-Wishlist $package.Name $version
+            $version = (Get-NuspecXMLValue (Join-Path $latest.FullName "$package.nuspec") "version")
+            $FoundPackagesManual = Search-Wishlist -packageName $package.Name -packageVersion $version -manual
             if ($FoundPackagesManual.Count -gt 0) {
                 $null = $newPackages.Add($FoundPackagesManual)
             }
@@ -106,11 +106,15 @@ function Start-Workflow {
         }
 
         # Commit and push changes to wishlist located in the path
-        Update-Wishlist $PackagesWishlistPath 'master'
         if ($newPackages) {
             Write-Log "Found the following new packages: $($newPackages.ForEach({$_.name}))" -Severity 2
             # Initialize branches for each new package
-            Update-PackageInboxFiltered $newPackages
+            try {
+                Update-PackageInboxFiltered $newPackages
+                Update-Wishlist $PackagesWishlistPath 'master'
+            } catch {
+                Write-Log "Error occurred in Update-PackageInboxFiltered workflow or while updating the wishlist. The following error occurred:`n$($_.Exception.Message)." -Severity 3
+            }
         }
 
         <#

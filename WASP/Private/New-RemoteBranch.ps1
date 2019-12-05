@@ -37,11 +37,7 @@ function New-RemoteBranch {
         $url = ("{0}/rest/api/1.0/projects/{1}/repos/{2}/branches" -f $Config.Application.GitBaseUrl, $Config.Application.GitProject, $Repository)
         # Convert Hashtable to JSON: https://docs.microsoft.com/en-us/powershell/module/microsoft.powershell.utility/convertto-json?view=powershell-6
         $json = @{"name" = $BranchName; "startPoint" = "refs/heads/{0}" -f $Config.Application.GitBranchPROD } | ConvertTo-Json
-        try {
-            $null = Invoke-PostRequest -Url $url -Body $json
-        } catch {
-            Write-Log "We were not able to create a new branch named $BranchName for repository $Repository" -Severity 3
-        }
+        $null = Invoke-PostRequest -Url $url -Body $json -ErrorAction Stop
         Write-Log "Branch $BranchName was successfully created for $Repository"
 
     }

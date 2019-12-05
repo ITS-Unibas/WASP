@@ -154,7 +154,7 @@ function Install-ChocolateyInstallPackage() {
     $checksumType = Get-ChecksumTypeFromVerificationFile -Checksums $checksum, $checksum64
     $checksumType64 = $checksumType
     if ($url -or $url64bit) {
-        Get-ChocolateyWebFile -PackageName $packageName `
+        $FilePath = Get-ChocolateyWebFile -PackageName $packageName `
             -FileFullPath $downloadFilePath `
             -Url $url `
             -Url64bit $url64bit `
@@ -165,6 +165,7 @@ function Install-ChocolateyInstallPackage() {
             -Options $options `
             -GetOriginalFileName
     }
-    Edit-ChocolateyInstaller (Join-Path (Get-Item -Path ".\").FullName "tools")
+    $FileName = Get-item $FilePath | Select-Object -ExpandProperty Name
+    Edit-ChocolateyInstaller -ToolsPath (Join-Path (Get-Item -Path ".\").FullName "tools") -FileName $FileName
     exit 0
 }

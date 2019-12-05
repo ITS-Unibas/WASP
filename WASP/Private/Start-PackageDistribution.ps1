@@ -22,6 +22,12 @@ function Start-PackageDistribution() {
         $GitFolderName = $GitFile.Replace(".git", "")
         $PackageGalleryPath = Join-Path -Path $config.Application.BaseDirectory -ChildPath $GitFolderName
         $OldWorkingDir = $PWD.Path
+
+        $GitRepo = $config.Application.PackagesWishlist
+        $GitFile = $GitRepo.Substring($GitRepo.LastIndexOf("/") + 1, $GitRepo.Length - $GitRepo.LastIndexOf("/") - 1)
+        $WishlistFolderName = $GitFile.Replace(".git", "")
+        $PackagesWishlistPath = Join-Path -Path $config.Application.BaseDirectory -ChildPath $WishlistFolderName
+        $wishlistPath = Join-Path -Path  $PackagesWishlistPath -ChildPath "wishlist.txt"
     }
 
     process {
@@ -33,6 +39,8 @@ function Start-PackageDistribution() {
 
         Write-Log "The following remote branches were found: $remoteBranches"
 
+        $wishlist = Get-Content -Path $wishlistPath | Where-Object { $_ -notlike "#*" }
+
         $nameAndVersionSeparator = '@'
         foreach ($branch in $remoteBranches) {
             if (-Not($branch -eq $config.Application.GitBranchPROD) -and -Not ($branch -eq $config.Application.GitBranchTEST)) {
@@ -41,6 +49,17 @@ function Start-PackageDistribution() {
 
                 $packageName, $packageVersion = $branch.split($nameAndVersionSeparator)
                 $packageName = $packageName -Replace $config.Application.GitBranchDEV, ''
+
+                $foundInWishlist = $false
+                foreach ($line in $wishlist) {
+                    if ($line -match "$packageName@$packageVersion") {
+                        $foundInWishlist = $true
+                    }
+                }
+                if (!$foundInWishlist) {
+                    Write-Log "Skipping package $packageName, because it is not in wishlist." -Severity 2
+                    continue
+                }
                 $packageRootPath = Join-Path $PackageGalleryPath (Join-Path $packageName $packageVersion)
                 if (-Not (Test-Path $packageRootPath)) {
                     Write-Log "PR for $packageName was not yet merged. Continuing .." -Severity 1
@@ -51,13 +70,13 @@ function Start-PackageDistribution() {
 
                 if (-Not (Test-Path $toolsPath)) {
                     Write-Log ("No tools folder, skipping package $packageName $packageVersion") -Severity 2
-                    return
+                    continue
                 }
 
                 # Call Override Function with the wanted package to override
                 try {
                     Set-Location "$PackageGalleryPath\$packageName\$packageVersion"
-                    $nuspecFile = (Get-ChildItem -Path $packageRootPath -Recurse | Where-Object { $_.FullName -match ".nuspec" }).FullName
+                    $nuspecFile = (Get-ChildItem -Path $packageRootPath -Recurse -Filter *.nuspec).FullName
                     $pkgNameNuspec = Get-NuspecXMLValue $nuspecFile "id"
                     $pkgVersionNuspec = Get-NuspecXMLValue $nuspecFile "version"
                     $env:ChocolateyPackageName = $pkgNameNuspec
@@ -65,10 +84,11 @@ function Start-PackageDistribution() {
                     Start-OverrideFunctionForPackage ( Join-Path $toolsPath "chocolateyInstall.ps1") $ForcedDownload
                     if ($LASTEXITCODE -eq 1) {
                         Write-Log "Override-Function terminated with an error. Exiting.." -Severity 3
-                        return
+                        continue
                     }
+                    Write-Log "Check if nupkg already exists."
                     # Check if a nupkg already exists
-                    $nupkg = (Get-ChildItem -Path $packageRootPath -Recurse | Where-Object { $_.FullName -match ".nupkg" }).FullName
+                    $nupkg = (Get-ChildItem -Path $packageRootPath -Recurse -Filter *.nupkg).FullName
 
                     if (-Not $nuspecFile) {
                         Write-Log "No nuspec file in package $packageName $packageVersion. Continuing with next package" -Severity 2
@@ -76,16 +96,18 @@ function Start-PackageDistribution() {
                     }
 
                     if ($nupkg) {
+                        Write-Log "Nupkg already exists $nupkg."
                         # Nupkg exists already, now we have to check if anything has changed and if yes we have to add a release version into the nuspec
-                        # Get hash of the existing nupkg and save the version of the existing nupkg
+                        # Get hash of the newest existing nupkg and save the version of the existing nupkg
                         $hashOldNupkg = Get-NupkgHash $nupkg $packageRootPath
                         # Build the package to compare it to the old one
                         Invoke-Expression -Command ("choco pack " + $nuspecFile + " -s .")
-                        $nupkgNew = (Get-ChildItem -Path $packageRootPath | Where-Object { $_.FullName -match ".nupkg" }).FullName
+                        $nupkgNew = (Get-ChildItem -Path $packageRootPath -Recurse -Filter *.nupkg).FullName
                         if (-Not $nupkgNew) {
                             Write-Log "Choco pack process of package $packageName $packageVersion failed. Continuing with next package." -Severity 3
                             continue
                         }
+                        Write-Log "Calculating hash for nupkg: $nupkgNew."
                         $hashNewNupkg = Get-NupkgHash $nupkgNew $packageRootPath
                         if (-Not ($hashNewNupkg -eq $hashOldNupkg)) {
                             # There were changes in the package, so iterate the version of the nuspec.
@@ -99,6 +121,7 @@ function Start-PackageDistribution() {
                         }
                     }
                     else {
+                        Write-Log "No nupkg exists."
                         # No new package has been build yet, append the release version 000 in the nuspec
                         Set-NewReleaseVersion $true $nuspecFile
                     }
@@ -117,6 +140,7 @@ function Start-PackageDistribution() {
                     $ChocolateyPackageName = Get-NuspecXMLValue $nuspecFile "id"
                     Write-Log ("Package " + $ChocolateyPackageName + " override process crashed. Skipping it.") -Severity 3
                     Write-Log ($_.Exception | Format-List -force | Out-String) -Severity 3
+                    Remove-Item -Path "$packageRootPath\unzipedNupkg"
                     git -C $packageRootPath checkout -- *
                     git -C $packageRootPath clean -f
                 }

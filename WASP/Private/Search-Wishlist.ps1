@@ -24,7 +24,12 @@ function Search-Wishlist {
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
         [string]
-        $packageVersion
+        $packageVersion,
+
+        [Parameter()]
+        [switch]
+        $manual
+
     )
 
     begin {
@@ -50,7 +55,6 @@ function Search-Wishlist {
         $wishlist = Get-Content -Path $wishlistPath | Where-Object { $_ -notlike "#*" }
 
         Foreach ($line in $wishlist) {
-            $origLine = $line
             if ($line -match "@") {
                 $packageNameWhishlist, $previousVersion = $line.split($NameAndVersionSeparator)
             }
@@ -76,16 +80,20 @@ function Search-Wishlist {
                 }
                 catch [System.Management.Automation.RuntimeException] {
                     Write-Log "The version $packageVersion could not be parsed" -Severity 2
-                    # TODO: Handle versions with characters in it
                 }
 
                 Write-Log "Copying $communityPackName $packageVersion." -Severity 1
+
                 #Create directory structure if not existing
-                $destPath = $PackagesInbxFilteredPath + "\" + $packageName + "\" + $packageVersion
+                if ($manual) {
+                    $destPath = Join-Path $PackagesInbxFilteredPath $packageName
+                }
+                else {
+                    $destPath = Join-Path $PackagesInbxFilteredPath (Join-Path $packageName $packageVersion)
+                }
 
-                Copy-Item $package.FullName -Destination $destPath -Recurse
+                Copy-Item $package.FullName -Destination $destPath -Recurse -Force
 
-                $SetContentComm = (Get-Content -Path $wishlistPath) -replace $origLine, ($packageName + $NameAndVersionSeparator + $packageVersion) | Set-Content $wishlistPath
                 # Return list of destPaths
                 $tmp = New-Object psobject @{'path' = $destPath; 'name' = $packageName; 'version' = $packageVersion }
                 #$updatedPackages += , $tmp
