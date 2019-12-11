@@ -140,7 +140,7 @@ function Start-PackageDistribution() {
                     $ChocolateyPackageName = Get-NuspecXMLValue $nuspecFile "id"
                     Write-Log ("Package " + $ChocolateyPackageName + " override process crashed. Skipping it.") -Severity 3
                     Write-Log ($_.Exception | Format-List -force | Out-String) -Severity 3
-                    Remove-Item -Path "$packageRootPath\unzipedNupkg"
+                    Remove-Item -Path "$packageRootPath\unzipedNupkg" -ErrorAction SilentlyContinue
                     git -C $packageRootPath checkout -- *
                     git -C $packageRootPath clean -f
                 }

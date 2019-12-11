@@ -19,14 +19,17 @@ function Edit-ChocolateyInstaller {
     #>
     param(
         [Parameter(Mandatory = $true)]
+        [ValidateNotNullOrEmpty()]
         [string]
         $ToolsPath,
 
         [Parameter(Mandatory = $true)]
+        [ValidateNotNullOrEmpty()]
         [string]
         $FileName,
 
         [Parameter()]
+        [ValidateNotNullOrEmpty()]
         [string]
         $UnzipPath
 
@@ -128,6 +131,7 @@ function Edit-ChocolateyInstaller {
                 }
                 else {
                     $null = New-Item -Path $DestinationPath
+                    $null = Set-Content -Path $DestinationPath -Value '# This script is run prior/post to the installation.'
                 }
             }
         }
@@ -135,6 +139,7 @@ function Edit-ChocolateyInstaller {
             foreach ($AdditionalScript in $AdditionalScripts) {
                 $ScriptPath = Join-Path -Path $ToolsPath -ChildPath $AdditionalScript
                 $null = New-Item -Path $ScriptPath -ErrorAction SilentlyContinue
+                $null = Set-Content -Path $DestinationPath -Value '# This script is run prior/post to the installation.'
             }
         }
 
