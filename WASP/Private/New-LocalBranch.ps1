@@ -43,7 +43,8 @@ function New-LocalBranch {
 
             # Create an checkout new branch
             Write-Log ([string](git -C $RepositoryPath checkout -b $BranchName 2>&1))
-        } else {
+        }
+        else {
             Write-Log "Path to repository $ReopsitoryPath does not exist."
         }
     }
