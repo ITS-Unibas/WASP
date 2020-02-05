@@ -14,21 +14,21 @@ Describe "Creating new local git branch in repository" {
         Mock Test-Path { return $true }
         Mock git { return 'wrong-branch' }
         New-LocalBranch $RepoPath $Branch
-        Assert-MockCalled git -Exactly 1
-        Assert-MockCalled Write-Log -Exactly 1
+        Assert-MockCalled git -Exactly 1 -Scope It
+        Assert-MockCalled Write-Log -Exactly 1 -Scope It
     }
     It "exists a repository and the local branch too" {
         Mock Write-Log { }
         Mock git { return 'branch' }
         Mock Test-Path { return $true }
         New-LocalBranch $RepoPath $Branch
-        Assert-MockCalled git -Exactly 2
-        Assert-MockCalled Write-Log -Exactly 2
+        Assert-MockCalled git -Exactly 1 -Scope It
+        Assert-MockCalled Write-Log -Exactly 1 -Scope It
     }
     It "exists no repository at that path" {
         Mock Write-Log { }
         Mock Test-Path { return $false }
         New-LocalBranch $RepoPath $Branch
-        Assert-MockCalled Write-Log -Exactly 3
+        Assert-MockCalled Write-Log -Exactly 1 -Scope It
     }
 }
