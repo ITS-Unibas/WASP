@@ -36,13 +36,33 @@ Describe "Writing log to file and console" {
         Mock Write-Host { }
         Mock Write-EventLog { }
 
-        Mock Read-ConfigFile { }
+        $test = '{
+            "Application": {
+                "BaseDirectory": "TestDrive:\\"
+            },
+            "Logger": {
+                "EventLogName": "WASP",
+                "EventID": 9999,
+                "LogSubFilePath": "logs",
+                "LogFileNamePrefix": "choco_log",
+                "MaxLogFiles": 10,
+                "LogLevel": 0,
+                "LogToHost": true
+            }
+        }'
+
+        Mock Read-ConfigFile { return ConvertFrom-Json $test }
+
+        $log = "TestDrive:\logs\choco_log_$(Get-Date -Format yyyyMMdd).log"
 
         It "creates log file if non exists" {
-
+            Write-Log "This is nice" 1
+            $log | Should -Exist
+            $log | Should -FileContentMatch 'This is nice'
         }
         It "appends log to exisiting log file" {
-
+            Write-Log "This is not nice" 1
+            $log | Should -FileContentMatch 'This is not nice'
         }
     }
 }
