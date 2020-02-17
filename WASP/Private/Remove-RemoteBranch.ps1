@@ -10,9 +10,13 @@ function Remove-RemoteBranch {
     #>
     [CmdletBinding()]
     param (
+        [Parameter(Mandatory = $true)]
+        [ValidateNotNullOrEmpty()]
         [string]
         $Repo,
 
+        [Parameter(Mandatory = $true)]
+        [ValidateNotNullOrEmpty()]
         [string]
         $Branch
     )
