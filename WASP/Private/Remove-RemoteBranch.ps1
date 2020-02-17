@@ -1,18 +1,12 @@
 function Remove-RemoteBranch {
     <#
     .SYNOPSIS
-        Short description
+        Removes a remote branch
     .DESCRIPTION
-        Long description
+        Removes a given branch from a given repo
     .EXAMPLE
-        PS C:\> <example usage>
-        Explanation of what the example does
-    .INPUTS
-        Inputs (if any)
-    .OUTPUTS
-        Output (if any)
-    .NOTES
-        General notes
+        PS C:\> Remove-Remote-Branch -Repo package-gallery -Branch nicePackage@1.0.0
+        Removes branch 'nicePackage@1.0.0' from repository 'package-gallery'
     #>
     [CmdletBinding()]
     param (
