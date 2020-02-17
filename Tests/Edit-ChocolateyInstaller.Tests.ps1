@@ -23,7 +23,7 @@ Describe "Editing package installer script from chocolatey" {
 
     $ToolsPath = 'TestDrive:\tools'
     $FileName = 'package.exe'
-    $UnzipPath = ''
+    $UnzipPath = $ToolsPath
 
     New-Item "TestDrive:\" -Name "tools" -ItemType Directory
 
@@ -42,31 +42,23 @@ Describe "Editing package installer script from chocolatey" {
         }
 
         It "Checks that all comments are removed from original script" {
-
+            $Content = Get-Content -Path "$ToolsPath\chocolateyInstall.ps1"
+            $Content -contains "#" | Should -Be $false
         }
 
         It "Checks that url and checksum args are removed from file" {
-
+            $Content = Get-Content -Path "$ToolsPath\chocolateyInstall.ps1"
+            $Content -contains "url." | Should -Be $false
+            $Content -contains "checksum." | Should -Be $false
         }
 
         It "Finds that file path is not yet set" {
-
-        }
-
-        It "Finds that file path is already set" {
+            Assert-MockCalled Write-Log -Exactly 1 -Scope It
 
         }
 
         BeforeEach {
             Set-Content "TestDrive:\tools\chocolateyInstall.ps1" -Value '$ErrorActionPreference = "Stop"
-
-            # Check if Sourcetree standard (with Squirrel installer) is installed
-            [array] $key = Get-UninstallRegistryKey "sourcetree" | Where-Object { -Not ($_.WindowsInstaller) }
-            if ($key.Count -gt 0) {
-              Write-Warning "Found installation of standard version of Sourcetree."
-              Write-Warning "This package will install the enterprise version of Sourcetree."
-              Write-Warning "Both applications can be installed side-by-side. Settings wont be migrated from the existing installation. If you no longer want the standard version installed you can uninstall it from Windows control panel."
-            }
 
             # Install Sourcetree Enterprise
             $packageArgs = @{
@@ -92,17 +84,26 @@ Describe "Editing package installer script from chocolatey" {
         }
     }
 
+    Context "" {
+        It "Finds that file path is not yet set" {
+            Assert-MockCalled Write-Log -Exactly 1 -Scope It
+
+        }
+
+    }
+
     Context "Unzip path is provided" {
 
         It "Writes unzip path to file" {
-
+            $Content = Get-Content -Path "$ToolsPath\chocolateyInstall.ps1"
+            $Content -contains "Install-ChocolateyZipPackage" | Should -Be $true
         }
 
         BeforeEach {
             Set-Content "TestDrive:\tools\chocolateyInstall.ps1" -Value '$ErrorActionPreference = "Stop"; # stop on all errors
                 $packageName= "unibas-netcrunchconsole" # arbitrary name for the package, used in messages
                 $toolsDir   = "$(Split-Path -parent $MyInvocation.MyCommand.Definition)"
-                $url        = "http://its-ld-core-p01.its.p.unibas.ch/swd/05%20Prod/NetCrunch%20Console/10.8.0.4935/x86/ENG.000/NC10Console.exe" # download url
+                $url        = "http://url.com/NC10Console.exe" # download url
                 $fileLocation = Join-Path $toolsDir "NC10Console.exe"
 
                 $packageArgs = @{
