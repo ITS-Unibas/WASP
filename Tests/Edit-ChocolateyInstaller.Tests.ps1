@@ -25,42 +25,105 @@ Describe "Editing package installer script from chocolatey" {
     $FileName = 'package.exe'
     $UnzipPath = ''
 
+    New-Item "TestDrive:\" -Name "tools" -ItemType Directory
+
     It "Catches error that the installer script does not exist" {
         Edit-ChocolateyInstaller $ToolsPath $FileName
         Assert-MockCalled Write-Log -Exactly 1 -Scope It
     }
 
     Context "Installer script exists at path" {
-        New-Item "TestDrive:\" -Name "tools" -ItemType Directory
-        Set-Content "TestDrive:\tools\chocolateyInstall.ps1" -Value '$ErrorActionPreference = "Stop"
-
-        # Check if Sourcetree standard (with Squirrel installer) is installed
-        [array] $key = Get-UninstallRegistryKey "sourcetree" | Where-Object { -Not ($_.WindowsInstaller) }
-        if ($key.Count -gt 0) {
-          Write-Warning "Found installation of standard version of Sourcetree."
-          Write-Warning "This package will install the enterprise version of Sourcetree."
-          Write-Warning "Both applications can be installed side-by-side. Settings wont be migrated from the existing installation. If you no longer want the standard version installed you can uninstall it from Windows control panel."
+        It "Makes copy of script and renames it" {
+            Test-Path "$ToolsPath\chocolateyInstall_old.ps1" | Should -Be $true
         }
 
-        # Install Sourcetree Enterprise
-        $packageArgs = @{
-          packageName   = $env:ChocolateyPackageName
-          softwareName  = "Sourcetree*"
-          fileType      = "msi"
-          silentArgs    = "/qn /norestart ACCEPTEULA=1 /l*v `"$env:TEMP\$env:ChocolateyPackageName.$env:ChocolateyPackageVersion.log`""
-          validExitCodes= @(0,1641,3010)
-          url           = "https://product-downloads.atlassian.com/software/sourcetree/windows/ga/SourcetreeEnterpriseSetup_3.2.6.msi"
-          checksum      = "c8b34688d7f69185b41f9419d8c65d63a2709d9ec59752ce8ea57ee6922cbba4"
-          checksumType  = "sha256"
-          url64bit      = ""
-          checksum64    = ""
-          checksumType64= "sha256"
+        It "Checks that contents of edited and original script are not equal" {
+            (Get-FileHash "$ToolsPath\chocolateyInstall_old.ps1").Hash -eq (Get-FileHash "$ToolsPath\chocolateyInstall.ps1").Hash | Should -Be $false
         }
 
-        Install-ChocolateyPackage @packageArgs'
+        It "Checks that all comments are removed from original script" {
 
-        It "Catches error that the installer script does not exist" {
+        }
+
+        It "Checks that url and checksum args are removed from file" {
+
+        }
+
+        It "Finds that file path is not yet set" {
+
+        }
+
+        It "Finds that file path is already set" {
+
+        }
+
+        BeforeEach {
+            Set-Content "TestDrive:\tools\chocolateyInstall.ps1" -Value '$ErrorActionPreference = "Stop"
+
+            # Check if Sourcetree standard (with Squirrel installer) is installed
+            [array] $key = Get-UninstallRegistryKey "sourcetree" | Where-Object { -Not ($_.WindowsInstaller) }
+            if ($key.Count -gt 0) {
+              Write-Warning "Found installation of standard version of Sourcetree."
+              Write-Warning "This package will install the enterprise version of Sourcetree."
+              Write-Warning "Both applications can be installed side-by-side. Settings wont be migrated from the existing installation. If you no longer want the standard version installed you can uninstall it from Windows control panel."
+            }
+
+            # Install Sourcetree Enterprise
+            $packageArgs = @{
+              packageName   = $env:ChocolateyPackageName
+              softwareName  = "Sourcetree*"
+              fileType      = "msi"
+              silentArgs    = "/qn /norestart ACCEPTEULA=1 /l*v `"$env:TEMP\$env:ChocolateyPackageName.$env:ChocolateyPackageVersion.log`""
+              validExitCodes= @(0,1641,3010)
+              url           = "https://product-downloads.atlassian.com/software/sourcetree/windows/ga/SourcetreeEnterpriseSetup_3.2.6.msi"
+              checksum      = "c8b34688d7f69185b41f9419d8c65d63a2709d9ec59752ce8ea57ee6922cbba4"
+              checksumType  = "sha256"
+              url64bit      = ""
+              checksum64    = ""
+              checksumType64= "sha256"
+            }
+
+            Install-ChocolateyPackage @packageArgs'
             Edit-ChocolateyInstaller $ToolsPath $FileName
+        }
+
+        AfterEach {
+            Get-ChildItem "TestDrive:\tools\*" -Recurse | Remove-Item
+        }
+    }
+
+    Context "Unzip path is provided" {
+
+        It "Writes unzip path to file" {
+
+        }
+
+        BeforeEach {
+            Set-Content "TestDrive:\tools\chocolateyInstall.ps1" -Value '$ErrorActionPreference = "Stop"; # stop on all errors
+                $packageName= "unibas-netcrunchconsole" # arbitrary name for the package, used in messages
+                $toolsDir   = "$(Split-Path -parent $MyInvocation.MyCommand.Definition)"
+                $url        = "http://its-ld-core-p01.its.p.unibas.ch/swd/05%20Prod/NetCrunch%20Console/10.8.0.4935/x86/ENG.000/NC10Console.exe" # download url
+                $fileLocation = Join-Path $toolsDir "NC10Console.exe"
+
+                $packageArgs = @{
+                packageName   = $packageName
+                unzipLocation = $toolsDir
+                fileType      = "EXE" #only one of these: exe, msi, msu
+                url           = $url
+                file          = $fileLocation
+                validExitCodes= @(0) #please insert other valid exit codes here
+
+                softwareName  = "unibas-netcrunchconsole*" #part or all of the Display Name as you see it in Programs and Features. It should be enough to be unique
+                checksum      = "3aeb5e8c7ed947ff28b998594a01be872f7994bdb4832fde4bd13e4351b93172"
+                checksumType  = "sha256" #default is md5, can also be sha1
+                }
+
+                Install-ChocolateyPackage @packageArgs'
+            Edit-ChocolateyInstaller $ToolsPath $FileName $UnzipPath
+        }
+
+        AfterEach {
+            Get-ChildItem "TestDrive:\tools\*" -Recurse | Remove-Item
         }
     }
 }
