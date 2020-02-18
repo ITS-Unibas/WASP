@@ -22,10 +22,10 @@ Describe "Editing package installer script from chocolatey" {
     Mock Write-Log { }
 
     New-Item "TestDrive:\" -Name "package" -ItemType Directory
-    New-Item "TestDrive:\package\" -Name "1.0.0" -ItemType Directory
-    New-Item "TestDrive:\package\1.0.0\" -Name "tools" -ItemType Directory
+    New-Item "TestDrive:\package\" -Name "2.0.0" -ItemType Directory
+    New-Item "TestDrive:\package\2.0.0\" -Name "tools" -ItemType Directory
 
-    $ToolsPath = "TestDrive:\package\1.0.0\tools"
+    $ToolsPath = "TestDrive:\package\2.0.0\tools"
     $FileName = 'package.exe'
     $UnzipPath = $ToolsPath
 
@@ -60,21 +60,58 @@ Describe "Editing package installer script from chocolatey" {
             "$ToolsPath\chocolateyInstall_old.ps1" | Should -Not -FileContentMatchExactly '(file[\s]*=)'
         }
 
-        Context "Additional scripts" {
-            It "Finds no previous versions and adds empty additional scripts" {
-                "$ToolsPath\chocolateyInstall_old.ps1" | Should -Not -FileContentMatchExactly 'InitialScript'
-                "$ToolsPath\chocolateyInstall.ps1" | Should -FileContentMatchExactly 'InitialScript'
-                "$ToolsPath\chocolateyInstall_old.ps1" | Should -Not -FileContentMatchExactly 'FinalScript'
-                "$ToolsPath\chocolateyInstall.ps1" | Should -FileContentMatchExactly 'FinalScript'
+        BeforeEach {
+            Set-Content "$ToolsPath\chocolateyInstall.ps1" -Value '$ErrorActionPreference = "Stop"
+
+            # Install Sourcetree Enterprise
+            $packageArgs = @{
+              packageName   = $env:ChocolateyPackageName
+              softwareName  = "Sourcetree*"
+              fileType      = "msi"
+              silentArgs    = "/qn /norestart ACCEPTEULA=1 /l*v `"$env:TEMP\$env:ChocolateyPackageName.$env:ChocolateyPackageVersion.log`""
+              validExitCodes= @(0,1641,3010)
+              url           = "https://product-downloads.atlassian.com/software/sourcetree/windows/ga/SourcetreeEnterpriseSetup_3.2.6.msi"
+              checksum      = "c8b34688d7f69185b41f9419d8c65d63a2709d9ec59752ce8ea57ee6922cbba4"
+              checksumType  = "sha256"
+              url64bit      = ""
+              checksum64    = ""
+              checksumType64= "sha256"
             }
 
-            It "Finds one previous version and adds the additional scripts" {
+            Install-ChocolateyPackage @packageArgs'
+            Edit-ChocolateyInstaller $ToolsPath $FileName
+        }
 
-            }
+        AfterEach {
+            Get-ChildItem "$ToolsPath\*" -Recurse | Remove-Item
+        }
+    }
 
-            It "Finds multiple previous versions and adds the latest as additional scripts" {
+    Context "Additional scripts" {
+        It "Finds no previous versions and adds empty additional scripts" {
+            Edit-ChocolateyInstaller $ToolsPath $FileName
+            "$ToolsPath\chocolateyInstall_old.ps1" | Should -Not -FileContentMatchExactly 'InitialScript'
+            "$ToolsPath\chocolateyInstall.ps1" | Should -FileContentMatchExactly 'InitialScript'
+            "$ToolsPath\chocolateyInstall_old.ps1" | Should -Not -FileContentMatchExactly 'FinalScript'
+            "$ToolsPath\chocolateyInstall.ps1" | Should -FileContentMatchExactly 'FinalScript'
+        }
 
-            }
+        It "Finds one previous version and adds the additional scripts" {
+            New-Item "TestDrive:\package\" -Name "1.0.0" -ItemType Directory
+            New-Item "TestDrive:\package\1.0.0\" -Name "tools" -ItemType Directory
+            Set-Content "TestDrive:\package\1.0.0\tools\InitialScript.ps1" -Value 'This is a previous script.'
+            Set-Content "TestDrive:\package\1.0.0\tools\FinalScript.ps1" -Value 'This is a previous script.'
+            Edit-ChocolateyInstaller $ToolsPath $FileName
+            "$ToolsPath\chocolateyInstall_old.ps1" | Should -Not -FileContentMatchExactly 'InitialScript'
+            "$ToolsPath\chocolateyInstall.ps1" | Should -FileContentMatchExactly 'InitialScript'
+            "$ToolsPath\chocolateyInstall_old.ps1" | Should -Not -FileContentMatchExactly 'FinalScript'
+            "$ToolsPath\chocolateyInstall.ps1" | Should -FileContentMatchExactly 'FinalScript'
+            "$ToolsPath\InitialScript.ps1" | Should -FileContentMatchExactly 'This is a previous script.'
+            "$ToolsPath\FinalScript.ps1" | Should -FileContentMatchExactly 'This is a previous script.'
+        }
+
+        It "Finds multiple previous versions and adds the latest as additional scripts" {
+
         }
 
         BeforeEach {
@@ -96,7 +133,6 @@ Describe "Editing package installer script from chocolatey" {
             }
 
             Install-ChocolateyPackage @packageArgs'
-            Edit-ChocolateyInstaller $ToolsPath $FileName
         }
 
         AfterEach {
