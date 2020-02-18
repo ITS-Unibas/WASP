@@ -111,7 +111,21 @@ Describe "Editing package installer script from chocolatey" {
         }
 
         It "Finds multiple previous versions and adds the latest as additional scripts" {
-
+            New-Item "TestDrive:\package\" -Name "1.5.0" -ItemType Directory
+            New-Item "TestDrive:\package\1.5.0\" -Name "tools" -ItemType Directory
+            Set-Content "TestDrive:\package\1.5.0\tools\InitialScript.ps1" -Value 'This is the previous script.'
+            Set-Content "TestDrive:\package\1.5.0\tools\FinalScript.ps1" -Value 'This is the previous script.'
+            New-Item "TestDrive:\package\" -Name "1.0.0" -ItemType Directory
+            New-Item "TestDrive:\package\1.0.0\" -Name "tools" -ItemType Directory
+            Set-Content "TestDrive:\package\1.0.0\tools\InitialScript.ps1" -Value 'This is a previous script.'
+            Set-Content "TestDrive:\package\1.0.0\tools\FinalScript.ps1" -Value 'This is a previous script.'
+            Edit-ChocolateyInstaller $ToolsPath $FileName
+            "$ToolsPath\chocolateyInstall_old.ps1" | Should -Not -FileContentMatchExactly 'InitialScript'
+            "$ToolsPath\chocolateyInstall.ps1" | Should -FileContentMatchExactly 'InitialScript'
+            "$ToolsPath\chocolateyInstall_old.ps1" | Should -Not -FileContentMatchExactly 'FinalScript'
+            "$ToolsPath\chocolateyInstall.ps1" | Should -FileContentMatchExactly 'FinalScript'
+            "$ToolsPath\InitialScript.ps1" | Should -FileContentMatchExactly 'This is the previous script.'
+            "$ToolsPath\FinalScript.ps1" | Should -FileContentMatchExactly 'This is the previous script.'
         }
 
         BeforeEach {
@@ -137,6 +151,10 @@ Describe "Editing package installer script from chocolatey" {
 
         AfterEach {
             Get-ChildItem "$ToolsPath\*" -Recurse | Remove-Item
+            Get-ChildItem "TestDrive:\package\1.0.0\*" -Recurse -ErrorAction SilentlyContinue | Remove-Item -Force -ErrorAction SilentlyContinue
+            Get-ChildItem "TestDrive:\package\1.5.0\*" -Recurse -ErrorAction SilentlyContinue | Remove-Item -Force -ErrorAction SilentlyContinue
+            Remove-Item "TestDrive:\package\1.5.0" -Force -Recurse -ErrorAction SilentlyContinue
+            Remove-Item "TestDrive:\package\1.0.0" -Force -Recurse -ErrorAction SilentlyContinue
         }
     }
 
