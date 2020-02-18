@@ -21,11 +21,13 @@ Describe "Editing package installer script from chocolatey" {
     Mock Read-ConfigFile { return ConvertFrom-Json $config }
     Mock Write-Log { }
 
-    $ToolsPath = 'TestDrive:\tools'
+    New-Item "TestDrive:\" -Name "package" -ItemType Directory
+    New-Item "TestDrive:\package\" -Name "1.0.0" -ItemType Directory
+    New-Item "TestDrive:\package\1.0.0\" -Name "tools" -ItemType Directory
+
+    $ToolsPath = "TestDrive:\package\1.0.0\tools"
     $FileName = 'package.exe'
     $UnzipPath = $ToolsPath
-
-    New-Item "TestDrive:\" -Name "tools" -ItemType Directory
 
     It "Catches error that the installer script does not exist" {
         Edit-ChocolateyInstaller $ToolsPath $FileName
@@ -42,24 +44,41 @@ Describe "Editing package installer script from chocolatey" {
         }
 
         It "Checks that all comments are removed from original script" {
-            'TestDrive:\tools\chocolateyInstall_old.ps1' | Should -FileContentMatchExactly '#'
-            'TestDrive:\tools\chocolateyInstall.ps1' | Should -Not -FileContentMatchExactly '#'
+            "$ToolsPath\chocolateyInstall_old.ps1" | Should -FileContentMatchExactly '#'
+            "$ToolsPath\chocolateyInstall.ps1" | Should -Not -FileContentMatchExactly '#'
         }
 
         It "Checks that url and checksum args are removed from file" {
-            'TestDrive:\tools\chocolateyInstall_old.ps1' | Should -FileContentMatchExactly 'url'
-            'TestDrive:\tools\chocolateyInstall.ps1' | Should -Not -FileContentMatchExactly 'url'
-            'TestDrive:\tools\chocolateyInstall_old.ps1' | Should -FileContentMatchExactly 'checksum'
-            'TestDrive:\tools\chocolateyInstall.ps1' | Should -Not -FileContentMatchExactly 'checksum'
+            "$ToolsPath\chocolateyInstall_old.ps1" | Should -FileContentMatchExactly 'url'
+            "$ToolsPath\chocolateyInstall.ps1" | Should -Not -FileContentMatchExactly 'url'
+            "$ToolsPath\chocolateyInstall_old.ps1" | Should -FileContentMatchExactly 'checksum'
+            "$ToolsPath\chocolateyInstall.ps1" | Should -Not -FileContentMatchExactly 'checksum'
         }
 
         It "Finds that file path is not yet set and sets it" {
-            'TestDrive:\tools\chocolateyInstall.ps1' | Should -FileContentMatchExactly '(file[\s]*=)'
-            'TestDrive:\tools\chocolateyInstall_old.ps1' | Should -Not -FileContentMatchExactly '(file[\s]*=)'
+            "$ToolsPath\chocolateyInstall.ps1" | Should -FileContentMatchExactly '(file[\s]*=)'
+            "$ToolsPath\chocolateyInstall_old.ps1" | Should -Not -FileContentMatchExactly '(file[\s]*=)'
+        }
+
+        Context "Additional scripts" {
+            It "Finds no previous versions and adds empty additional scripts" {
+                "$ToolsPath\chocolateyInstall_old.ps1" | Should -Not -FileContentMatchExactly 'InitialScript'
+                "$ToolsPath\chocolateyInstall.ps1" | Should -FileContentMatchExactly 'InitialScript'
+                "$ToolsPath\chocolateyInstall_old.ps1" | Should -Not -FileContentMatchExactly 'FinalScript'
+                "$ToolsPath\chocolateyInstall.ps1" | Should -FileContentMatchExactly 'FinalScript'
+            }
+
+            It "Finds one previous version and adds the additional scripts" {
+
+            }
+
+            It "Finds multiple previous versions and adds the latest as additional scripts" {
+
+            }
         }
 
         BeforeEach {
-            Set-Content "TestDrive:\tools\chocolateyInstall.ps1" -Value '$ErrorActionPreference = "Stop"
+            Set-Content "$ToolsPath\chocolateyInstall.ps1" -Value '$ErrorActionPreference = "Stop"
 
             # Install Sourcetree Enterprise
             $packageArgs = @{
@@ -81,18 +100,18 @@ Describe "Editing package installer script from chocolatey" {
         }
 
         AfterEach {
-            Get-ChildItem "TestDrive:\tools\*" -Recurse | Remove-Item
+            Get-ChildItem "$ToolsPath\*" -Recurse | Remove-Item
         }
     }
 
     Context "File path is already set in script" {
         It "Finds that file path is set" {
-            'TestDrive:\tools\chocolateyInstall_old.ps1' | Should -FileContentMatchExactly '(file[\s]*=)'
-            'TestDrive:\tools\chocolateyInstall.ps1' | Should -FileContentMatchExactly '(file[\s]*=)'
+            "$ToolsPath\chocolateyInstall_old.ps1" | Should -FileContentMatchExactly '(file[\s]*=)'
+            "$ToolsPath\chocolateyInstall.ps1" | Should -FileContentMatchExactly '(file[\s]*=)'
         }
 
         BeforeEach {
-            Set-Content "TestDrive:\tools\chocolateyInstall.ps1" -Value '$ErrorActionPreference = "Stop"; # stop on all errors
+            Set-Content "$ToolsPath\chocolateyInstall.ps1" -Value '$ErrorActionPreference = "Stop"; # stop on all errors
                 $packageName= "unibas-netcrunchconsole" # arbitrary name for the package, used in messages
                 $toolsDir   = "$(Split-Path -parent $MyInvocation.MyCommand.Definition)"
                 $url        = "http://url.com/NC10Console.exe" # download url
@@ -116,7 +135,7 @@ Describe "Editing package installer script from chocolatey" {
         }
 
         AfterEach {
-            Get-ChildItem "TestDrive:\tools\*" -Recurse | Remove-Item
+            Get-ChildItem "$ToolsPath\*" -Recurse | Remove-Item
         }
 
     }
@@ -124,12 +143,12 @@ Describe "Editing package installer script from chocolatey" {
     Context "Unzip path is provided" {
 
         It "Writes unzip path to file" {
-            'TestDrive:\tools\chocolateyInstall_old.ps1' | Should -FileContentMatchExactly 'Install-ChocolateyZipPackage'
-            'TestDrive:\tools\chocolateyInstall.ps1' | Should -Not -FileContentMatchExactly 'Install-ChocolateyZipPackage'
+            "$ToolsPath\chocolateyInstall_old.ps1" | Should -FileContentMatchExactly 'Install-ChocolateyZipPackage'
+            "$ToolsPath\chocolateyInstall.ps1" | Should -Not -FileContentMatchExactly 'Install-ChocolateyZipPackage'
         }
 
         BeforeEach {
-            Set-Content "TestDrive:\tools\chocolateyInstall.ps1" -Value '$ErrorActionPreference = "Stop"; # stop on all errors
+            Set-Content "$ToolsPath\chocolateyInstall.ps1" -Value '$ErrorActionPreference = "Stop"; # stop on all errors
                 $packageName= "unibas-netcrunchconsole" # arbitrary name for the package, used in messages
                 $toolsDir   = "$(Split-Path -parent $MyInvocation.MyCommand.Definition)"
                 $url        = "http://url.com/NC10Console.exe" # download url
@@ -153,7 +172,7 @@ Describe "Editing package installer script from chocolatey" {
         }
 
         AfterEach {
-            Get-ChildItem "TestDrive:\tools\*" -Recurse | Remove-Item
+            Get-ChildItem "$ToolsPath\*" -Recurse | Remove-Item
         }
     }
 }

@@ -35,6 +35,7 @@ function Edit-ChocolateyInstaller {
     )
 
     begin {
+        $Config = Read-ConfigFile
         $NewFile = Join-Path -Path $ToolsPath -ChildPath "chocolateyInstall.ps1"
         $OriginalFile = Join-Path -Path $ToolsPath -ChildPath "chocolateyInstall_old.ps1"
         $ParentSWDirectory = Split-Path (Split-Path -Path $ToolsPath)
@@ -137,7 +138,7 @@ function Edit-ChocolateyInstaller {
                 foreach ($AdditionalScript in $AdditionalScripts) {
                     $ScriptPath = Join-Path -Path $ToolsPath -ChildPath $AdditionalScript
                     $null = New-Item -Path $ScriptPath -ErrorAction SilentlyContinue
-                    $null = Set-Content -Path $DestinationPath -Value '# This script is run prior/post to the installation.'
+                    $null = Set-Content -Path $ScriptPath -Value '# This script is run prior/post to the installation.'
                 }
             }
 
@@ -167,7 +168,6 @@ function Edit-ChocolateyInstaller {
             Set-Content -Path $NewFile -Value $InstallerContent
         }
         catch {
-            Write-Host "error"
             Write-Log "$($_.Exception.Message)" -Severity 3
         }
     }
