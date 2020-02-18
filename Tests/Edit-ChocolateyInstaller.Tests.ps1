@@ -8,8 +8,8 @@ foreach ($import in $Private) {
 Describe "Editing package installer script from chocolatey" {
     $config = '{
         "Application": {
-            "GitProject": "csswcs",
-            "GitBaseUrl": "https://git.its.unibas.ch",
+            "GitProject": "project",
+            "GitBaseUrl": "https://base.url.com",
             "PreAdditionalScripts": [
                 "InitialScript.ps1"
             ],
@@ -42,19 +42,20 @@ Describe "Editing package installer script from chocolatey" {
         }
 
         It "Checks that all comments are removed from original script" {
-            $Content = Get-Content -Path "$ToolsPath\chocolateyInstall.ps1"
-            $Content -contains "#" | Should -Be $false
+            'TestDrive:\tools\chocolateyInstall_old.ps1' | Should -FileContentMatchExactly '#'
+            'TestDrive:\tools\chocolateyInstall.ps1' | Should -Not -FileContentMatchExactly '#'
         }
 
         It "Checks that url and checksum args are removed from file" {
-            $Content = Get-Content -Path "$ToolsPath\chocolateyInstall.ps1"
-            $Content -contains "url." | Should -Be $false
-            $Content -contains "checksum." | Should -Be $false
+            'TestDrive:\tools\chocolateyInstall_old.ps1' | Should -FileContentMatchExactly 'url'
+            'TestDrive:\tools\chocolateyInstall.ps1' | Should -Not -FileContentMatchExactly 'url'
+            'TestDrive:\tools\chocolateyInstall_old.ps1' | Should -FileContentMatchExactly 'checksum'
+            'TestDrive:\tools\chocolateyInstall.ps1' | Should -Not -FileContentMatchExactly 'checksum'
         }
 
-        It "Finds that file path is not yet set" {
-            Assert-MockCalled Write-Log -Exactly 1 -Scope It
-
+        It "Finds that file path is not yet set and sets it" {
+            'TestDrive:\tools\chocolateyInstall.ps1' | Should -FileContentMatchExactly '(file[\s]*=)'
+            'TestDrive:\tools\chocolateyInstall_old.ps1' | Should -Not -FileContentMatchExactly '(file[\s]*=)'
         }
 
         BeforeEach {
@@ -84,19 +85,10 @@ Describe "Editing package installer script from chocolatey" {
         }
     }
 
-    Context "" {
-        It "Finds that file path is not yet set" {
-            Assert-MockCalled Write-Log -Exactly 1 -Scope It
-
-        }
-
-    }
-
-    Context "Unzip path is provided" {
-
-        It "Writes unzip path to file" {
-            $Content = Get-Content -Path "$ToolsPath\chocolateyInstall.ps1"
-            $Content -contains "Install-ChocolateyZipPackage" | Should -Be $true
+    Context "File path is already set in script" {
+        It "Finds that file path is set" {
+            'TestDrive:\tools\chocolateyInstall_old.ps1' | Should -FileContentMatchExactly '(file[\s]*=)'
+            'TestDrive:\tools\chocolateyInstall.ps1' | Should -FileContentMatchExactly '(file[\s]*=)'
         }
 
         BeforeEach {
@@ -120,6 +112,43 @@ Describe "Editing package installer script from chocolatey" {
                 }
 
                 Install-ChocolateyPackage @packageArgs'
+            Edit-ChocolateyInstaller $ToolsPath $FileName
+        }
+
+        AfterEach {
+            Get-ChildItem "TestDrive:\tools\*" -Recurse | Remove-Item
+        }
+
+    }
+
+    Context "Unzip path is provided" {
+
+        It "Writes unzip path to file" {
+            'TestDrive:\tools\chocolateyInstall_old.ps1' | Should -FileContentMatchExactly 'Install-ChocolateyZipPackage'
+            'TestDrive:\tools\chocolateyInstall.ps1' | Should -Not -FileContentMatchExactly 'Install-ChocolateyZipPackage'
+        }
+
+        BeforeEach {
+            Set-Content "TestDrive:\tools\chocolateyInstall.ps1" -Value '$ErrorActionPreference = "Stop"; # stop on all errors
+                $packageName= "unibas-netcrunchconsole" # arbitrary name for the package, used in messages
+                $toolsDir   = "$(Split-Path -parent $MyInvocation.MyCommand.Definition)"
+                $url        = "http://url.com/NC10Console.exe" # download url
+                $fileLocation = Join-Path $toolsDir "NC10Console.exe"
+
+                $packageArgs = @{
+                packageName   = $packageName
+                unzipLocation = $toolsDir
+                fileType      = "EXE" #only one of these: exe, msi, msu
+                url           = $url
+                file          = $fileLocation
+                validExitCodes= @(0) #please insert other valid exit codes here
+
+                softwareName  = "unibas-netcrunchconsole*" #part or all of the Display Name as you see it in Programs and Features. It should be enough to be unique
+                checksum      = "3aeb5e8c7ed947ff28b998594a01be872f7994bdb4832fde4bd13e4351b93172"
+                checksumType  = "sha256" #default is md5, can also be sha1
+                }
+
+                Install-ChocolateyZipPackage @packageArgs'
             Edit-ChocolateyInstaller $ToolsPath $FileName $UnzipPath
         }
 
