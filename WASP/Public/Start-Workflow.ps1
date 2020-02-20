@@ -53,7 +53,7 @@ function Start-Workflow {
         foreach ($package in $packagesManual) {
             # Use the latest created package as reference
             $latest = Get-ChildItem -Path $package.FullName | Sort-Object CreationTime -Descending | Select-Object -First 1
-            $version = (Get-NuspecXMLValue (Join-Path $latest.FullName "$package.nuspec") "version")
+            $version = ([xml](Get-Content -Path (Join-Path $latest.FullName "$package.nuspec"))).Package.metadata.version
             $FoundPackagesManual = Search-Wishlist -packageName $package.Name -packageVersion $version -manual
             if ($FoundPackagesManual.Count -gt 0) {
                 $null = $newPackages.Add($FoundPackagesManual)
@@ -83,7 +83,7 @@ function Start-Workflow {
                     if (-Not $nuspec -or $nuspec.GetType().ToString() -eq "System.Object[]") {
                         continue
                     }
-                    $version = (Get-NuspecXMLValue $nuspec.FullName "version")
+                    $version = ([xml](Get-Content -Path $nuspec.FullName)).Package.metadata.version
                     $FoundPackagesAutomatic = Search-Wishlist $package $version
                     if ($FoundPackagesAutomatic.Count -gt 0) {
                         $null = $newPackages.Add($FoundPackagesAutomatic)
@@ -96,7 +96,7 @@ function Start-Workflow {
                     if (-Not $nuspec -or $nuspec.GetType().ToString() -eq "System.Object[]") {
                         continue
                     }
-                    $version = (Get-NuspecXMLValue $nuspec.FullName "version")
+                    $version = ([xml](Get-Content -Path $nuspec.FullName)).Package.metadata.version
                     $FoundPackages = Search-Wishlist $package $version
                     if ($FoundPackages.Count -gt 0) {
                         $null = $newPackages.Add($FoundPackages)
@@ -112,7 +112,8 @@ function Start-Workflow {
             try {
                 Update-PackageInboxFiltered $newPackages
                 Update-Wishlist $PackagesWishlistPath 'master'
-            } catch {
+            }
+            catch {
                 Write-Log "Error occurred in Update-PackageInboxFiltered workflow or while updating the wishlist. The following error occurred:`n$($_.Exception.Message)." -Severity 3
             }
         }

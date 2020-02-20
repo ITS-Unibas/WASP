@@ -77,10 +77,8 @@ function Start-PackageDistribution() {
                 try {
                     Set-Location "$PackageGalleryPath\$packageName\$packageVersion"
                     $nuspecFile = (Get-ChildItem -Path $packageRootPath -Recurse -Filter *.nuspec).FullName
-                    $pkgNameNuspec = Get-NuspecXMLValue $nuspecFile "id"
-                    $pkgVersionNuspec = Get-NuspecXMLValue $nuspecFile "version"
-                    $env:ChocolateyPackageName = $pkgNameNuspec
-                    $env:ChocolateyPackageVersion = $pkgVersionNuspec
+                    $env:ChocolateyPackageName = ([xml](Get-Content -Path $nuspecFile)).Package.metadata.id
+                    $env:ChocolateyPackageVersion = ([xml](Get-Content -Path $nuspecFile)).Package.metadata.version
                     Start-OverrideFunctionForPackage ( Join-Path $toolsPath "chocolateyInstall.ps1") $ForcedDownload
                     if ($LASTEXITCODE -eq 1) {
                         Write-Log "Override-Function terminated with an error. Exiting.." -Severity 3
@@ -137,7 +135,7 @@ function Start-PackageDistribution() {
 
                 }
                 catch [Exception] {
-                    $ChocolateyPackageName = Get-NuspecXMLValue $nuspecFile "id"
+                    $ChocolateyPackageName = ([xml](Get-Content -Path $nuspecFile)).Package.metadata.id
                     Write-Log ("Package " + $ChocolateyPackageName + " override process crashed. Skipping it.") -Severity 3
                     Write-Log ($_.Exception | Format-List -force | Out-String) -Severity 3
                     Remove-Item -Path "$packageRootPath\unzipedNupkg" -ErrorAction SilentlyContinue
