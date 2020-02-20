@@ -41,7 +41,7 @@ function New-LocalBranch {
                 return
             }
 
-            # Create an checkout new branch
+            # Create and checkout new branch
             Write-Log ([string](git -C $RepositoryPath checkout -b $BranchName 2>&1))
         }
         else {

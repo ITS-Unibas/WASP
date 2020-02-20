@@ -12,10 +12,8 @@ function Edit-ChocolateyInstaller {
         Created: 2019-08-07
         Updated: 2020-02-18
         Version: 1.0.0
-    .PARAMETER
-    .EXAMPLE
-        PS>
     #>
+    [CmdletBinding()]
     param(
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]

@@ -1,25 +1,27 @@
 function Send-NupkgToServer {
     <#
     .SYNOPSIS
-        Short description
+        Perform choco push for nupkg in given folder to given choco server url
     .DESCRIPTION
         Long description
-    .EXAMPLE
-        PS C:\> <example usage>
-        Explanation of what the example does
-    .INPUTS
-        Inputs (if any)
-    .OUTPUTS
-        Output (if any)
     .NOTES
-        General notes
+        FileName: Send-NupkgToServer.ps1
+        Author: Kevin Schaefer, Maximilian Burgert, Tim Koenigl
+        Contact: its-wcs-ma@unibas.ch
+        Created: 2019-08-07
+        Updated: 2020-02-20
+        Version: 1.0.0
     #>
     [CmdletBinding()]
     param (
+        [Parameter(Mandatory = $true)]
+        [ValidateNotNullOrEmpty()]
         [string]
         $nuspecFolder,
 
-        [String]
+        [Parameter(Mandatory = $true)]
+        [ValidateNotNullOrEmpty()]
+        [string]
         $url
     )
 
@@ -37,6 +39,7 @@ function Send-NupkgToServer {
             Write-Log ("Pushed package " + $nupkg + " successfully to server.") -Severity 1
         }
         catch {
+            Write-Log "$($_.Exception.Message)" -Severity 3
             Write-Log ("Package " + $nupkg + " could not be pushed.") -Severity 3
         }
     }
