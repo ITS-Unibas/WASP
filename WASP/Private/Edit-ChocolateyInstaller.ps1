@@ -10,7 +10,7 @@ function Edit-ChocolateyInstaller {
         Author: Kevin Schaefer, Maximilian Burgert, Tim Koenigl
         Contact: its-wcs-ma@unibas.ch
         Created: 2019-08-07
-        Updated: 2019-08-07
+        Updated: 2020-02-18
         Version: 1.0.0
     .PARAMETER
     .EXAMPLE
@@ -31,7 +31,6 @@ function Edit-ChocolateyInstaller {
         [ValidateNotNullOrEmpty()]
         [string]
         $UnzipPath
-
     )
 
     begin {
