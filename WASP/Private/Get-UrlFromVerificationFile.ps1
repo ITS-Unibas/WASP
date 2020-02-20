@@ -18,7 +18,7 @@ function Get-UrlFromVerificationFile() {
         Has to be set to false if searchFor32BitUrl is set to true!
 
     .OUTPUTS
-        The url will be returned as a string.
+        The first found url will be returned as a string if found, $none is returned otherwise.
     #>
     param(
         [parameter(Mandatory = $true)][bool] $searchFor32BitUrl,
