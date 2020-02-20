@@ -4,15 +4,12 @@ function Search-Wishlist {
         Search in the wishlist for a package Name
     .DESCRIPTION
         When the package name is found, the version will locally be added in this manner: "packageName@1.0.0.0"
-    .EXAMPLE
-        PS C:\> <example usage>
-        Explanation of what the example does
-    .INPUTS
-        Name of the package and version of the package
-    .OUTPUTS
-        Output (if any)
     .NOTES
-        General notes
+        FileName: Search-Wishlist.ps1
+        Author: Kevin Schaefer, Maximilian Burgert, Tim Königl
+        Contact: its-wcs-ma@unibas.ch
+        Created: 2020-20-02
+        Version: 1.0.0
     #>
     [CmdletBinding()]
     param (
