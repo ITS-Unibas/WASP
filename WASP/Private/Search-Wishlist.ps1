@@ -4,6 +4,8 @@ function Search-Wishlist {
         Search in the wishlist for a package Name
     .DESCRIPTION
         When the package name is found, the version will locally be added in this manner: "packageName@1.0.0.0"
+        Additionally, copies package to update into filtered inbox repository path.
+        These changes will later be committed an pushed to git.
     .NOTES
         FileName: Search-Wishlist.ps1
         Author: Kevin Schaefer, Maximilian Burgert, Tim Königl
@@ -16,7 +18,7 @@ function Search-Wishlist {
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
         [string]
-        $packageName,
+        $packagePath,
 
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
@@ -49,57 +51,65 @@ function Search-Wishlist {
     }
 
     process {
-        $wishlist = Get-Content -Path $wishlistPath | Where-Object { $_ -notlike "#*" }
+        try {
+            $wishlist = Get-Content -Path $wishlistPath | Where-Object { $_ -notlike "#*" }
+            $packageName = $package.Name
 
-        Foreach ($line in $wishlist) {
-            if ($line -match "@") {
-                $packageNameWhishlist, $previousVersion = $line.split($NameAndVersionSeparator)
-            }
-            else {
-                $previousVersion = "0.0.0.0"
-                $packageNameWhishlist = $line.Trim()
-            }
-
-            if ($packageName -like $packageNameWhishlist.Trim()) {
-
-                try {
-                    # Make Version parsable so we can compare with '-le'
-                    if (-Not ($packageVersion -match "^(\d+\.)?(\d+\.)?(\d+\.)?(\*|\d+)$")) {
-                        Write-Log "The version $packageVersion / $previousVersion will not able to be parsed. Going to format it"
-                        $packageVersion = Format-VersionString -VersionString $packageVersion
-                        $previousVersion = Format-VersionString -VersionString $previousVersion
-                        Write-Log "Formatted versions now $packageVersion / $previousVersion"
-                    }
-
-                    if (([version]$packageVersion) -le ([version]$previousVersion)) {
-                        continue
-                    }
-                }
-                catch [System.Management.Automation.RuntimeException] {
-                    Write-Log "The version $packageVersion could not be parsed" -Severity 2
-                }
-
-                Write-Log "Copying $communityPackName $packageVersion." -Severity 1
-
-                #Create directory structure if not existing
-                if ($manual) {
-                    $destPath = Join-Path $PackagesInbxFilteredPath $packageName
+            Foreach ($line in $wishlist) {
+                if ($line -match "@") {
+                    $packageNameWhishlist, $previousVersion = $line.split($NameAndVersionSeparator)
                 }
                 else {
-                    $destPath = Join-Path $PackagesInbxFilteredPath (Join-Path $packageName $packageVersion)
+                    $previousVersion = "0.0.0.0"
+                    $packageNameWhishlist = $line.Trim()
                 }
 
-                Copy-Item $package.FullName -Destination $destPath -Recurse -Force
+                if ($packageName -like $packageNameWhishlist.Trim()) {
+                    try {
+                        # Make Version parsable so we can compare with '-le'
+                        if (-Not ($packageVersion -match "^(\d+\.)?(\d+\.)?(\d+\.)?(\*|\d+)$")) {
+                            Write-Log "The version $packageVersion / $previousVersion for package $packageName cannot be parsed. Going to format it"
+                            $packageVersion = Format-VersionString -VersionString $packageVersion
+                            $previousVersion = Format-VersionString -VersionString $previousVersion
+                            Write-Log "Formatted versions now $packageVersion / $previousVersion for package $packageName"
+                        }
 
-                # Return list of destPaths
-                $tmp = New-Object psobject @{'path' = $destPath; 'name' = $packageName; 'version' = $packageVersion }
-                #$updatedPackages += , $tmp
-                $null = $updatedPackages.Add($tmp)
+                        if (([version]$packageVersion) -le ([version]$previousVersion)) {
+                            continue
+                        }
+                    }
+                    catch [System.Management.Automation.RuntimeException] {
+                        Write-Log "The version $packageVersion could not be parsed" -Severity 2
+                    }
+
+                    #Create directory structure if not existing
+                    if ($manual) {
+                        $destPath = Join-Path $PackagesInbxFilteredPath $packageName
+                    }
+                    else {
+                        $destPath = Join-Path $PackagesInbxFilteredPath (Join-Path $packageName $packageVersion)
+                    }
+
+                    try {
+                        Write-Log "Copying $($package.FullName) to $destPath"
+                        Copy-Item $package.FullName -Destination $destPath -Recurse -Force
+                    }
+                    catch {
+                        Write-Host "$($_.Exception)"
+                    }
+
+                    # Return list of destPaths
+                    $tmp = New-Object psobject @{'path' = $destPath; 'name' = $packageName; 'version' = $packageVersion }
+                    #$updatedPackages += , $tmp
+                    $null = $updatedPackages.Add($tmp)
+
+                    Write-Log "Found package to update: $packageName with version $packageVersion"
+                }
             }
+            return $updatedPackages
         }
-    }
-
-    end {
-        return $updatedPackages
+        catch {
+            Write-Log "$($_.Exception)"
+        }
     }
 }
