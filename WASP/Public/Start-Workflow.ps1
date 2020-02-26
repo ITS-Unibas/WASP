@@ -55,7 +55,7 @@ function Start-Workflow {
             $latest = Get-ChildItem -Path $package.FullName | Sort-Object CreationTime -Descending | Select-Object -First 1
             $version = ([xml](Get-Content -Path (Join-Path $latest.FullName "$package.nuspec"))).Package.metadata.version
             $FoundPackagesManual = Search-Wishlist -packagePath $package -packageVersion $version -manual
-            if ($FoundPackagesManual.Count -gt 0) {
+            if ($FoundPackagesManual) {
                 $null = $newPackages.Add($FoundPackagesManual)
             }
         }
@@ -85,7 +85,7 @@ function Start-Workflow {
                     }
                     $version = ([xml](Get-Content -Path $nuspec.FullName)).Package.metadata.version
                     $FoundPackagesAutomatic = Search-Wishlist $package $version
-                    if ($FoundPackagesAutomatic.Count -gt 0) {
+                    if ($FoundPackagesAutomatic) {
                         $null = $newPackages.Add($FoundPackagesAutomatic)
                     }
                 }
@@ -98,7 +98,7 @@ function Start-Workflow {
                     }
                     $version = ([xml](Get-Content -Path $nuspec.FullName)).Package.metadata.version
                     $FoundPackages = Search-Wishlist $package $version
-                    if ($FoundPackages.Count -gt 0) {
+                    if ($FoundPackages) {
                         $null = $newPackages.Add($FoundPackages)
                     }
                 }

@@ -46,7 +46,7 @@ Describe "Finding package name in wishlist" {
 
         foreach ($package in $packages) {
             $packageToUpdate = Search-Wishlist -packagePath $package -packageVersion $packageVersion
-            $packageToUpdate| Should -Be $null
+            $packageToUpdate | Should -Be $null
         }
     }
 
@@ -77,8 +77,6 @@ Describe "Finding package name in wishlist" {
             $packageToUpdate.version | Should -Be 2.0.0.0
         }
     }
-
-    # TODO: Add test if multiple packages can be updated at once
 
     AfterEach {
         Get-ChildItem "TestDrive:\urltofilteredinbox\" -Recurse -ErrorAction SilentlyContinue | Remove-Item -Force -Recurse -ErrorAction SilentlyContinue

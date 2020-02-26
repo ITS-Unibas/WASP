@@ -45,8 +45,6 @@ function Search-Wishlist {
         $GitFolderName = $GitFile.Replace(".git", "")
         $PackagesInbxFilteredPath = Join-Path -Path $config.Application.BaseDirectory -ChildPath $GitFolderName
 
-        $updatedPackages = New-Object System.Collections.ArrayList
-
         $NameAndVersionSeparator = $config.Application.WishlistSeperatorChar
     }
 
@@ -98,15 +96,11 @@ function Search-Wishlist {
                         Write-Host "$($_.Exception)"
                     }
 
-                    # Return list of destPaths
-                    $tmp = New-Object psobject @{'path' = $destPath; 'name' = $packageName; 'version' = $packageVersion }
-                    #$updatedPackages += , $tmp
-                    $null = $updatedPackages.Add($tmp)
-
                     Write-Log "Found package to update: $packageName with version $packageVersion"
+
+                    return New-Object psobject @{'path' = $destPath; 'name' = $packageName; 'version' = $packageVersion }
                 }
             }
-            return $updatedPackages
         }
         catch {
             Write-Log "$($_.Exception)"
