@@ -17,7 +17,7 @@ function Search-Wishlist {
     param (
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
-        [string]
+        [System.Object]
         $packagePath,
 
         [Parameter(Mandatory = $true)]
@@ -53,7 +53,7 @@ function Search-Wishlist {
     process {
         try {
             $wishlist = Get-Content -Path $wishlistPath | Where-Object { $_ -notlike "#*" }
-            $packageName = $package.Name
+            $packageName = $packagePath.Name
 
             Foreach ($line in $wishlist) {
                 if ($line -match "@") {
@@ -91,8 +91,8 @@ function Search-Wishlist {
                     }
 
                     try {
-                        Write-Log "Copying $($package.FullName) to $destPath"
-                        Copy-Item $package.FullName -Destination $destPath -Recurse -Force
+                        Write-Log "Copying $($packagePath.FullName) to $destPath"
+                        Copy-Item $packagePath.FullName -Destination $destPath -Recurse -Force
                     }
                     catch {
                         Write-Host "$($_.Exception)"
