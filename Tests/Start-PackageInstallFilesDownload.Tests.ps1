@@ -1,0 +1,63 @@
+$path = (Split-Path -Parent $MyInvocation.MyCommand.Path).Replace("\Tests", "\WASP")
+$Private = @(Get-ChildItem -Path $path\Private\*.ps1 -ErrorAction SilentlyContinue)
+
+foreach ($import in $Private) {
+    . $import.fullname
+}
+
+Describe "Overriding function for package" {
+    Mock Write-Log { }
+    Mock Invoke-Expression { }
+
+    New-Item "TestDrive:\" -Name "package" -ItemType Directory
+    New-Item "TestDrive:\package" -Name "2.0.0" -ItemType Directory
+    New-Item "TestDrive:\package\2.0.0" -Name "chocolateyInstall.ps1" -ItemType File
+    #Set-Content "TestDrive:\package\2.0.0\chocolateyInstall.ps1" -Value "#Content"
+    $packToolInstallPath = "TestDrive:\package\2.0.0\chocolateyInstall.ps1"
+
+    Context "Script has not been executed previously" {
+        It "Has forced download disabled" {
+            $ForcedDownload = $false
+            Start-OverrideFunctionForPackage $packToolInstallPath $ForcedDownload
+            Assert-MockCalled Invoke-Expression -Times 1 -ParameterFilter { $command -eq $packToolInstallPath }
+        }
+
+        It "Has forced download enabled" {
+            $ForcedDownload = $true
+            Start-OverrideFunctionForPackage $packToolInstallPath $ForcedDownload
+            Assert-MockCalled Invoke-Expression -Times 1 -ParameterFilter { $command -eq $packToolInstallPath }
+        }
+    }
+
+    Context "Script has not been executed previously" {
+        $ForcedDownload = $false
+        It "Has forced download disabled" {
+            Start-OverrideFunctionForPackage $packToolInstallPath $ForcedDownload
+            Assert-MockCalled Invoke-Expression -Times 1 -ParameterFilter { $command -eq $packToolInstallPath }
+        }
+        It "Has forced download disabled and finds downloaded binary (exe)" {
+            New-Item "TestDrive:\package\2.0.0" -Name "package.exe" -ItemType File
+            Start-OverrideFunctionForPackage $packToolInstallPath $ForcedDownload
+            Assert-MockCalled Invoke-Expression -Times 0 -Scope It
+        }
+        It "Has forced download disabled and finds downloaded binary (msi)" {
+            New-Item "TestDrive:\package\2.0.0" -Name "package.msi" -ItemType File
+            Start-OverrideFunctionForPackage $packToolInstallPath $ForcedDownload
+            Assert-MockCalled Invoke-Expression -Times 0 -Scope It
+        }
+        It "Has forced download disabled and finds downloaded binary (zip)" {
+            New-Item "TestDrive:\package\2.0.0" -Name "package.zip" -ItemType File
+            Start-OverrideFunctionForPackage $packToolInstallPath $ForcedDownload
+            Assert-MockCalled Invoke-Expression -Times 0 -Scope It
+        }
+
+        BeforeEach {
+            New-Item "TestDrive:\package\2.0.0" -Name "chocolateyInstall.ps1" -ItemType File -ErrorAction SilentlyContinue
+            New-Item "TestDrive:\package\2.0.0" -Name "chocolateyInstall_old.ps1" -ItemType File -ErrorAction SilentlyContinue
+        }
+
+        AfterEach {
+            Get-ChildItem "TestDrive:\package\2.0.0\*" -Recurse -ErrorAction SilentlyContinue | Remove-Item -Force -ErrorAction SilentlyContinue
+        }
+    }
+}

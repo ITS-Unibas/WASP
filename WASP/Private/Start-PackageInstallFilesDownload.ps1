@@ -1,4 +1,4 @@
-function Start-OverrideFunctionForPackage {
+function Start-PackageInstallFilesDownload {
     <#
     .SYNOPSIS
         This script is called to run the install script of a package. There are three different install functions that are overwritten.
@@ -16,9 +16,12 @@ function Start-OverrideFunctionForPackage {
     #>
     [CmdletBinding()]
     param (
+        [parameter(Mandatory = $true)]
+        [ValidateNotNullOrEmpty()]
         [string]
         $packToolInstallPath,
 
+        [ValidateNotNullOrEmpty()]
         [bool]
         $ForcedDownload
     )
