@@ -18,13 +18,13 @@ Describe "Overriding function for package" {
     Context "Script has not been executed previously" {
         It "Has forced download disabled" {
             $ForcedDownload = $false
-            Start-OverrideFunctionForPackage $packToolInstallPath $ForcedDownload
+            Start-PackageInstallFilesDownload $packToolInstallPath $ForcedDownload
             Assert-MockCalled Invoke-Expression -Times 1 -ParameterFilter { $command -eq $packToolInstallPath }
         }
 
         It "Has forced download enabled" {
             $ForcedDownload = $true
-            Start-OverrideFunctionForPackage $packToolInstallPath $ForcedDownload
+            Start-PackageInstallFilesDownload $packToolInstallPath $ForcedDownload
             Assert-MockCalled Invoke-Expression -Times 1 -ParameterFilter { $command -eq $packToolInstallPath }
         }
     }
@@ -32,22 +32,22 @@ Describe "Overriding function for package" {
     Context "Script has not been executed previously" {
         $ForcedDownload = $false
         It "Has forced download disabled" {
-            Start-OverrideFunctionForPackage $packToolInstallPath $ForcedDownload
+            Start-PackageInstallFilesDownload $packToolInstallPath $ForcedDownload
             Assert-MockCalled Invoke-Expression -Times 1 -ParameterFilter { $command -eq $packToolInstallPath }
         }
         It "Has forced download disabled and finds downloaded binary (exe)" {
             New-Item "TestDrive:\package\2.0.0" -Name "package.exe" -ItemType File
-            Start-OverrideFunctionForPackage $packToolInstallPath $ForcedDownload
+            Start-PackageInstallFilesDownload $packToolInstallPath $ForcedDownload
             Assert-MockCalled Invoke-Expression -Times 0 -Scope It
         }
         It "Has forced download disabled and finds downloaded binary (msi)" {
             New-Item "TestDrive:\package\2.0.0" -Name "package.msi" -ItemType File
-            Start-OverrideFunctionForPackage $packToolInstallPath $ForcedDownload
+            Start-PackageInstallFilesDownload $packToolInstallPath $ForcedDownload
             Assert-MockCalled Invoke-Expression -Times 0 -Scope It
         }
         It "Has forced download disabled and finds downloaded binary (zip)" {
             New-Item "TestDrive:\package\2.0.0" -Name "package.zip" -ItemType File
-            Start-OverrideFunctionForPackage $packToolInstallPath $ForcedDownload
+            Start-PackageInstallFilesDownload $packToolInstallPath $ForcedDownload
             Assert-MockCalled Invoke-Expression -Times 0 -Scope It
         }
 
