@@ -97,7 +97,7 @@ function Start-PackageDistribution() {
                         Write-Log "Nupkg already exists $nupkg."
                         # Nupkg exists already, now we have to check if anything has changed and if yes we have to add a release version into the nuspec
                         # Get hash of the newest existing nupkg and save the version of the existing nupkg
-                        $hashOldNupkg = Get-FileHash $nupkg
+                        $hashOldNupkg = Get-NupkgHash $nupkg $packageRootPath
                         # Build the package to compare it to the old one
                         Invoke-Expression -Command ("choco pack " + $nuspecFile + " -s .")
                         $nupkgNew = (Get-ChildItem -Path $packageRootPath -Recurse -Filter *.nupkg).FullName
@@ -106,8 +106,9 @@ function Start-PackageDistribution() {
                             continue
                         }
                         Write-Log "Calculating hash for nupkg: $nupkgNew."
-                        $hashNewNupkg = Get-FileHash $nupkgNew
+                        $hashNewNupkg = Get-NupkgHash $nupkg $packageRootPath
                         if (-Not ($hashNewNupkg -eq $hashOldNupkg)) {
+                            Write-Log "Hashes do not match, increasing release version in $nuspecFile by 1."
                             # There were changes in the package, so iterate the version of the nuspec.
                             Set-NewReleaseVersion $false $nuspecFile
                             # Because the later new build package has a different version and therefore a new nupkg will be created we have to remove the old not anymore used nupkg

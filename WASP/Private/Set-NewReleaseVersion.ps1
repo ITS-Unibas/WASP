@@ -31,7 +31,6 @@ function Set-NewReleaseVersion() {
 
     begin {
         $version = ([xml](Get-Content -Path $nuspecPath)).Package.metadata.version
-
     }
 
     process {

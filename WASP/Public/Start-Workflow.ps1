@@ -53,7 +53,13 @@ function Start-Workflow {
         foreach ($package in $packagesManual) {
             # Use the latest created package as reference
             $latest = Get-ChildItem -Path $package.FullName | Sort-Object CreationTime -Descending | Select-Object -First 1
-            $version = ([xml](Get-Content -Path (Join-Path $latest.FullName "$package.nuspec"))).Package.metadata.version
+            try {
+                $version = ([xml](Get-Content -Path (Join-Path $latest.FullName "$package.nuspec"))).Package.metadata.version
+            }
+            catch {
+                Write-Log "Error reading $(Join-Path $latest.FullName "$package.nuspec")" -Severity 3
+                Write-Log "$($_.Exception.Message)" -Severity 3
+            }
             $FoundPackagesManual = Search-Wishlist -packagePath $package -packageVersion $version -manual
             if ($FoundPackagesManual) {
                 $null = $newPackages.Add($FoundPackagesManual)
@@ -83,7 +89,13 @@ function Start-Workflow {
                     if (-Not $nuspec -or $nuspec.GetType().ToString() -eq "System.Object[]") {
                         continue
                     }
-                    $version = ([xml](Get-Content -Path $nuspec.FullName)).Package.metadata.version
+                    try {
+                        $version = ([xml](Get-Content -Path $nuspec.FullName)).Package.metadata.version
+                    }
+                    catch {
+                        Write-Log "Error reading $($nuspec.FullName)" -Severity 3
+                        Write-Log "$($_.Exception.Message)" -Severity 3
+                    }
                     $FoundPackagesAutomatic = Search-Wishlist $package $version
                     if ($FoundPackagesAutomatic) {
                         $null = $newPackages.Add($FoundPackagesAutomatic)
@@ -96,7 +108,13 @@ function Start-Workflow {
                     if (-Not $nuspec -or $nuspec.GetType().ToString() -eq "System.Object[]") {
                         continue
                     }
-                    $version = ([xml](Get-Content -Path $nuspec.FullName)).Package.metadata.version
+                    try {
+                        $version = ([xml](Get-Content -Path $nuspec.FullName)).Package.metadata.version
+                    }
+                    catch {
+                        Write-Log "Error reading $($nuspec.FullName)" -Severity 3
+                        Write-Log "$($_.Exception.Message)" -Severity 3
+                    }
                     $FoundPackages = Search-Wishlist $package $version
                     if ($FoundPackages) {
                         $null = $newPackages.Add($FoundPackages)
