@@ -16,7 +16,7 @@ Describe "Getting hash of nupkg" {
 
   New-Item "TestDrive:\" -Name "nupkg" -ItemType Directory
 
-  Compress-Archive -Path TestDrive:\sources -DestinationPath "TestDrive:\nupkg\package.zip" -Force
+  Compress-Archive -Path "TestDrive:\sources\*" -DestinationPath "TestDrive:\nupkg\package.zip" -Force
   Rename-Item -Path "TestDrive:\nupkg\package.zip" -NewName "package.nupkg"
 
   $nupkgPath = "TestDrive:\nupkg\package.nupkg"
@@ -24,9 +24,10 @@ Describe "Getting hash of nupkg" {
 
   It "hashes contents of nupkg" {
     $hash = Get-NupkgHash $nupkgPath $packageFolder
-    $hash | Should -Be
+    $hash | Should -Be -Not $null
   }
 
+  <#
   It "changes to the readme do not have an effect to the hash" {
     $hash = Get-NupkgHash $nupkgPath $packageFolder
   }
@@ -38,4 +39,5 @@ Describe "Getting hash of nupkg" {
   It "tests hash for changes to file in \legal directory" {
     $hash = Get-NupkgHash $nupkgPath $packageFolder
   }
+  #>
 }
