@@ -77,11 +77,9 @@ function Start-PackageDistribution() {
                 try {
                     Set-Location "$PackageGalleryPath\$packageName\$packageVersion"
                     $nuspecFile = (Get-ChildItem -Path $packageRootPath -Recurse -Filter *.nuspec).FullName
-                    $pkgNameNuspec = Get-NuspecXMLValue $nuspecFile "id"
-                    $pkgVersionNuspec = Get-NuspecXMLValue $nuspecFile "version"
-                    $env:ChocolateyPackageName = $pkgNameNuspec
-                    $env:ChocolateyPackageVersion = $pkgVersionNuspec
-                    Start-OverrideFunctionForPackage ( Join-Path $toolsPath "chocolateyInstall.ps1") $ForcedDownload
+                    $env:ChocolateyPackageName = ([xml](Get-Content -Path $nuspecFile)).Package.metadata.id
+                    $env:ChocolateyPackageVersion = ([xml](Get-Content -Path $nuspecFile)).Package.metadata.version
+                    Start-PackageInstallFilesDownload ( Join-Path $toolsPath "chocolateyInstall.ps1") $ForcedDownload
                     if ($LASTEXITCODE -eq 1) {
                         Write-Log "Override-Function terminated with an error. Exiting.." -Severity 3
                         continue
@@ -108,8 +106,9 @@ function Start-PackageDistribution() {
                             continue
                         }
                         Write-Log "Calculating hash for nupkg: $nupkgNew."
-                        $hashNewNupkg = Get-NupkgHash $nupkgNew $packageRootPath
+                        $hashNewNupkg = Get-NupkgHash $nupkg $packageRootPath
                         if (-Not ($hashNewNupkg -eq $hashOldNupkg)) {
+                            Write-Log "Hashes do not match, increasing release version in $nuspecFile by 1."
                             # There were changes in the package, so iterate the version of the nuspec.
                             Set-NewReleaseVersion $false $nuspecFile
                             # Because the later new build package has a different version and therefore a new nupkg will be created we have to remove the old not anymore used nupkg
@@ -137,7 +136,7 @@ function Start-PackageDistribution() {
 
                 }
                 catch [Exception] {
-                    $ChocolateyPackageName = Get-NuspecXMLValue $nuspecFile "id"
+                    $ChocolateyPackageName = ([xml](Get-Content -Path $nuspecFile)).Package.metadata.id
                     Write-Log ("Package " + $ChocolateyPackageName + " override process crashed. Skipping it.") -Severity 3
                     Write-Log ($_.Exception | Format-List -force | Out-String) -Severity 3
                     Remove-Item -Path "$packageRootPath\unzipedNupkg" -ErrorAction SilentlyContinue
@@ -162,7 +161,7 @@ function Start-PackageDistribution() {
                     $packagePath = Join-Path $PackageGalleryPath $package
                     $versionsList = Get-ChildItem $packagePath -Directory
                     foreach ($version in $versionsList) {
-                        if (Test-RemoteFolder $GitFolderName $package $version $branch) {
+                        if (Test-ExistPackageVersion $GitFolderName $package $version $branch) {
                             $packageRootPath = Join-Path $packagePath $version
                             # TODO: Only send nupkg to server when it does not exist there yet
                             Send-NupkgToServer $packageRootPath $chocolateyDestinationServer

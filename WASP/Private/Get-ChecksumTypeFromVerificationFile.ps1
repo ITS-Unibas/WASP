@@ -5,7 +5,7 @@ function Get-ChecksumTypeFromVerificationFile() {
 
     .DESCRIPTION
         If this function is called and the VERIFICATION.txt file exists there will be searched for the checksumType in the file by using a regex.
-        If there is no match with the regex the default "sha256" will be returned.
+        If there is no match with the regex the default "md5" will be returned.
 
     .OUTPUTS
         The checksumType will be returned as a string.

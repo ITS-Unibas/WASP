@@ -1,18 +1,15 @@
 function Get-VerificationFilePath {
     <#
     .SYNOPSIS
-        Short description
+        Builds path to "legal\VERIFICATION.txt" of a package
     .DESCRIPTION
-        Long description
+        Uses package path and version on development branch to build path to verification file.
     .EXAMPLE
-        PS C:\> <example usage>
-        Explanation of what the example does
-    .INPUTS
-        Inputs (if any)
+        PS C:\> Get-VerificationFilePath
     .OUTPUTS
-        Output (if any)
+        Path to file
     .NOTES
-        General notes
+        CAUTION: this method only builds the path, the existence check is performed when reading from the file
     #>
     [CmdletBinding()]
     param (

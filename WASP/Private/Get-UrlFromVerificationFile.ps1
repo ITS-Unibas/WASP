@@ -18,7 +18,7 @@ function Get-UrlFromVerificationFile() {
         Has to be set to false if searchFor32BitUrl is set to true!
 
     .OUTPUTS
-        The url will be returned as a string.
+        The first found url will be returned as a string if found, $none is returned otherwise.
     #>
     param(
         [parameter(Mandatory = $true)][bool] $searchFor32BitUrl,
@@ -60,8 +60,8 @@ function Get-UrlFromVerificationFile() {
             }
         }
         # We couldn't find an url for 32bit so we search for an independent url
-        Write-Log "$($packageName): Searching for any 32bit urls with file endings (.msi|.exe|.zip|.tar.gz|.msu)..."
-        $regexLinkWithFileExtension = '(http[:/\w\d.&%^$=#\-@+\*]*(.msi|.exe|.zip|.tar.gz|.msu))'
+        Write-Log "$($packageName): Searching for any urls with file endings (.msi|.exe|.zip|.tar.gz|.msu)..."
+        $regexLinkWithFileExtension = '(http[:/\w\d.&%^$=#\-@+\*]*(\.msi|\.exe|\.zip|\.tar\.gz|\.msu))'
         $urlMatches = (Select-String -Path $verificationPath -Pattern $regexLinkWithFileExtension).Matches
         if ($urlMatches) {
             Write-Log "$($packageName): Returning independent url"

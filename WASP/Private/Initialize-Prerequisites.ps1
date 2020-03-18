@@ -18,7 +18,7 @@ function Initialize-Prerequisites {
     process {
         $ChocoPath = $env:ChocolateyInstall
         if (-Not $ChocoPath) {
-            Write-Log "Chocolatey seems not to be installed, please run 'Register-ChocolateyServer' first."
+            Write-Log "Chocolatey seems not to be installed, please run 'Register-ChocolateyPackagingServer' first."
             return
         }
 

@@ -1,5 +1,5 @@
 function Get-NupkgHash() {
-    <#
+  <#
     .SYNOPSIS
         Gets a hash string for a given nupkg
 
@@ -16,16 +16,20 @@ function Get-NupkgHash() {
     .OUTPUTS
         This fuction returns a string which consists of a concatenation of all file hashes and represents the hashvalue of the nupkg
     #>
-    param(
-      [Parameter(Mandatory=$true)][string]$nupkgPath,
-      [Parameter(Mandatory=$true)][string]$packageFolder
-    )
-    Add-Type -AssemblyName System.IO.Compression.FileSystem
-    $hashString = ""
-    $dir = New-Item -ItemType directory -Path (Join-Path $packageFolder "unzipedNupkg")
-    [System.IO.Compression.ZipFile]::ExtractToDirectory($nupkgPath, $dir.FullName)
+  param(
+    [Parameter(Mandatory = $true)][string]$nupkgPath,
+    [Parameter(Mandatory = $true)][string]$packageFolder
+  )
+  Add-Type -AssemblyName System.IO.Compression.FileSystem
+  $hashString = ""
+  $dir = New-Item -ItemType directory -Path (Join-Path $packageFolder "unzipedNupkg")
+  try {
+    $tmpZipPath = Join-Path (Split-Path $nupkgPath -Parent) "package.zip"
+    Copy-Item $nupkgPath -Destination $tmpZipPath
+    Expand-Archive -Path $tmpZipPath -DestinationPath $dir.FullName
+    #[System.IO.Compression.ZipFile]::ExtractToDirectory($nupkgPath, $dir.FullName)
     # Get hashvalue of the nuspec File
-    $nuspec = (Get-ChildItem -Path $dir.FullName | Where-Object {$_.FullName -match ".nuspec"}).FullName
+    $nuspec = (Get-ChildItem -Path $dir.FullName | Where-Object { $_.FullName -match ".nuspec" }).FullName
     $hashString = $hashString + ([string](Get-FileHash $nuspec).Hash)
     # Get hashvalue of the tools and legal folder
     $toolsDir = ($dir.FullName + '\tools')
@@ -44,5 +48,11 @@ function Get-NupkgHash() {
       }
     }
     $removed = Remove-Item -Path $dir.FullName -Recurse -Force
+    $removed = Remove-Item -Path $tmpZipPath -Recurse -Force
     return $hashString
   }
+  catch {
+    Write-Error -Exception $_.Exception
+    Write-Log $_.Exception -Severity 3
+  }
+}

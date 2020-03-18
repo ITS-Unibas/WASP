@@ -1,18 +1,15 @@
 function Format-VersionString {
     <#
     .SYNOPSIS
-        Short description
+        Formats version string
     .DESCRIPTION
-        Long description
-    .EXAMPLE
-        PS C:\> <example usage>
-        Explanation of what the example does
-    .INPUTS
-        Inputs (if any)
-    .OUTPUTS
-        Output (if any)
+        Formats version string to replace any non-digit characters with a 0
     .NOTES
-        General notes
+        FileName: Format-VersionString.ps1
+        Author: Kevin Schaefer, Maximilian Burgert
+        Contact: its-wcs-ma@unibas.ch
+        Created: 2020-30-01
+        Version: 1.0.0
     #>
     [CmdletBinding()]
     param (
@@ -37,10 +34,9 @@ function Format-VersionString {
                 $null = $versionList.Add("0")
             }
         }
-        $version = $versionList -join "."
+        return $versionList -join "."
     }
 
     end {
-        return $version
     }
 }
