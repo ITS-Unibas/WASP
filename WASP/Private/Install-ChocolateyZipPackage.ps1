@@ -121,7 +121,7 @@ function Install-ChocolateyZipPackage() {
             -Options $options `
             -GetOriginalFileName
         $unzipLocation = (Join-Path (Get-Item -Path ".\").FullName "tools")
-        Get-ChocolateyUnzip "$filePath" $unzipLocation $specificFolder $packageName
+        #Get-ChocolateyUnzip "$filePath" $unzipLocation $specificFolder $packageName
         $FileName = Get-item $FilePath | Select-Object -ExpandProperty Name
         Edit-ChocolateyInstaller -ToolsPath (Join-Path (Get-Item -Path ".\").FullName "tools") -FileName $FileName -UnzipPath $unzipLocation
     }

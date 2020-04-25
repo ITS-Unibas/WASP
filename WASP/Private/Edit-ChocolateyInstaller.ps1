@@ -113,12 +113,14 @@ function Edit-ChocolateyInstaller {
                 $VersionList.Sort()
                 $VersionList.Reverse()
                 $LastVersion = $VersionList[1]
+                Write-Log ("Previous version of package found: " + $VersionList[1]) -Severity 1
             }
 
             # Fetch the additional scripts from the last version or create them from scratch
             $AdditionalScripts = $PreAdditionalScripts + $PostAddtionalScripts
             if ($LastVersion) {
                 $LastVersionPath = Join-Path -Path $ParentSWDirectory -ChildPath "$LastVersion\tools"
+                # TODO: Instead of fetching only the previous additional scripts, fetch all scripts except chocolateyInstall.ps1 and chocolateyUninstall.ps1
                 foreach ($AdditionalScript in $AdditionalScripts) {
                     $SourcePath = Join-Path -Path $LastVersionPath -ChildPath $AdditionalScript
                     $DestinationPath = Join-Path -Path $ToolsPath -ChildPath $AdditionalScript
