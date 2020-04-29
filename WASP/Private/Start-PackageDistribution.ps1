@@ -132,6 +132,7 @@ function Start-PackageDistribution() {
                     Write-Log ([string] (git -C $packageRootPath add . 2>&1))
                     Write-Log ([string] (git -C $packageRootPath commit -m "Created override for $packageName $packageVersion" 2>&1))
                     Write-Log ([string] (git -C $packageRootPath push 2>&1))
+                    # TODO: Remove build files only when package is moved to prod branch
                     Remove-BuildFiles $packageRootPath
 
                 }

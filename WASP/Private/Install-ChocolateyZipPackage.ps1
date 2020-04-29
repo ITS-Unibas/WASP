@@ -36,7 +36,7 @@ function Install-ChocolateyZipPackage() {
         [parameter(ValueFromRemainingArguments = $true)][Object[]] $ignoredArguments
     )
     $fileType = 'zip'
-    $downloadFilePath = Join-Path (Get-Item -Path ".\").FullName "$($packageName)Install.$fileType"
+    $downloadFilePath = Join-Path (Join-Path (Get-Item -Path ".\").FullName "tools") "$($packageName)Install.$fileType"
 
 
     if ($url -eq '' -or $url -eq $null) {
