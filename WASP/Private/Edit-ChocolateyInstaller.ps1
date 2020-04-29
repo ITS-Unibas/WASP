@@ -128,7 +128,7 @@ function Edit-ChocolateyInstaller {
                         Copy-Item -Path $SourcePath -Destination $DestinationPath -Force
                     }
                     else {
-                        $null = New-Item -Path $DestinationPath
+                        $null = New-Item -Path $DestinationPath -ErrorAction SilentlyContinue
                         $null = Set-Content -Path $DestinationPath -Value '# This script is run prior/post to the installation.'
                     }
                 }
