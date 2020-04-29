@@ -35,63 +35,68 @@ function Install-ChocolateyZipPackage() {
         [alias("fileFullPath64")][parameter(Mandatory = $false)][string] $file64 = '',
         [parameter(ValueFromRemainingArguments = $true)][Object[]] $ignoredArguments
     )
+
     $fileType = 'zip'
     $downloadFilePath = Join-Path (Join-Path (Get-Item -Path ".\").FullName "tools") "$($packageName)Install.$fileType"
 
-
-    if ($url -eq '' -or $url -eq $null) {
-        if ($file -and (Test-Path $file)) {
-            # first check whether we already have our zip file
-            Write-Log "$($packageName): The zip32 package is already present and no download is needed"
-            $url = $file
-        }
-        else {
-            # we do not have the file, so we need to get the download url from
-            # VERIFICATION.txt
-            Write-Log "$($packageName): Getting url for file from VERIFICATION.txt"
-            $searchArgs = @{
-                searchFor32BitUrl = $True
-                searchFor64BitUrl = $False
-            }
-            $url = Get-UrlFromVerificationFile @searchArgs
-
-            $searchArgs = @{
-                searchFor32BitChecksum = $True
-                searchFor64BitChecksum = $False
-            }
-            $checksum = Get-ChecksumFromVerificationFile @searchArgs
-        }
+    # Check if url and checksum is given as parameters.
+    if (($url -and $checksum) -or (($url64 -and $checksum64))) {
+        Write-Log "$($packageName): URL and CHECKSUM available in chocolateyInstall.ps1. No need to look elsewhere"
     }
-
-    if ($url64bit -eq '' -or $url64bit -eq $null) {
-        if ($file64 -and (Test-Path $file64)) {
-            # first check whether we already have our zip file
-            Write-Log "$($packageName): The zip64 package is already present and no download is needed"
-            $url64bit = $file64
-        }
-        else {
-            # we do not have the file, so we need to get the download url from
-            # VERIFICATION.txt
-            Write-Log "$($packageName): Getting url for file64 from VERIFICATION.txt"
-            $searchArgs = @{
-                searchFor32BitUrl = $False
-                searchFor64BitUrl = $True
+    else {
+        Write-Log "$($packageName): URL and CHECKSUM not present in chocolateyInstall.ps1. Looking for VERIFICATION.txt"
+        if ($url -eq '' -or $url -eq $null) {
+            if ($file -and (Test-Path $file)) {
+                # first check whether we already have our zip file
+                Write-Log "$($packageName): The zip32 package is already present and no download is needed"
+                $url = $file
             }
-            $url64bit = Get-UrlFromVerificationFile @searchArgs
+            else {
+                # we do not have the file, so we need to get the download url from
+                # VERIFICATION.txt
+                Write-Log "$($packageName): Getting url for file from VERIFICATION.txt"
+                $searchArgs = @{
+                    searchFor32BitUrl = $True
+                    searchFor64BitUrl = $False
+                }
+                $url = Get-UrlFromVerificationFile @searchArgs
 
-            $searchArgs = @{
-                searchFor32BitChecksum = $False
-                searchFor64BitChecksum = $True
+                $searchArgs = @{
+                    searchFor32BitChecksum = $True
+                    searchFor64BitChecksum = $False
+                }
+                $checksum = Get-ChecksumFromVerificationFile @searchArgs
             }
-            $checksum64 = Get-ChecksumFromVerificationFile @searchArgs
+        } elseif ($url64bit -eq '' -or $url64bit -eq $null) {
+            if ($file64 -and (Test-Path $file64)) {
+                # first check whether we already have our zip file
+                Write-Log "$($packageName): The zip64 package is already present and no download is needed"
+                $url64bit = $file64
+            }
+            else {
+                # we do not have the file, so we need to get the download url from
+                # VERIFICATION.txt
+                Write-Log "$($packageName): Getting url for file64 from VERIFICATION.txt"
+                $searchArgs = @{
+                    searchFor32BitUrl = $False
+                    searchFor64BitUrl = $True
+                }
+                $url64bit = Get-UrlFromVerificationFile @searchArgs
+
+                $searchArgs = @{
+                    searchFor32BitChecksum = $False
+                    searchFor64BitChecksum = $True
+                }
+                $checksum64 = Get-ChecksumFromVerificationFile @searchArgs
+            }
         }
     }
     # Check if any urls were found
     if (($url -and $checksum) -or ($url64bit -and $checksum64)) {
-        Write-Log "$($packageName): Urls found! $url $url64bit" -Severity 1
+        Write-Log "$($packageName): Urls and checksums found! $url $url64bit $checksum $checksum64" -Severity 1
     }
     else {
-        Write-Log "$($packageName): Wether url nor checksum found! Exiting..." -Severity 3
+        Write-Log "$($packageName): Whether url nor checksum found! Exiting..." -Severity 3
         exit 1
     }
 
