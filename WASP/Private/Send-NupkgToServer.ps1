@@ -24,7 +24,9 @@ function Send-NupkgToServer {
         [string]
         $url
     )
-
+    begin {
+        $Config = Read-ConfigFile
+    }
     process {
         $nupkg = (Get-ChildItem -Path $nuspecFolder | Where-Object { $_.FullName -match ".nupkg" }).FullName
         $nuspecFile = (Get-ChildItem -Path $nuspecFolder | Where-Object { $_.FullName -match ".nuspec" }).FullName
@@ -35,7 +37,8 @@ function Send-NupkgToServer {
         }
         try {
             # Try to push the package to the dev choco server
-            Invoke-Expression -Command ("choco push " + $nupkg + " -s " + $url + " -f --api-key=chocolateyrocks")
+            $NuGetExecutable = Join-Path $Config.Application.BaseDirectory "NuGet\nuget.exe"
+            Invoke-Expression -Command ("$NugetExecutable push" + $nupkg + " -Source " + $url + " -ApiKey $($Config.Application.ApiKey) -Timeout 10800" )
             Write-Log ("Pushed package " + $nupkg + " successfully to server.") -Severity 1
         }
         catch {
