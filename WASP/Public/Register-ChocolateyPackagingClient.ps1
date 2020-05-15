@@ -1,16 +1,16 @@
-function Register-ChocolateyPackagingServer {
+function Register-ChocolateyPackagingClient {
     <#
    .SYNOPSIS
-    Setup a new Chocolatey Packaging Server
+    Setup a new Chocolatey Packaging Client
    .DESCRIPTION
-    Setup a new Chocolatey Packaging Server with all the stuff you need for doing sick packaging
+    Setup a new Chocolatey Packaging Client with all the stuff you need for doing sick packaging
    .NOTES
-    FileName: Register-ChocolateyPackagingServer.ps1
+    FileName: Register-ChocolateyPackagingClient.ps1
     Author: Kevin Schaefer
     Contact: its-wcs-ma@unibas.ch
     Created: 2019-07-31
-    Updated: 2019-07-31
-    Version: 1.0.0
+    Updated: 2020-05-15
+    Version: 1.1.0
    .EXAMPLE
     PS>
    .LINK
