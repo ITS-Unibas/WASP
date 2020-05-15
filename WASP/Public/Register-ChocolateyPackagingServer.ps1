@@ -35,6 +35,17 @@ function Register-ChocolateyPackagingServer {
         Invoke-Expression ((New-Object System.Net.WebClient).DownloadString('https://chocolatey.org/install.ps1')) | ForEach-Object { Write-Log $_ }
         # TODO: Check if chocolatey was installed
 
+        # Download Nuget
+        $NugetUrl = "https://dist.nuget.org/win-x86-commandline/latest/nuget.exe"
+        $NuGetDirectory = New-Item -Path (Join-Path $Config.Application.BaseDirectory "NuGet") -ItemType Directory -Force
+        $NuGetFilePath = (Join-Path $NuGetDirectory.FullName "nuget.exe")
+        Invoke-WebRequest -Uri $NugetUrl -OutFile $NuGetFilePath
+        if(-Not (Test-Path -Path $NuGetFilePath)) {
+            Write-Log "There was an error downloading nuget.exe from $NuGetUrl. Please Download it manually to $NugetDirectory." -Severity 3
+        } else {
+            Write-Log "Successfully downloaded nuget.exe." -Severity 1
+        }
+
         Request-GitRepo -User $Config.Application.GitServiceUser -GitRepo $Config.Application.PackagesInbox -CloneDirectory $Config.Application.BaseDirectory -WithSubmodules
         Request-GitRepo -User $Config.Application.GitServiceUser -GitRepo $Config.Application.PackageGallery -CloneDirectory $Config.Application.BaseDirectory
         Request-GitRepo -User $Config.Application.GitServiceUser -GitRepo $Config.Application.PackagesInboxFiltered -CloneDirectory $Config.Application.BaseDirectory
