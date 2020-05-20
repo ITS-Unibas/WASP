@@ -91,7 +91,7 @@ function Edit-ChocolateyInstaller {
             if ($UnzipPath) {
                 Write-Log "Calling set unzip location and remove installzip, got unzip location $UnzipPath" -Severity 1
                 $InstallerContent = $InstallerContent | ForEach-Object { $_ -replace '.*unzipLocation[\s]*=[\s]*Get-PackageCacheLocation', "unzipLocation = $UnzipPath" }
-                $InstallerContent = $InstallerContent | ForEach-Object { $_ -replace 'Install-ChocolateyZipPackage\s*@packageArgs', 'Install-ChocolateyPackage @packageArgs' }
+                $InstallerContent = $InstallerContent | ForEach-Object { $_ -replace 'Install-ChocolateyZipPackage\s*@packageArgs', 'Install-ChocolateyInstallPackage @packageArgs' }
             }
 
             # Now we're getting to check if there was already version packaged. If yes we're going to get the last version
@@ -113,12 +113,14 @@ function Edit-ChocolateyInstaller {
                 $VersionList.Sort()
                 $VersionList.Reverse()
                 $LastVersion = $VersionList[1]
+                Write-Log ("Previous version of package found: " + $VersionList[1]) -Severity 1
             }
 
             # Fetch the additional scripts from the last version or create them from scratch
             $AdditionalScripts = $PreAdditionalScripts + $PostAddtionalScripts
             if ($LastVersion) {
                 $LastVersionPath = Join-Path -Path $ParentSWDirectory -ChildPath "$LastVersion\tools"
+                # TODO: Instead of fetching only the previous additional scripts, fetch all scripts except chocolateyInstall.ps1 and chocolateyUninstall.ps1
                 foreach ($AdditionalScript in $AdditionalScripts) {
                     $SourcePath = Join-Path -Path $LastVersionPath -ChildPath $AdditionalScript
                     $DestinationPath = Join-Path -Path $ToolsPath -ChildPath $AdditionalScript
@@ -126,7 +128,7 @@ function Edit-ChocolateyInstaller {
                         Copy-Item -Path $SourcePath -Destination $DestinationPath -Force
                     }
                     else {
-                        $null = New-Item -Path $DestinationPath
+                        $null = New-Item -Path $DestinationPath -ErrorAction SilentlyContinue
                         $null = Set-Content -Path $DestinationPath -Value '# This script is run prior/post to the installation.'
                     }
                 }

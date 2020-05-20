@@ -52,12 +52,12 @@ function Start-PackageDistribution() {
 
                 $foundInWishlist = $false
                 foreach ($line in $wishlist) {
-                    if ($line -match "$packageName@$packageVersion") {
+                    if ($line -match $packageName) {
                         $foundInWishlist = $true
                     }
                 }
                 if (!$foundInWishlist) {
-                    Write-Log "Skipping package $packageName, because it is not in wishlist." -Severity 2
+                    Write-Log "Skipping package $packageName@$PackageVersion, because it is not in wishlist." -Severity 2
                     continue
                 }
                 $packageRootPath = Join-Path $PackageGalleryPath (Join-Path $packageName $packageVersion)
@@ -132,6 +132,7 @@ function Start-PackageDistribution() {
                     Write-Log ([string] (git -C $packageRootPath add . 2>&1))
                     Write-Log ([string] (git -C $packageRootPath commit -m "Created override for $packageName $packageVersion" 2>&1))
                     Write-Log ([string] (git -C $packageRootPath push 2>&1))
+                    # TODO: Remove build files only when package is moved to prod branch
                     Remove-BuildFiles $packageRootPath
 
                 }

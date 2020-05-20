@@ -37,7 +37,9 @@ function Remove-BuildFiles {
             # .nupkg files will be left over, so we can move the nupkg onto the next instance on the repo server.
             # TODO: maybe there is a better solution for this.
             if ($Line -notlike "*nupkg*") {
-                Remove-Item -Path (Join-Path $PackagePath $Line) -ErrorAction SilentlyContinue
+                $path = Join-Path $PackagePath $Line
+                Write-Log "Removing $path"
+                Remove-Item -Path $path -ErrorAction SilentlyContinue
             }
         }
     }
