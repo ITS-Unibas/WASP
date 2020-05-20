@@ -25,6 +25,7 @@
         "ChocoServerDEV": "https://its-wcs-choco1.its.unibas.ch/dev/chocolatey",
         "ChocoServerTEST": "https://its-wcs-choco1.its.unibas.ch/test/chocolatey",
         "ChocoServerPROD": "https://its-wcs-choco1.its.unibas.ch/prod/chocolatey",
+        "ApiKey": "chocolateyrocks",
         "Reviewers": [
             "burmax00",
             "schaefek"

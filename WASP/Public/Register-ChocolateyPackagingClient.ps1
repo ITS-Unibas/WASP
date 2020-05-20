@@ -1,16 +1,16 @@
-function Register-ChocolateyPackagingServer {
+function Register-ChocolateyPackagingClient {
     <#
    .SYNOPSIS
-    Setup a new Chocolatey Packaging Server
+    Setup a new Chocolatey Packaging Client
    .DESCRIPTION
-    Setup a new Chocolatey Packaging Server with all the stuff you need for doing sick packaging
+    Setup a new Chocolatey Packaging Client with all the stuff you need for doing sick packaging
    .NOTES
-    FileName: Register-ChocolateyPackagingServer.ps1
+    FileName: Register-ChocolateyPackagingClient.ps1
     Author: Kevin Schaefer
     Contact: its-wcs-ma@unibas.ch
     Created: 2019-07-31
-    Updated: 2019-07-31
-    Version: 1.0.0
+    Updated: 2020-05-15
+    Version: 1.1.0
    .EXAMPLE
     PS>
    .LINK
@@ -34,6 +34,17 @@ function Register-ChocolateyPackagingServer {
         # TODO: Check if chocolatey already installed before
         Invoke-Expression ((New-Object System.Net.WebClient).DownloadString('https://chocolatey.org/install.ps1')) | ForEach-Object { Write-Log $_ }
         # TODO: Check if chocolatey was installed
+
+        # Download Nuget
+        $NugetUrl = "https://dist.nuget.org/win-x86-commandline/latest/nuget.exe"
+        $NuGetDirectory = New-Item -Path (Join-Path $Config.Application.BaseDirectory "NuGet") -ItemType Directory -Force
+        $NuGetFilePath = (Join-Path $NuGetDirectory.FullName "nuget.exe")
+        Invoke-WebRequest -Uri $NugetUrl -OutFile $NuGetFilePath
+        if(-Not (Test-Path -Path $NuGetFilePath)) {
+            Write-Log "There was an error downloading nuget.exe from $NuGetUrl. Please Download it manually to $NugetDirectory." -Severity 3
+        } else {
+            Write-Log "Successfully downloaded nuget.exe." -Severity 1
+        }
 
         Request-GitRepo -User $Config.Application.GitServiceUser -GitRepo $Config.Application.PackagesInbox -CloneDirectory $Config.Application.BaseDirectory -WithSubmodules
         Request-GitRepo -User $Config.Application.GitServiceUser -GitRepo $Config.Application.PackageGallery -CloneDirectory $Config.Application.BaseDirectory
