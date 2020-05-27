@@ -124,7 +124,7 @@ function Edit-ChocolateyInstaller {
                 foreach ($file in $files) {
                     # Fetch all files except the install/uninstallscripts from the last version
                     if (!($file -like "*chocolateyInstall.ps1*" -or $file -like "*chocolateyInstall_old.ps1*" -or $file -like "*chocolateyUninstall.ps1*")) {
-                        Copy-item $file -Destination $ToolsPath -Force
+                        Copy-item $file -Destination $ToolsPath -Force -Recurse
                     }
                 }
             }
