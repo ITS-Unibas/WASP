@@ -141,6 +141,9 @@ function Start-Workflow {
         on assicuated atlassian jira kanban board
         #>
         Start-PackageDistribution -ForcedDownload $ForcedDownload
+
+        # Project current deployment status of packages to jira board
+        Invoke-JiraObserver
     }
 
     end {
