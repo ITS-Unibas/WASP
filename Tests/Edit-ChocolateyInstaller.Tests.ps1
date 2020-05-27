@@ -110,6 +110,18 @@ Describe "Editing package installer script from chocolatey" {
             "$ToolsPath\FinalScript.ps1" | Should -FileContentMatchExactly 'This is a previous script.'
         }
 
+        It "Finds one previous version with a config file and adds all additional files and the config" {
+            New-Item "TestDrive:\package\" -Name "1.0.0" -ItemType Directory
+            New-Item "TestDrive:\package\1.0.0\" -Name "tools" -ItemType Directory
+            Set-Content "TestDrive:\package\1.0.0\tools\config.json" -Value '{"Test":0, "Test2":1}'
+            Set-Content "TestDrive:\package\1.0.0\tools\InitialScript.ps1" -Value 'This is a previous script.'
+            Set-Content "TestDrive:\package\1.0.0\tools\FinalScript.ps1" -Value 'This is a previous script.'
+            Edit-ChocolateyInstaller $ToolsPath $FileName
+            "$ToolsPath\config.json" | Should -FileContentMatchExactly '{"Test":0, "Test2":1}'
+            "$ToolsPath\InitialScript.ps1" | Should -FileContentMatchExactly 'This is a previous script.'
+            "$ToolsPath\FinalScript.ps1" | Should -FileContentMatchExactly 'This is a previous script.'
+        }
+
         It "Finds multiple previous versions and adds the latest as additional scripts" {
             New-Item "TestDrive:\package\" -Name "1.5.0" -ItemType Directory
             New-Item "TestDrive:\package\1.5.0\" -Name "tools" -ItemType Directory

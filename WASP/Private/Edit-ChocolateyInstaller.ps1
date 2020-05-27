@@ -116,26 +116,23 @@ function Edit-ChocolateyInstaller {
                 Write-Log ("Previous version of package found: " + $VersionList[1]) -Severity 1
             }
 
-            # Fetch the additional scripts from the last version or create them from scratch
+            # Fetch the additional scripts and configs from the last version
             $AdditionalScripts = $PreAdditionalScripts + $PostAddtionalScripts
             if ($LastVersion) {
                 $LastVersionPath = Join-Path -Path $ParentSWDirectory -ChildPath "$LastVersion\tools"
-                # TODO: Instead of fetching only the previous additional scripts, fetch all scripts except chocolateyInstall.ps1 and chocolateyUninstall.ps1
-                foreach ($AdditionalScript in $AdditionalScripts) {
-                    $SourcePath = Join-Path -Path $LastVersionPath -ChildPath $AdditionalScript
-                    $DestinationPath = Join-Path -Path $ToolsPath -ChildPath $AdditionalScript
-                    if (Test-Path $SourcePath -ErrorAction SilentlyContinue) {
-                        Copy-Item -Path $SourcePath -Destination $DestinationPath -Force
-                    }
-                    else {
-                        $null = New-Item -Path $DestinationPath -ErrorAction SilentlyContinue
-                        $null = Set-Content -Path $DestinationPath -Value '# This script is run prior/post to the installation.'
+                $files = Get-ChildItem $LastVersionPath | Select-Object -ExpandProperty FullName
+                foreach ($file in $files) {
+                    # Fetch all files except the install/uninstallscripts from the last version
+                    if (!($file -like "*chocolateyInstall.ps1*" -or $file -like "*chocolateyInstall_old.ps1*" -or $file -like "*chocolateyUninstall.ps1*")) {
+                        Copy-item $file -Destination $ToolsPath -Force
                     }
                 }
             }
-            else {
-                foreach ($AdditionalScript in $AdditionalScripts) {
-                    $ScriptPath = Join-Path -Path $ToolsPath -ChildPath $AdditionalScript
+
+            # Create additional scripts if not yet existing
+            foreach ($AdditionalScript in $AdditionalScripts) {
+                $ScriptPath = Join-Path -Path $ToolsPath -ChildPath $AdditionalScript
+                if (!(Test-Path $ScriptPath -ErrorAction SilentlyContinue)) {
                     $null = New-Item -Path $ScriptPath -ErrorAction SilentlyContinue
                     $null = Set-Content -Path $ScriptPath -Value '# This script is run prior/post to the installation.'
                 }
