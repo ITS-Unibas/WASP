@@ -30,7 +30,7 @@ function Invoke-JiraObserver {
             Write-Log ([string] (python $filePath 2>&1))
         }
         catch {
-            Write-Log "$($_.Exception)"
+            Write-Log "$($_.Exception)" -Severity 3
         }
     }
 
