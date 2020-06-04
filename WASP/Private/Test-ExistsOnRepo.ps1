@@ -32,23 +32,23 @@ function Test-ExistsOnRepo {
         # TODO: Maybe store Repo names in config?
         switch ($Repository) {
             "Dev" {
-                $Repository = "choco-dev"
+                $RepositoryName = "choco-dev"
             }
             "Test" {
-                $Repository = "choco-test"
+                $RepositoryName = "choco-test"
             }
             "Prod" {
-                $Repository = "choco-prod"
+                $RepositoryName = "choco-prod"
             }
             default {
-                $Repository = "choco-prod"
+                $RepositoryName = "choco-prod"
             }
         }
     }
 
     process {
         $Base64Auth = [Convert]::ToBase64String([Text.Encoding]::ASCII.GetBytes(("{0}:{1}" -f $Config.Application.RepositoryManagerAPIUser, $Config.Application.RepostoryManagerAPIPassword)))
-        $Uri = $Config.Application.RepositoryManagerAPIBaseUrl + "v1/search?repository=$Repository&name=$PackageName&version=$PackageVersion"
+        $Uri = $Config.Application.RepositoryManagerAPIBaseUrl + "v1/search?repository=$RepositoryName&name=$PackageName&version=$PackageVersion"
         try {
             $Response = Invoke-RestMethod -Method Get -Uri $Uri -ContentType "application/json" -Headers @{Authorization="Basic $Base64Auth"}
             return ($Response.items.Count -gt 0)
