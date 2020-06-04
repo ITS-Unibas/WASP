@@ -16,6 +16,9 @@
         "ChocoRepo": "github.com/chocolatey/choco.git",
         "JiraObserver": "git.its.unibas.ch/scm/sun/jira-observer.git",
         "BitBucketAPIToken": "NjExODAxOTgzMTA3OqQkz5YbYAF/O5hLsKigL7V1w7qe",
+        "RepositoryManagerAPIBaseUrl": "http://its-chocolatey-repo.its.unibas.ch:8081/service/rest/",
+        "RepositoryManagerAPIUser": "user",
+        "RepostoryManagerAPIPassword": "password",
         "PreAdditionalScripts": [
             "InitialScript.ps1"
         ],
