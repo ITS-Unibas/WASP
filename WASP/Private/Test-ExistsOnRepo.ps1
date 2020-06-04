@@ -49,14 +49,8 @@ function Test-ExistsOnRepo {
     process {
         $Base64Auth = [Convert]::ToBase64String([Text.Encoding]::ASCII.GetBytes(("{0}:{1}" -f $Config.Application.RepositoryManagerAPIUser, $Config.Application.RepostoryManagerAPIPassword)))
         $Uri = $Config.Application.RepositoryManagerAPIBaseUrl + "v1/search?repository=$Repository&name=$PackageName&version=$PackageVersion"
-        $ParamSplat = @{
-            Method      = 'GET'
-            Uri         = $Uri
-            ContentType = "application/json"
-            Headers     = @{Authorization = "Basic $Base64Auth"}
-        }
         try {
-            $Response = Invoke-RestMethod $ParamSplat
+            $Response = Invoke-RestMethod -Method Get -Uri $Uri -ContentType "application/json" -Headers @{Authorization="Basic $Base64Auth"}
             return ($Response.items.Count -gt 0)
         } catch {
             Write-Log "Get request failed. Going to assume it doesn't exist on the target repository." -Severity 2

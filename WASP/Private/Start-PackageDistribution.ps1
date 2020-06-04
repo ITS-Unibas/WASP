@@ -166,11 +166,12 @@ function Start-PackageDistribution() {
                     foreach ($version in $versionsList) {
                         if (Test-ExistPackageVersion $GitFolderName $package $version $branch) {
                             $packageRootPath = Join-Path $packagePath $version
-                            if(-Not (Test-ExistsOnRepo -PackageName $package -PackageVersion $version -Repository $Repo)) {
-                                Write-Log "Package $package with version $version doesn't exist on $chocolateyDestinationServer"
+                            $FullVersion = ([xml](Get-Content -Path (Join-Path $packageRootPath "$package.nuspec"))).Package.metadata.version
+                            if(-Not (Test-ExistsOnRepo -PackageName $package -PackageVersion $FullVersion -Repository $Repo)) {
+                                Write-Log "Package $package with version $version doesn't exist on $chocolateyDestinationServer. Going to push..."
                                 Send-NupkgToServer $packageRootPath $chocolateyDestinationServer
                             } else {
-                                Write-Log "Package $package with version $version already exists on $chocolateyDestinationServer"
+                                Write-Log "Package $package with version $version already exists on $chocolateyDestinationServer. Doing nothing."
                             }
                         }
                     }
