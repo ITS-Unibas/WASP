@@ -149,9 +149,11 @@ function Start-PackageDistribution() {
                 # if packages are moved to prod and testing, push them to the appropriate choco servers
                 if ($branch -eq $config.Application.GitBranchPROD) {
                     $chocolateyDestinationServer = $config.Application.ChocoServerPROD
+                    $Repo = "Prod"
                 }
                 elseif ($branch -eq $config.Application.GitBranchTEST) {
                     $chocolateyDestinationServer = $config.Application.ChocoServerTEST
+                    $Repo = "Test"
                 }
 
                 Switch-GitBranch $PackageGalleryPath $branch
@@ -164,8 +166,13 @@ function Start-PackageDistribution() {
                     foreach ($version in $versionsList) {
                         if (Test-ExistPackageVersion $GitFolderName $package $version $branch) {
                             $packageRootPath = Join-Path $packagePath $version
-                            # TODO: Only send nupkg to server when it does not exist there yet
-                            Send-NupkgToServer $packageRootPath $chocolateyDestinationServer
+                            $FullVersion = ([xml](Get-Content -Path (Join-Path $packageRootPath "$package.nuspec"))).Package.metadata.version
+                            if(-Not (Test-ExistsOnRepo -PackageName $package -PackageVersion $FullVersion -Repository $Repo)) {
+                                Write-Log "Package $package with version $version doesn't exist on $chocolateyDestinationServer. Going to push..."
+                                Send-NupkgToServer $packageRootPath $chocolateyDestinationServer
+                            } else {
+                                Write-Log "Package $package with version $version already exists on $chocolateyDestinationServer. Doing nothing."
+                            }
                         }
                     }
                 }
