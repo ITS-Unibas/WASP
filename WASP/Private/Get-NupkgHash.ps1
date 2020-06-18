@@ -34,17 +34,27 @@ function Get-NupkgHash() {
     # Get hashvalue of the tools and legal folder
     $toolsDir = ($dir.FullName + '\tools')
     if (Test-Path $toolsDir) {
-      $toolsObjects = Get-ChildItem -Path $toolsDir |
+      $toolsObjects = Get-ChildItem -Path $toolsDir -Recurse |
       Foreach-Object {
         $hashString = $hashString + ([string](Get-FileHash $_.FullName).Hash)
+      }
+      # add file and folder names to check for name changes
+      $toolsObjects = Get-ChildItem -Path $toolsDir -Recurse |
+      Foreach-Object {
+        $hashString = $hashString + $_.Name
       }
     }
 
     $legalDir = ($dir.FullName + '\legal')
     if (Test-Path $legalDir) {
-      $legalObjects = Get-ChildItem -Path $legalDir |
+      $legalObjects = Get-ChildItem -Path $legalDir -Recurse |
       Foreach-Object {
         $hashString = $hashString + ([string](Get-FileHash $_.FullName).Hash)
+      }
+      # add file and folder names to check for name changes
+      $toolsObjects = Get-ChildItem -Path $toolsDir -Recurse |
+      Foreach-Object {
+        $hashString = $hashString + $_.Name
       }
     }
     $removed = Remove-Item -Path $dir.FullName -Recurse -Force
