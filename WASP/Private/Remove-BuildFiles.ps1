@@ -38,11 +38,11 @@ function Remove-BuildFiles {
             # TODO: maybe there is a better solution for this.
             if ($Line -notlike "*nupkg*") {
                 if ($Line -like "*!*") {
-                    $Line = $Line.replace("!","")
+                    $Line = $Line.replace("!", "")
                 }
                 $path = Join-Path $PackagePath $Line
                 Write-Log "Removing $path"
-                Remove-Item -Path $path -Recurse -ErrorAction SilentlyContinue
+                Remove-Item -Path $path -ErrorAction SilentlyContinue
             }
         }
     }
