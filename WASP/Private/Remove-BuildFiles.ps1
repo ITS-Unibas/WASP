@@ -39,7 +39,7 @@ function Remove-BuildFiles {
             if ($Line -notlike "*nupkg*") {
                 $path = Join-Path $PackagePath $Line
                 Write-Log "Removing $path"
-                Remove-Item -Path $path -ErrorAction SilentlyContinue
+                Remove-Item -Path $path -Recurse -ErrorAction SilentlyContinue
             }
         }
     }
