@@ -31,6 +31,7 @@ function Set-NewReleaseVersion() {
 
     begin {
         $version = ([xml](Get-Content -Path $nuspecPath)).Package.metadata.version
+        $id = ([xml](Get-Content -Path $nuspecPath)).Package.metadata.id
     }
 
     process {
@@ -54,6 +55,11 @@ function Set-NewReleaseVersion() {
             # This is the first time this package will be build so we append the release version 000
             # This check will prevent adding .000 to version.
             if (-not($version -match "(0{3})$")) {
+                # If we have four segments, we should check if there isn't
+                # already a 000 version of an older minor increase
+                if($hasFourSegments) {
+                    Get-LatestVersionFromRepo -PackageName $id -Repository "Dev"
+                }
                 $set = (Get-Content $nuspecPath) -replace "<version>.*</version>", ("<version>" + $version + ".000" + "</version>") | Set-Content $nuspecPath
             }
         }
