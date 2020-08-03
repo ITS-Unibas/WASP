@@ -62,11 +62,11 @@ function Set-NewReleaseVersion() {
                     if(([version]$LatestVersion).Major -eq ([version]$version).Major -and ([version]$LatestVersion).Minor -eq ([version]$version).Minor -and
                      ([version]$LatestVersion).Build -eq ([version]$version).Build) {
                         if(([version]$LatestVersion).Revision -ge 100) {
-                            $Rel = ([version]$LatestVersion).Revision + 1
+                            $Rel = (([version]$LatestVersion).Revision + 1).ToString()
                         } elseif (([version]$LatestVersion).Revision -ge 10) {
-                            $Rel = "0" + ([version]$LatestVersion).Revision + 1
+                            $Rel = "0" + (([version]$LatestVersion).Revision + 1).ToString()
                         } else {
-                            $Rel = "00" + ([version]$LatestVersion).Revision + 1
+                            $Rel = "00" + (([version]$LatestVersion).Revision + 1).ToString()
                         }
                     } else {
                         $Rel = "000"
