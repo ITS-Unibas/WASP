@@ -58,9 +58,23 @@ function Set-NewReleaseVersion() {
                 # If we have four segments, we should check if there isn't
                 # already a 000 version of an older minor increase
                 if($hasFourSegments) {
-                    Get-LatestVersionFromRepo -PackageName $id -Repository "Dev"
+                    $LatestVersion = Get-LatestVersionFromRepo -PackageName $id -Repository "Dev"
+                    if(([version]$LatestVersion).Major -eq ([version]$version).Major -and ([version]$LatestVersion).Minor -eq ([version]$version).Minor -and
+                     ([version]$LatestVersion).Build -eq ([version]$version).Build) {
+                        if(([version]$LatestVersion).Revision -ge 100) {
+                            $Rel = ([version]$LatestVersion).Revision.ToString()
+                        } elseif (([version]$LatestVersion).Revision -ge 10) {
+                            $Rel = "0" + ([version]$LatestVersion).Revision.ToString()
+                        } else {
+                            $Rel = "00" + ([version]$LatestVersion).Revision.ToString()
+                        }
+                    } else {
+                        $Rel = "000"
+                    }
+                } else {
+                    $Rel = "000"
                 }
-                $set = (Get-Content $nuspecPath) -replace "<version>.*</version>", ("<version>" + $version + ".000" + "</version>") | Set-Content $nuspecPath
+                $set = (Get-Content $nuspecPath) -replace "<version>.*</version>", ("<version>" + $version + ".$Rel" + "</version>") | Set-Content $nuspecPath
             }
         }
         else {
