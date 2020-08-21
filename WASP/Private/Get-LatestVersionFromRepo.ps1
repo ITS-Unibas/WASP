@@ -44,7 +44,7 @@ function Get-LatestVersionFromRepo() {
         $Uri = $Config.Application.RepositoryManagerAPIBaseUrl + "v1/search?repository=$RepositoryName&name=$PackageName&sort=version"
         try {
             $Response = Invoke-RestMethod -Method Get -Uri $Uri -ContentType "application/json" -Headers @{Authorization="Basic $Base64Auth"}
-            return $Response.items[$items.items.Length-1].version
+            return $Response.items[$Response.items.Length-1].version
         } catch {
             Write-Log "Get request failed. Going to assume it doesn't exist on the target repository." -Severity 2
         }

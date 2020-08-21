@@ -95,6 +95,7 @@ function Start-Workflow {
                     catch {
                         Write-Log "Error reading $($nuspec.FullName)" -Severity 3
                         Write-Log "$($_.Exception.Message)" -Severity 3
+                        continue
                     }
                     $FoundPackagesAutomatic = Search-Wishlist $package $version
                     if ($FoundPackagesAutomatic) {

@@ -59,6 +59,7 @@ function Set-NewReleaseVersion() {
                 # already a 000 version of an older minor increase
                 if($hasFourSegments) {
                     $LatestVersion = Get-LatestVersionFromRepo -PackageName $id -Repository "Dev"
+                    Write-Log "Version has four segments. Found the following old version on the Repo: $LatestVersion"
                     if(([version]$LatestVersion).Major -eq ([version]$version).Major -and ([version]$LatestVersion).Minor -eq ([version]$version).Minor -and
                      ([version]$LatestVersion).Build -eq ([version]$version).Build) {
                         if(([version]$LatestVersion).Revision -ge 100) {
@@ -68,6 +69,7 @@ function Set-NewReleaseVersion() {
                         } else {
                             $Rel = "00" + (([version]$LatestVersion).Revision + 1).ToString()
                         }
+                        Write-Log "The first three segments are the same. Setting the following Release: $Rel"
                     } else {
                         $Rel = "000"
                     }
