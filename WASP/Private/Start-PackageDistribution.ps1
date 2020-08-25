@@ -169,7 +169,7 @@ function Start-PackageDistribution() {
                             $FullVersion = ([xml](Get-Content -Path (Join-Path $packageRootPath "$package.nuspec"))).Package.metadata.version
                             $FullID = ([xml](Get-Content -Path (Join-Path $packageRootPath "$package.nuspec"))).Package.metadata.id
 
-                            # if package is in TEST, check if it exists in PROD and DEV --> make sure that if a nupkg is faulty on dev and gets deleted on dev server, it is pushed there again
+                            # if package is in PROD, check if it exists in DEV as well --> make sure that if a nupkg is faulty on dev and gets deleted on dev server, it is pushed there again
                             # goal is to be sure that the same nupkg exists on all three servers
                             if ($Repo -eq "Prod") {
                                 $tmpChocolateyDestinationServer = $config.Application.ChocoServerDEV
