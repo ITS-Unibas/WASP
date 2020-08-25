@@ -159,7 +159,7 @@ function Edit-ChocolateyInstaller {
             if (-Not $Regex.Matches($InstallerContentRaw).value) {
                 if ($InstallerContentRaw -match 'Install-ChocolateyZipPackage*'){
                     $InstallerLine = $InstallerContent | Where-Object { $_ -match "(I|i)nstall-Choco.*" }
-                    $InstallerContent = $InstallerContent -replace $InstallerLine, "$($PreInstallerLine)`r`nExpand-Archive -Path (Join-Path `$toolsDir '$FileName') -DestinationPath `$toolsDir -Force`r`n$($InstallerLine)$($PostInstallerLine)"
+                    $InstallerContent = $InstallerContent -replace $InstallerLine, "$($PreInstallerLine)Expand-Archive -Path (Join-Path `$toolsDir '$FileName') -DestinationPath `$toolsDir -Force`r`n$($InstallerLine)$($PostInstallerLine)"
                 } else {
                     $InstallerLine = $InstallerContent | Where-Object { $_ -match "(I|i)nstall-Choco.*" }
                     $InstallerContent = $InstallerContent -replace $InstallerLine, "$($PreInstallerLine)$($InstallerLine)$($PostInstallerLine)"
