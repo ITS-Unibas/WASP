@@ -172,10 +172,10 @@ function Start-PackageDistribution() {
                             # if package is in TEST, check if it exists in PROD and DEV --> make sure that if a nupkg is faulty on dev and gets deleted on dev server, it is pushed there again
                             # goal is to be sure that the same nupkg exists on all three servers
                             if ($Repo -eq "Prod") {
+                                $tmpChocolateyDestinationServer = $config.Application.ChocoServerDEV
                                 if (-Not (Test-ExistsOnRepo -PackageName $FullID -PackageVersion $FullVersion -Repository "Dev")) {
-                                    $tmpChocolateyDestinationServer = $config.Application.ChocoServerDEV
                                     Write-Log "Package $FullID with version $FullVersion doesn't exist on $tmpchocolateyDestinationServer. Going to push..."
-                                    Send-NupkgToServer $packageRootPath $chocolateyDestinationServer
+                                    Send-NupkgToServer $packageRootPath $tmpchocolateyDestinationServer
                                 }
                                 else {
                                     Write-Log "Package $FullID with version $FullVersion already exists on $tmpchocolateyDestinationServer. Doing nothing."
