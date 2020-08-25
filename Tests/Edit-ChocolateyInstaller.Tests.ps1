@@ -241,4 +241,44 @@ Describe "Editing package installer script from chocolatey" {
             Get-ChildItem "$ToolsPath\*" -Recurse | Remove-Item
         }
     }
+
+    Context "Zip package is overridden" {
+
+        It "Adds expansion of archive" {
+            "$ToolsPath\chocolateyInstall.ps1" | Should -FileContentMatchExactly 'Expand-Archive'
+        }
+
+        It "Adds additional files" {
+            "$ToolsPath\chocolateyInstall.ps1" | Should -FileContentMatchExactly 'InitialScript'
+            "$ToolsPath\chocolateyInstall.ps1" | Should -FileContentMatchExactly 'FinalScript'
+        }
+
+        BeforeEach {
+            Set-Content "$ToolsPath\chocolateyInstall.ps1" -Value '$ErrorActionPreference = "Stop"; # stop on all errors
+                $packageName= "unibas-netcrunchconsole" # arbitrary name for the package, used in messages
+                $toolsDir   = "$(Split-Path -parent $MyInvocation.MyCommand.Definition)"
+                $url        = "http://url.com/NC10Console.exe" # download url
+                $fileLocation = Join-Path $toolsDir "NC10Console.exe"
+
+                $packageArgs = @{
+                packageName   = $packageName
+                unzipLocation = $toolsDir
+                fileType      = "EXE" #only one of these: exe, msi, msu
+                url           = $url
+                file          = $fileLocation
+                validExitCodes= @(0) #please insert other valid exit codes here
+
+                softwareName  = "unibas-netcrunchconsole*" #part or all of the Display Name as you see it in Programs and Features. It should be enough to be unique
+                checksum      = "3aeb5e8c7ed947ff28b998594a01be872f7994bdb4832fde4bd13e4351b93172"
+                checksumType  = "sha256" #default is md5, can also be sha1
+                }
+
+                Install-ChocolateyZipPackage @packageArgs'
+            Edit-ChocolateyInstaller $ToolsPath $FileName $UnzipPath
+        }
+
+        AfterEach {
+            Get-ChildItem "$ToolsPath\*" -Recurse | Remove-Item
+        }
+    }
 }

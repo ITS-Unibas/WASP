@@ -91,7 +91,7 @@ function Edit-ChocolateyInstaller {
             if ($UnzipPath) {
                 Write-Log "Calling set unzip location and remove installzip, got unzip location $UnzipPath" -Severity 1
                 $InstallerContent = $InstallerContent | ForEach-Object { $_ -replace '.*unzipLocation[\s]*=[\s]*Get-PackageCacheLocation', "unzipLocation = $UnzipPath" }
-                $InstallerContent = $InstallerContent | ForEach-Object { $_ -replace 'Install-ChocolateyZipPackage\s*@packageArgs', 'Install-ChocolateyInstallPackage @packageArgs' }
+                $InstallerContent = $InstallerContent | ForEach-Object { $_ -replace 'Install-ChocolateyZipPackage\s*@packageArgs', "Install-ChocolateyInstallPackage @packageArgs" }
             }
 
             # Now we're getting to check if there was already version packaged. If yes we're going to get the last version
@@ -157,8 +157,13 @@ function Edit-ChocolateyInstaller {
             $PostInstallerLine += "`r`n"
             $Regex = [regex]$Regex
             if (-Not $Regex.Matches($InstallerContentRaw).value) {
-                $InstallerLine = $InstallerContent | Where-Object { $_ -match "(I|i)nstall-Choco.*" }
-                $InstallerContent = $InstallerContent -replace $InstallerLine, "$($PreInstallerLine)$($InstallerLine)$($PostInstallerLine)"
+                if ($InstallerContentRaw -match 'Install-ChocolateyZipPackage*'){
+                    $InstallerLine = $InstallerContent | Where-Object { $_ -match "(I|i)nstall-Choco.*" }
+                    $InstallerContent = $InstallerContent -replace $InstallerLine, "$($PreInstallerLine)Expand-Archive -Path (Join-Path `$toolsDir '$FileName') -DestinationPath `$toolsDir -Force`r`n$($InstallerLine)$($PostInstallerLine)"
+                } else {
+                    $InstallerLine = $InstallerContent | Where-Object { $_ -match "(I|i)nstall-Choco.*" }
+                    $InstallerContent = $InstallerContent -replace $InstallerLine, "$($PreInstallerLine)$($InstallerLine)$($PostInstallerLine)"
+                }
             }
 
             Set-Content -Path $NewFile -Value $InstallerContent
