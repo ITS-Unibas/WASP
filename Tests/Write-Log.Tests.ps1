@@ -10,23 +10,23 @@ Describe "Writing log to file and console" {
     Context "General log message tests" {
         Mock Write-Host { }
         Mock Write-EventLog { }
-        Mock Add-Content { }
+        Mock Out-File { }
 
         It "logs no message if it is empty" {
             Write-Log "" 0
-            Assert-MockCalled Add-Content -Exactly 0 -Scope It
+            Assert-MockCalled Out-File -Exactly 0 -Scope It
             Assert-MockCalled Write-EventLog -Exactly 0 -Scope It
             Assert-MockCalled Write-Host -Exactly 0 -Scope It
         }
         It "logs message to debug as default" {
             Write-Log "This is nice" 0
-            Assert-MockCalled Add-Content -Exactly 1 -Scope It
+            Assert-MockCalled Out-File -Exactly 1 -Scope It
             Assert-MockCalled Write-EventLog -Exactly 0 -Scope It
             Assert-MockCalled Write-Host -Exactly 1 -Scope It
         }
         It "logs message to information when severity is 1 and writes in EventLog" {
             Write-Log "This is nice" 1
-            Assert-MockCalled Add-Content -Exactly 1 -Scope It
+            Assert-MockCalled Out-File -Exactly 1 -Scope It
             Assert-MockCalled Write-EventLog -Exactly 1 -Scope It
             Assert-MockCalled Write-Host -Exactly 1 -Scope It
         }
