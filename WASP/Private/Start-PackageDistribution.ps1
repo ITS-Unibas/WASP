@@ -100,7 +100,7 @@ function Start-PackageDistribution() {
                         $hashOldNupkg = Get-NupkgHash $nupkg $packageRootPath
                         # Build the package to compare it to the old one
                         $InvokeMessage = Invoke-Expression -Command ("choco pack " + $nuspecFile + " -s . -r")
-                        Write-Log ($InvokeMessage -join "`n")
+                        $InvokeMessage | ForEach-Object {Write-Log $_}
                         $nupkgNew = (Get-ChildItem -Path $packageRootPath -Recurse -Filter *.nupkg).FullName
                         if (-Not $nupkgNew) {
                             Write-Log "Choco pack process of package $packageName $packageVersion failed. Continuing with next package." -Severity 3
@@ -127,7 +127,7 @@ function Start-PackageDistribution() {
                     }
                     #Build the package
                     $InvokeMessage = Invoke-Expression -Command ("choco pack $nuspecFile -s $packageRootPath -r")
-                    Write-Log ($InvokeMessage -join "`n")
+                    $InvokeMessage | ForEach-Object {Write-Log $_}
                     Send-NupkgToServer $packageRootPath $config.Application.ChocoServerDEV
                     Set-Location $OldWorkingDir
                     # Remove all uncommited files, so no left over files will be moved to prod branch. Or else it will be pushed from choco to all instances
