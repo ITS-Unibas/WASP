@@ -41,10 +41,10 @@ function Get-LatestVersionFromRepo() {
         }
     } process {
         $Base64Auth = [Convert]::ToBase64String([Text.Encoding]::ASCII.GetBytes(("{0}:{1}" -f $Config.Application.RepositoryManagerAPIUser, $Config.Application.RepostoryManagerAPIPassword)))
-        $Uri = $Config.Application.RepositoryManagerAPIBaseUrl + "v1/search?repository=$RepositoryName&name=$PackageName&sort=version"
+        $Uri = $Config.Application.RepositoryManagerAPIBaseUrl + "v1/search?repository=$RepositoryName&name=$PackageName&sort=version&direction=desc"
         try {
             $Response = Invoke-RestMethod -Method Get -Uri $Uri -ContentType "application/json" -Headers @{Authorization="Basic $Base64Auth"}
-            return $Response.items[$Response.items.Length-1].version
+            return $Response.items[0].version
         } catch {
             Write-Log "Get request failed. Going to assume it doesn't exist on the target repository." -Severity 2
         }
