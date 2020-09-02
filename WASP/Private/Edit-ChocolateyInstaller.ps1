@@ -108,7 +108,7 @@ function Edit-ChocolateyInstaller {
                         }
                     }
                     $Version = $SplitVersion -join "."
-                    $null = $VersionList.Add([version]$Version)
+                    $null = $VersionList.Add($Version)
                 }
                 $VersionList.Sort()
                 $VersionList.Reverse()
@@ -157,10 +157,11 @@ function Edit-ChocolateyInstaller {
             $PostInstallerLine += "`r`n"
             $Regex = [regex]$Regex
             if (-Not $Regex.Matches($InstallerContentRaw).value) {
-                if ($InstallerContentRaw -match 'Install-ChocolateyZipPackage*'){
+                if ($InstallerContentRaw -match 'Install-ChocolateyZipPackage*') {
                     $InstallerLine = $InstallerContent | Where-Object { $_ -match "(I|i)nstall-Choco.*" }
                     $InstallerContent = $InstallerContent -replace $InstallerLine, "$($PreInstallerLine)Expand-Archive -Path (Join-Path `$toolsDir '$FileName') -DestinationPath `$toolsDir -Force`r`n$($InstallerLine)$($PostInstallerLine)"
-                } else {
+                }
+                else {
                     $InstallerLine = $InstallerContent | Where-Object { $_ -match "(I|i)nstall-Choco.*" }
                     $InstallerContent = $InstallerContent -replace $InstallerLine, "$($PreInstallerLine)$($InstallerLine)$($PostInstallerLine)"
                 }

@@ -281,4 +281,65 @@ Describe "Editing package installer script from chocolatey" {
             Get-ChildItem "$ToolsPath\*" -Recurse | Remove-Item
         }
     }
+
+    Context "Previous version as a trailing zero" {
+
+        It "Finds correct version even if previous version has a trailing zero" {
+            New-Item "TestDrive:\package\" -Name "1.5.0.0891" -ItemType Directory
+            New-Item "TestDrive:\package\1.5.0.0891\" -Name "tools" -ItemType Directory
+            Set-Content "TestDrive:\package\1.5.0.0891\tools\InitialScript.ps1" -Value 'This is the previous script.'
+            Set-Content "TestDrive:\package\1.5.0.0891\tools\FinalScript.ps1" -Value 'This is the previous script.'
+            Edit-ChocolateyInstaller $ToolsPath $FileName
+            "$ToolsPath\chocolateyInstall_old.ps1" | Should -Not -FileContentMatchExactly 'InitialScript'
+            "$ToolsPath\chocolateyInstall.ps1" | Should -FileContentMatchExactly 'InitialScript'
+            "$ToolsPath\chocolateyInstall_old.ps1" | Should -Not -FileContentMatchExactly 'FinalScript'
+            "$ToolsPath\chocolateyInstall.ps1" | Should -FileContentMatchExactly 'FinalScript'
+            "$ToolsPath\InitialScript.ps1" | Should -FileContentMatchExactly 'This is the previous script.'
+            "$ToolsPath\FinalScript.ps1" | Should -FileContentMatchExactly 'This is the previous script.'
+        }
+
+        It "Finds correct version even if previous version has a trailing zero in different segment" {
+            New-Item "TestDrive:\package\" -Name "1.5.01.0891" -ItemType Directory
+            New-Item "TestDrive:\package\1.5.01.0891\" -Name "tools" -ItemType Directory
+            Set-Content "TestDrive:\package\1.5.01.0891\tools\InitialScript.ps1" -Value 'This is the previous script.'
+            Set-Content "TestDrive:\package\1.5.01.0891\tools\FinalScript.ps1" -Value 'This is the previous script.'
+            Edit-ChocolateyInstaller $ToolsPath $FileName
+            "$ToolsPath\chocolateyInstall_old.ps1" | Should -Not -FileContentMatchExactly 'InitialScript'
+            "$ToolsPath\chocolateyInstall.ps1" | Should -FileContentMatchExactly 'InitialScript'
+            "$ToolsPath\chocolateyInstall_old.ps1" | Should -Not -FileContentMatchExactly 'FinalScript'
+            "$ToolsPath\chocolateyInstall.ps1" | Should -FileContentMatchExactly 'FinalScript'
+            "$ToolsPath\InitialScript.ps1" | Should -FileContentMatchExactly 'This is the previous script.'
+            "$ToolsPath\FinalScript.ps1" | Should -FileContentMatchExactly 'This is the previous script.'
+        }
+
+
+        BeforeEach {
+            Set-Content "$ToolsPath\chocolateyInstall.ps1" -Value '$ErrorActionPreference = "Stop"
+
+            # Install Sourcetree Enterprise
+            $packageArgs = @{
+              packageName   = $env:ChocolateyPackageName
+              softwareName  = "Sourcetree*"
+              fileType      = "msi"
+              silentArgs    = "/qn /norestart ACCEPTEULA=1 /l*v `"$env:TEMP\$env:ChocolateyPackageName.$env:ChocolateyPackageVersion.log`""
+              validExitCodes= @(0,1641,3010)
+              url           = "https://product-downloads.atlassian.com/software/sourcetree/windows/ga/SourcetreeEnterpriseSetup_3.2.6.msi"
+              checksum      = "c8b34688d7f69185b41f9419d8c65d63a2709d9ec59752ce8ea57ee6922cbba4"
+              checksumType  = "sha256"
+              url64bit      = ""
+              checksum64    = ""
+              checksumType64= "sha256"
+            }
+
+            Install-ChocolateyPackage @packageArgs'
+        }
+
+        AfterEach {
+            Get-ChildItem "$ToolsPath\*" -Recurse | Remove-Item
+            Get-ChildItem "TestDrive:\package\1.5.0.0891\*" -Recurse -ErrorAction SilentlyContinue | Remove-Item -Force -ErrorAction SilentlyContinue
+            Remove-Item "TestDrive:\package\1.5.01.0891" -Force -Recurse -ErrorAction SilentlyContinue
+            Get-ChildItem "TestDrive:\package\1.5.01.0891\*" -Recurse -ErrorAction SilentlyContinue | Remove-Item -Force -ErrorAction SilentlyContinue
+            Remove-Item "TestDrive:\package\1.5.01.0891" -Force -Recurse -ErrorAction SilentlyContinue
+        }
+    }
 }
