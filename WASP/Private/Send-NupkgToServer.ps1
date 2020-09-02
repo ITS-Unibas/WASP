@@ -28,8 +28,8 @@ function Send-NupkgToServer {
         $Config = Read-ConfigFile
     }
     process {
-        $nupkg = (Get-ChildItem -Path $nuspecFolder | Where-Object { $_.FullName -match ".nupkg" }).FullName
-        $nuspecFile = (Get-ChildItem -Path $nuspecFolder | Where-Object { $_.FullName -match ".nuspec" }).FullName
+        $nupkg = (Get-ChildItem -Path $nuspecFolder | Where-Object { $_.FullName -match "\.nupkg" }).FullName
+        $nuspecFile = (Get-ChildItem -Path $nuspecFolder | Where-Object { $_.FullName -match "\.nuspec" }).FullName
         # Test-Path on a null valued path will always result in an error, so just test if there was found anything
         if (-Not $nuspecFile -or -Not $nupkg) {
             Write-Log ("No nupkg or nuspec found in " + $nuspecFolder)
@@ -39,7 +39,7 @@ function Send-NupkgToServer {
             # Try to push the package to the dev choco server
             $NuGetExecutable = Join-Path $Config.Application.BaseDirectory "NuGet\nuget.exe"
             $InvokeMessage = Invoke-Expression -Command ("$NugetExecutable push " + $nupkg + " -Source " + $url + " -ApiKey $($Config.Application.ApiKey) -Timeout 10800")
-            $InvokeMessage | ForEach-Object {Write-Log $_}
+            $InvokeMessage | ForEach-Object { Write-Log $_ }
             Write-Log ("Pushed package " + $nupkg + " successfully to server.") -Severity 1
         }
         catch {
