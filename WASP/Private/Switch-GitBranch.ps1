@@ -20,6 +20,10 @@ function Switch-GitBranch {
     )
 
     process {
+        $packageName, $packageVersion, $re = $branch.split('@')
+        if ($re) {
+            Write-Log ([string] (git -C $path branch -D $branch 2>&1))
+        }
         Write-Log ([string] (git -C $path checkout $branch 2>&1))
 
         # Check if we could checkout the correct branch

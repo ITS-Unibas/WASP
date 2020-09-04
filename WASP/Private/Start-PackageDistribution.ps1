@@ -47,7 +47,7 @@ function Start-PackageDistribution() {
                 # Check for new packages on remote branches, that contain 'dev/' in their names
                 Switch-GitBranch $PackageGalleryPath $branch
 
-                $packageName, $packageVersion = $branch.split($nameAndVersionSeparator)
+                $packageName, $packageVersion, $re = $branch.split($nameAndVersionSeparator)
                 $packageName = $packageName -Replace $config.Application.GitBranchDEV, ''
 
                 $foundInWishlist = $false
