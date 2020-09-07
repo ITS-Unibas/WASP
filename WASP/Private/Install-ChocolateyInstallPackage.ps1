@@ -76,7 +76,7 @@ function Install-ChocolateyInstallPackage() {
             }
             $url64bit = Get-UrlFromVerificationFile @searchArgs
             if (-Not $url64bit) {
-                Write-Log "$($packageName): No url for 64bit file found! Looking for 32 bit." -Severity 3
+                Write-Log "$($packageName): No url for 64bit file found! Looking for 32 bit."
                 Write-Log "$($packageName): Getting url for file parameter from VERIFICATION.txt"
                 $searchArgs = @{
                     searchFor32BitUrl = $True
