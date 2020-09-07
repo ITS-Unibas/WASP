@@ -46,6 +46,15 @@ function Get-UrlFromVerificationFile() {
                     return $url32Matches[0].Value
                 }
             }
+            # We couldn't find an url for 32bit so we search for an independent url
+            # We handle the found architecture independent url as a 32bit file (default)
+            Write-Log "$($packageName): Searching for any urls with file endings (.msi|.exe|.zip|.tar.gz|.msu)..."
+            $regexLinkWithFileExtension = '(http[:/\w\d.&%^$=#\-@+\*]*(\.msi|\.exe|\.zip|\.tar\.gz|\.msu))'
+            $urlMatches = (Select-String -Path $verificationPath -Pattern $regexLinkWithFileExtension).Matches
+            if ($urlMatches) {
+                Write-Log "$($packageName): Returning architecture independent url"
+                return $urlMatches[0].Value
+            }
         }
         elseif ($searchFor64BitUrl) {
             # We only want to search for 64bit urls in our verification text
@@ -58,14 +67,6 @@ function Get-UrlFromVerificationFile() {
                     return $url64Matches[0].Value
                 }
             }
-        }
-        # We couldn't find an url for 32bit so we search for an independent url
-        Write-Log "$($packageName): Searching for any urls with file endings (.msi|.exe|.zip|.tar.gz|.msu)..."
-        $regexLinkWithFileExtension = '(http[:/\w\d.&%^$=#\-@+\*]*(\.msi|\.exe|\.zip|\.tar\.gz|\.msu))'
-        $urlMatches = (Select-String -Path $verificationPath -Pattern $regexLinkWithFileExtension).Matches
-        if ($urlMatches) {
-            Write-Log "$($packageName): Returning independent url"
-            return $urlMatches[0].Value
         }
     }
     return
