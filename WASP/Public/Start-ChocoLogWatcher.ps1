@@ -21,8 +21,8 @@ function Start-ChocoLogWatcher {
 
     $Config = Read-ConfigFile
     $LogPath = Join-Path -Path $Config.Application.BaseDirectory -ChildPath $Config.Logger.LogSubFilePath
-    $LogFile = Get-ChildItem $LogPath | Select-Object -Last $LineCount | Select-Object -ExpandProperty FullName
-    Get-Content $LogFile -Tail 1 -Wait | Where-Object {
+    $LogFile = Get-ChildItem $LogPath | Select-Object -Last 1 | Select-Object -ExpandProperty FullName
+    Get-Content $LogFile -Tail $LineCount -Wait | Where-Object {
         if ($_ -match "Debug") { Write-Host $_ -ForegroundColor Cyan }
         elseif ($_ -match "Information") { Write-Host $_ -ForegroundColor Magenta }
         elseif ($_ -match "Warning") { Write-Host $_ -ForegroundColor Yellow }
