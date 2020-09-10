@@ -57,7 +57,7 @@ function Test-ExistsOnRepo {
             $Response = Invoke-WebRequest -Uri $Uri -Headers @{Authorization = "Basic $Base64Auth" }
             [xml]$XMLContent = $Response | Select-Object -ExpandProperty Content
             [datetime]$PublishDate = $XMLContent.entry.properties.Published.'#text'
-            Write-Log "Repository publish date is $PublishDate and file creation date is $FileCreationDate. File on packaging client is newer: $($PublishDate -ge $FileCreationDate)"
+            Write-Log "Repository publish date is $PublishDate and file creation date is $FileCreationDate. File on repo server is current: $($PublishDate -ge $FileCreationDate)"
             return ($PublishDate -ge $FileCreationDate)
         }
         catch {
