@@ -100,7 +100,7 @@ function Start-PackageDistribution() {
                         $hashOldNupkg = Get-NupkgHash $nupkg $packageRootPath
                         # Build the package to compare it to the old one
                         $InvokeMessage = Invoke-Expression -Command ("choco pack " + $nuspecFile + " -s . -r")
-                        $InvokeMessage | ForEach-Object {Write-Log $_}
+                        $InvokeMessage | ForEach-Object { Write-Log $_ }
                         $nupkgNew = (Get-ChildItem -Path $packageRootPath -Recurse -Filter *.nupkg).FullName
                         if (-Not $nupkgNew) {
                             Write-Log "Choco pack process of package $packageName $packageVersion failed. Continuing with next package." -Severity 3
@@ -109,9 +109,7 @@ function Start-PackageDistribution() {
                         Write-Log "Calculating hash for nupkg: $nupkgNew."
                         $hashNewNupkg = Get-NupkgHash $nupkg $packageRootPath
                         if (-Not ($hashNewNupkg -eq $hashOldNupkg)) {
-                            Write-Log "Hashes do not match, increasing release version in $nuspecFile by 1."
-                            # There were changes in the package, so iterate the version of the nuspec.
-                            Set-NewReleaseVersion $false $nuspecFile
+                            Write-Log "Hashes do not match, removing old nupkg and building new nupkg."
                             # Because the later new build package has a different version and therefore a new nupkg will be created we have to remove the old not anymore used nupkg
                             Remove-Item -Path "$packageRootPath\*.nupkg"
                         }
@@ -121,13 +119,11 @@ function Start-PackageDistribution() {
                         }
                     }
                     else {
-                        Write-Log "No nupkg exists."
-                        # No new package has been build yet, append the release version 000 in the nuspec
-                        Set-NewReleaseVersion $true $nuspecFile
+                        Write-Log "No nupkg exists. Packing package.."
                     }
                     #Build the package
                     $InvokeMessage = Invoke-Expression -Command ("choco pack $nuspecFile -s $packageRootPath -r")
-                    $InvokeMessage | ForEach-Object {Write-Log $_}
+                    $InvokeMessage | ForEach-Object { Write-Log $_ }
                     Send-NupkgToServer $packageRootPath $config.Application.ChocoServerDEV
                     Set-Location $OldWorkingDir
                     # Remove all uncommited files, so no left over files will be moved to prod branch. Or else it will be pushed from choco to all instances
