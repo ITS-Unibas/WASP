@@ -4,24 +4,19 @@ function Test-ExistsOnRepo {
         Tests if a given choco package exists on a given repostiory
     .DESCRIPTION
         Invokes the REST API of the Repository Manager to check if the
-        choco package with a given name and a specified version already exists
+        choco package with a given sha512 hash of the nupkg already exists
         on the given repository
     #>
 
     [CmdletBinding()]
 
     param(
-        [Parameter(Mandatory=$true)]
+        [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
         [String]
-        $PackageName,
+        $PackageHash,
 
-        [Parameter(Mandatory=$true)]
-        [ValidateNotNullOrEmpty()]
-        [String]
-        $PackageVersion,
-
-        [Parameter(Mandatory=$true)]
+        [Parameter(Mandatory = $true)]
         [ValidateSet("Dev", "Test", "Prod")]
         [String]
         $Repository
@@ -48,11 +43,12 @@ function Test-ExistsOnRepo {
 
     process {
         $Base64Auth = [Convert]::ToBase64String([Text.Encoding]::ASCII.GetBytes(("{0}:{1}" -f $Config.Application.RepositoryManagerAPIUser, $Config.Application.RepostoryManagerAPIPassword)))
-        $Uri = $Config.Application.RepositoryManagerAPIBaseUrl + "v1/search?repository=$RepositoryName&name=$PackageName&version=$PackageVersion"
+        $Uri = $Config.Application.RepositoryManagerAPIBaseUrl + "v1/search?repository=$RepositoryName&sha512=$PackageHash"
         try {
-            $Response = Invoke-RestMethod -Method Get -Uri $Uri -ContentType "application/json" -Headers @{Authorization="Basic $Base64Auth"}
+            $Response = Invoke-RestMethod -Method Get -Uri $Uri -ContentType "application/json" -Headers @{Authorization = "Basic $Base64Auth" }
             return ($Response.items.Count -gt 0)
-        } catch {
+        }
+        catch {
             Write-Log "Get request failed. Going to assume it doesn't exist on the target repository." -Severity 2
         }
         return $false
