@@ -53,6 +53,7 @@ function Test-ExistsOnRepo {
     process {
         $Base64Auth = [Convert]::ToBase64String([Text.Encoding]::ASCII.GetBytes(("{0}:{1}" -f $Config.Application.RepositoryManagerAPIUser, $Config.Application.RepostoryManagerAPIPassword)))
         $Uri = $RepositoryUrl + "/Packages(Id='$PackageName',Version='$PackageVersion')"
+        Write-Log "We are checking at the following location if the publish date is current: $Uri"
         try {
             $Response = Invoke-WebRequest -Uri $Uri -Headers @{Authorization = "Basic $Base64Auth" }
             [xml]$XMLContent = $Response | Select-Object -ExpandProperty Content
