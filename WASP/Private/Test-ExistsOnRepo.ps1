@@ -4,7 +4,7 @@ function Test-ExistsOnRepo {
         Tests if a given choco package exists on a given repostiory
     .DESCRIPTION
         Invokes the REST API of the Repository Manager to check if the
-        choco package with a given sha512 hash of the nupkg already exists
+        choco package with a given sha1 hash of the nupkg already exists
         on the given repository
     #>
 
@@ -43,7 +43,7 @@ function Test-ExistsOnRepo {
 
     process {
         $Base64Auth = [Convert]::ToBase64String([Text.Encoding]::ASCII.GetBytes(("{0}:{1}" -f $Config.Application.RepositoryManagerAPIUser, $Config.Application.RepostoryManagerAPIPassword)))
-        $Uri = $Config.Application.RepositoryManagerAPIBaseUrl + "v1/search?repository=$RepositoryName&sha512=$PackageHash"
+        $Uri = $Config.Application.RepositoryManagerAPIBaseUrl + "v1/search?repository=$RepositoryName&sha1=$PackageHash"
         try {
             $Response = Invoke-RestMethod -Method Get -Uri $Uri -ContentType "application/json" -Headers @{Authorization = "Basic $Base64Auth" }
             return ($Response.items.Count -gt 0)
