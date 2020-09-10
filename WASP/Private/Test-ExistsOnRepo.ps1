@@ -24,7 +24,11 @@ function Test-ExistsOnRepo {
         [Parameter(Mandatory = $true)]
         [ValidateSet("Dev", "Test", "Prod")]
         [String]
-        $Repository
+        $Repository,
+
+        [Parameter(Mandatory)]
+        [datetime]
+        $FileCreationDate
     )
 
     begin {
@@ -32,26 +36,28 @@ function Test-ExistsOnRepo {
         # TODO: Maybe store Repo names in config?
         switch ($Repository) {
             "Dev" {
-                $RepositoryName = "choco-dev"
+                $RepositoryUrl = $config.Application.ChocoServerDEV
             }
             "Test" {
-                $RepositoryName = "choco-test"
+                $RepositoryUrl = $config.Application.ChocoServerTEST
             }
             "Prod" {
-                $RepositoryName = "choco-prod"
+                $RepositoryUrl = $config.Application.ChocoServerPROD
             }
             default {
-                $RepositoryName = "choco-prod"
+                $RepositoryUrl = $config.Application.ChocoServerPROD
             }
         }
     }
 
     process {
         $Base64Auth = [Convert]::ToBase64String([Text.Encoding]::ASCII.GetBytes(("{0}:{1}" -f $Config.Application.RepositoryManagerAPIUser, $Config.Application.RepostoryManagerAPIPassword)))
-        $Uri = $Config.Application.RepositoryManagerAPIBaseUrl + "v1/search?repository=$RepositoryName&name=$PackageName&version=$PackageVersion"
+        $Uri = $RepositoryUrl + "/Packages(Id='$PacakageName',Version='$PackageVersion')"
         try {
-            $Response = Invoke-RestMethod -Method Get -Uri $Uri -ContentType "application/json" -Headers @{Authorization = "Basic $Base64Auth" }
-            return ($Response.items.Count -gt 0)
+            $Response = Invoke-WebRequest -Uri $Uri -Headers @{Authorization = "Basic $Base64Auth" }
+            [xml]$XMLContent = $Response | Select-Object -ExpandProperty Content
+            [datetime]$PublishDate = $XMLContent.entry.properties.Published.'#text'
+            return ($PublishDate -ge $FileCreationDate)
         }
         catch {
             Write-Log "Get request failed. Going to assume it doesn't exist on the target repository." -Severity 2
