@@ -107,7 +107,7 @@ function Start-PackageDistribution() {
                             continue
                         }
                         Write-Log "Calculating hash for nupkg: $nupkgNew."
-                        $hashNewNupkg = Get-NupkgHash $nupkg $packageRootPath
+                        $hashNewNupkg = Get-NupkgHash $nupkgNew $packageRootPath
                         if ($hashNewNupkg -eq $hashOldNupkg) {
                             Write-Log "No changes detected for package $packageName. Removing "
                             Remove-Item -Path "$packageRootPath\*.nupkg"
