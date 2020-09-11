@@ -116,7 +116,8 @@ function Start-PackageDistribution() {
                             continue
                         }
                         else {
-                            Write-Log "Hashes do not match, pushing new package to server."
+                            Write-Log "Hashes do not match, removing $packageName from $tmpdir and push new package to server."
+                            Remove-Item "$tmpdir\$env:ChocolateyPackageName.$env:ChocolateyPackageVersion.nupkg"
                         }
                     }
                     else {
