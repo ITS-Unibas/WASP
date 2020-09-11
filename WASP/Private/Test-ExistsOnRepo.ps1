@@ -4,27 +4,31 @@ function Test-ExistsOnRepo {
         Tests if a given choco package exists on a given repostiory
     .DESCRIPTION
         Invokes the REST API of the Repository Manager to check if the
-        choco package with a given name and a specified version already exists
+        choco package with a given name and version a specified version already exists
         on the given repository
     #>
 
     [CmdletBinding()]
 
     param(
-        [Parameter(Mandatory=$true)]
+        [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
         [String]
         $PackageName,
 
-        [Parameter(Mandatory=$true)]
+        [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
         [String]
         $PackageVersion,
 
-        [Parameter(Mandatory=$true)]
+        [Parameter(Mandatory = $true)]
         [ValidateSet("Dev", "Test", "Prod")]
         [String]
-        $Repository
+        $Repository,
+
+        [Parameter(Mandatory)]
+        [datetime]
+        $FileCreationDate
     )
 
     begin {
@@ -32,27 +36,32 @@ function Test-ExistsOnRepo {
         # TODO: Maybe store Repo names in config?
         switch ($Repository) {
             "Dev" {
-                $RepositoryName = "choco-dev"
+                $RepositoryUrl = $config.Application.ChocoServerDEV
             }
             "Test" {
-                $RepositoryName = "choco-test"
+                $RepositoryUrl = $config.Application.ChocoServerTEST
             }
             "Prod" {
-                $RepositoryName = "choco-prod"
+                $RepositoryUrl = $config.Application.ChocoServerPROD
             }
             default {
-                $RepositoryName = "choco-prod"
+                $RepositoryUrl = $config.Application.ChocoServerPROD
             }
         }
     }
 
     process {
         $Base64Auth = [Convert]::ToBase64String([Text.Encoding]::ASCII.GetBytes(("{0}:{1}" -f $Config.Application.RepositoryManagerAPIUser, $Config.Application.RepostoryManagerAPIPassword)))
-        $Uri = $Config.Application.RepositoryManagerAPIBaseUrl + "v1/search?repository=$RepositoryName&name=$PackageName&version=$PackageVersion"
+        $Uri = $RepositoryUrl + "/Packages(Id='$PackageName',Version='$PackageVersion')"
+        Write-Log "We are checking at the following location if the publish date is current: $Uri"
         try {
-            $Response = Invoke-RestMethod -Method Get -Uri $Uri -ContentType "application/json" -Headers @{Authorization="Basic $Base64Auth"}
-            return ($Response.items.Count -gt 0)
-        } catch {
+            $Response = Invoke-WebRequest -Uri $Uri -Headers @{Authorization = "Basic $Base64Auth" }
+            [xml]$XMLContent = $Response | Select-Object -ExpandProperty Content
+            [datetime]$PublishDate = $XMLContent.entry.properties.Published.'#text'
+            Write-Log "Repository publish date is $PublishDate and file creation date is $FileCreationDate. File on repo server is current: $($PublishDate -ge $FileCreationDate)"
+            return ($PublishDate -ge $FileCreationDate)
+        }
+        catch {
             Write-Log "Get request failed. Going to assume it doesn't exist on the target repository." -Severity 2
         }
         return $false

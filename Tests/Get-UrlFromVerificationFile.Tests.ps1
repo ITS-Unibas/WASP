@@ -2,15 +2,15 @@ $path = (Split-Path -Parent $MyInvocation.MyCommand.Path).Replace("\Tests", "\WA
 $Private = @(Get-ChildItem -Path $path\Private\*.ps1 -ErrorAction SilentlyContinue)
 
 foreach ($import in $Private) {
-    . $import.fullname
+  . $import.fullname
 }
 
 Describe "Getting checksum type from verification file" {
-    Mock Write-Log { }
-    Mock Get-VerificationFilePath { return "TestDrive:\VERIFICATION.txt" }
+  Mock Write-Log { }
+  Mock Get-VerificationFilePath { return "TestDrive:\VERIFICATION.txt" }
 
-    Context "returns urls for searched architectures" {
-        Set-Content "TestDrive:\verification.txt" -Value "VERIFICATION
+  Context "returns urls for searched architectures" {
+    Set-Content "TestDrive:\verification.txt" -Value "VERIFICATION
       Verification is intended to assist the Chocolatey moderators and community
       in verifying that this package's contents are trustworthy.
 
@@ -30,17 +30,17 @@ Describe "Getting checksum type from verification file" {
 
       File 'LICENSE.txt' is obtained from <http://www.7-zip.org/license.txt>"
 
-        It "returns url for 32 bit" {
-            Get-UrlFromVerificationFile -searchFor32Biturl $true -searchFor64BitUrl $false | Should -Be 'http://www.7-zip.org/a/7z1900.exe'
-        }
-        It "returns url for 64 bit" {
-            Get-UrlFromVerificationFile -searchFor32Biturl $false -searchFor64BitUrl $true | Should -Be 'http://www.7-zip.org/a/7z1900-x64.exe'
-        }
+    It "returns url for 32 bit" {
+      Get-UrlFromVerificationFile -searchFor32Biturl $true -searchFor64BitUrl $false | Should -Be 'http://www.7-zip.org/a/7z1900.exe'
     }
+    It "returns url for 64 bit" {
+      Get-UrlFromVerificationFile -searchFor32Biturl $false -searchFor64BitUrl $true | Should -Be 'http://www.7-zip.org/a/7z1900-x64.exe'
+    }
+  }
 
 
-    Context "returns first matched urls for searched architectures" {
-        Set-Content "TestDrive:\verification.txt" -Value "VERIFICATION
+  Context "returns first matched urls for searched architectures" {
+    Set-Content "TestDrive:\verification.txt" -Value "VERIFICATION
       Verification is intended to assist the Chocolatey moderators and community
       in verifying that this package's contents are trustworthy.
 
@@ -62,16 +62,16 @@ Describe "Getting checksum type from verification file" {
 
       File 'LICENSE.txt' is obtained from <http://www.7-zip.org/license.txt>"
 
-        It "returns url for 32 bit" {
-            Get-UrlFromVerificationFile -searchFor32Biturl $true -searchFor64BitUrl $false | Should -Be 'http://www.7-zip.org/a/7z1900.exe'
-        }
-        It "returns url for 64 bit" {
-            Get-UrlFromVerificationFile -searchFor32Biturl $false -searchFor64BitUrl $true | Should -Be 'http://www.7-zip.org/a/7z1900-x64.exe'
-        }
+    It "returns url for 32 bit" {
+      Get-UrlFromVerificationFile -searchFor32Biturl $true -searchFor64BitUrl $false | Should -Be 'http://www.7-zip.org/a/7z1900.exe'
     }
+    It "returns url for 64 bit" {
+      Get-UrlFromVerificationFile -searchFor32Biturl $false -searchFor64BitUrl $true | Should -Be 'http://www.7-zip.org/a/7z1900-x64.exe'
+    }
+  }
 
-    Context "returns any found url" {
-        Set-Content "TestDrive:\verification.txt" -Value "VERIFICATION
+  Context "returns any found url" {
+    Set-Content "TestDrive:\verification.txt" -Value "VERIFICATION
       Verification is intended to assist the Chocolatey moderators and community
       in verifying that this package's contents are trustworthy.
 
@@ -90,15 +90,15 @@ Describe "Getting checksum type from verification file" {
 
       File 'LICENSE.txt' is obtained from <http://www.7-zip.org/license.txt>"
 
-        It "returns any url when specified architecture 32 bit url is not found" {
-            Get-UrlFromVerificationFile -searchFor32Biturl $true -searchFor64BitUrl $false | Should -Be 'http://www.7-zip.org/a/7z1900.exe'
-        }
-        It "returns any url when specified architecture 64 bit url is not found" {
-            Get-UrlFromVerificationFile -searchFor32Biturl $false -searchFor64BitUrl $true | Should -Be 'http://www.7-zip.org/a/7z1900.exe'
-        }
+    It "returns any url when specified architecture 32 bit url is not found" {
+      Get-UrlFromVerificationFile -searchFor32Biturl $true -searchFor64BitUrl $false | Should -Be 'http://www.7-zip.org/a/7z1900.exe'
     }
-    Context "returns none if no url with appropriate file ending is found" {
-        Set-Content "TestDrive:\verification.txt" -Value "VERIFICATION
+    It "returns any url when specified architecture 64 bit url is not found" {
+      Get-UrlFromVerificationFile -searchFor32Biturl $false -searchFor64BitUrl $true | Should -Be $None
+    }
+  }
+  Context "returns none if no url with appropriate file ending is found" {
+    Set-Content "TestDrive:\verification.txt" -Value "VERIFICATION
       Verification is intended to assist the Chocolatey moderators and community
       in verifying that this package's contents are trustworthy.
 
@@ -117,11 +117,11 @@ Describe "Getting checksum type from verification file" {
 
       File 'LICENSE.txt' is obtained from <http://www.7-zip.org/license.txt>"
 
-        It "returns none when specified architecture 32 bit url is not found" {
-            Get-UrlFromVerificationFile -searchFor32Biturl $true -searchFor64BitUrl $false | Should -Be $null
-        }
-        It "returns none when specified architecture 64 bit url is not found" {
-            Get-UrlFromVerificationFile -searchFor32Biturl $false -searchFor64BitUrl $true | Should -Be $null
-        }
+    It "returns none when specified architecture 32 bit url is not found" {
+      Get-UrlFromVerificationFile -searchFor32Biturl $true -searchFor64BitUrl $false | Should -Be $null
     }
+    It "returns none when specified architecture 64 bit url is not found" {
+      Get-UrlFromVerificationFile -searchFor32Biturl $false -searchFor64BitUrl $true | Should -Be $null
+    }
+  }
 }

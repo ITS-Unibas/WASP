@@ -6,38 +6,68 @@ foreach ($import in $Private) {
 }
 Describe "Package exists on repo" {
 
-    $Repository = "Dev"
-    $Package = "package"
-    $Version = "1.0.0"
-    $ValidAnswer = [PSCustomObject]@{
-        items = @([PSCustomObject]@{
-            name = "msedge"
-        })
+    $ParamSplat = @{
+        Repository = "Dev"
+        PackageName = "package"
+        PackageVersion = "1.0.0"
+        FileCreationDate = [datetime]"2020-09-10T14:33:46.502Z"
     }
-    $EmptyAnswer = [PSCustomObject]@{
-        items = @()
+
+    $EqualDateAnswer = [PSCustomObject]@{
+        Content = [xml]@"
+        <entry xmlns:d="http://schemas.microsoft.com/ado/2007/08/dataservices" xmlns:m="http://schemas.microsoft.com/ado/2007/08/dataservices/metadata" xmlns="http://www.w3.org/2005/Atom">
+        <m:properties>
+          <d:Published m:type="Edm.DateTime">2020-09-10T14:33:46.502Z</d:Published>
+        </m:properties>
+      </entry>
+"@
+    }
+    $SmallerDateAnswer = [PSCustomObject]@{
+        Content = [xml]@"
+        <entry xmlns:d="http://schemas.microsoft.com/ado/2007/08/dataservices" xmlns:m="http://schemas.microsoft.com/ado/2007/08/dataservices/metadata" xmlns="http://www.w3.org/2005/Atom">
+        <m:properties>
+          <d:Published m:type="Edm.DateTime">2020-09-09T14:33:46.502Z</d:Published>
+        </m:properties>
+      </entry>
+"@
+    }
+    $BiggerDateAnswer = [PSCustomObject]@{
+        Content = [xml]@"
+        <entry xmlns:d="http://schemas.microsoft.com/ado/2007/08/dataservices" xmlns:m="http://schemas.microsoft.com/ado/2007/08/dataservices/metadata" xmlns="http://www.w3.org/2005/Atom">
+        <m:properties>
+          <d:Published m:type="Edm.DateTime">2020-09-10T15:33:46.502Z</d:Published>
+        </m:properties>
+      </entry>
+"@
     }
 
     Mock Write-Log { }
 
     It "tests if package with a given version and exists on repo, should be false if an error is thrown" {
-        Mock Invoke-RestMethod { Throw 'url not found error' }
+        Mock Invoke-WebRequest { Throw 'url not found error' }
 
-        $test = Test-ExistsOnRepo $Package $Version $Repository
+        $test = Test-ExistsOnRepo @ParamSplat
         $test | Should be $false
     }
 
-    It "tests if package with a given version and exists on repo, should be false if not exists" {
-        Mock Invoke-RestMethod { $EmptyAnswer }
+    It "tests if package with smaller date on repo exists, should be false if not exists" {
+        Mock Invoke-WebRequest { $SmallerDateAnswer }
 
-        $test = Test-ExistsOnRepo $Package $Version $Repository
+        $test = Test-ExistsOnRepo @ParamSplat
         $test | Should be $false
     }
 
-    It "tests if package with a given version and exists on repo, should be true if exists" {
-        Mock Invoke-RestMethod { return $ValidAnswer }
+    It "tests if package with a equal date exists repo, should be true if exists" {
+        Mock Invoke-WebRequest { return $EqualDateAnswer }
 
-        $test = Test-ExistsOnRepo $Package $Version $Repository
+        $test = Test-ExistsOnRepo @ParamSplat
+        $test | Should be $true
+    }
+
+    It "tests if package with a bigger date exists repo, should be true if exists" {
+        Mock Invoke-WebRequest { return $BiggerDateAnswer }
+
+        $test = Test-ExistsOnRepo @ParamSplat
         $test | Should be $true
     }
 }
