@@ -123,6 +123,7 @@ function Start-PackageDistribution() {
                     else {
                         Write-Log "No nupkg exists. Packing package.."
                         $InvokeMessage = Invoke-Expression -Command ("choco pack $nuspecFile -s . -r")
+                        $InvokeMessage | ForEach-Object { Write-Log $_ }
                     }
                     Send-NupkgToServer $packageRootPath $config.Application.ChocoServerDEV
                     Set-Location $OldWorkingDir
