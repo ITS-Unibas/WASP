@@ -3,6 +3,7 @@
         "BaseDirectory": "C:\\ProgramData\\Unibasel\\wasp",
         "GitServiceUser": "d-its-wcs-de",
         "GitBaseUrl": "https://git.its.unibas.ch",
+        "JiraBaseUrl": "https://deployment-jira.its.unibas.ch",
         "GitProject": "csswcs",
         "GitBranchDEV": "dev/",
         "GitBranchTEST": "test",
