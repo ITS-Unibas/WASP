@@ -38,6 +38,7 @@ function Start-PackageDistribution() {
         Switch-GitBranch $PackageGalleryPath $config.Application.GitBranchPROD
 
         $remoteBranches = Get-RemoteBranches $GitFolderName
+        $repackagingBranches = $remoteBranches | Where-Object { ($_ -split '@').Length -eq 3 }
 
         Write-Log "The following remote branches were found: $remoteBranches"
 
@@ -167,8 +168,26 @@ function Start-PackageDistribution() {
                             $packageRootPath = Join-Path $packagePath $version
                             $FullVersion = ([xml](Get-Content -Path (Join-Path $packageRootPath "$package.nuspec"))).Package.metadata.version
                             $FullID = ([xml](Get-Content -Path (Join-Path $packageRootPath "$package.nuspec"))).Package.metadata.id
-                            $FileDate = (Get-ChildItem -Path $packageRootPath | Where-Object { $_.FullName -match "\.nupkg" }).CreationTime
+                            $FileDate = (Get-ChildItem -Path $packageRootPath | Where-Object { $_.FullName -match "\.nupkg" }).LastWriteTime
 
+                            # check if package is being repackaged
+                            if ($repackagingBranches -match "$package@$FullVersion") {
+                                # only push it to test if the jira issue is in test
+                                if ($chocolateyDestinationServer -eq $config.Application.ChocoServerTEST) {
+                                    if (Test-IssueStatus $package $version 'Testing') {
+                                        if (-Not (Test-ExistsOnRepo -PackageName $FullID -PackageVersion $FullVersion -Repository $Repo -FileCreationDate $FileDate)) {
+                                            Write-Log "Package $FullID with version $FullVersion doesn't exist on $chocolateyDestinationServer. Going to push..."
+                                            Send-NupkgToServer $packageRootPath $chocolateyDestinationServer
+                                        }
+                                        else {
+                                            Write-Log "Package $FullID with version $FullVersion already exists on $chocolateyDestinationServer. Doing nothing."
+                                        }
+                                        continue
+                                    }
+                                }
+                                Write-Log "Package $package is in repackaging and its nupkg is not pushed to $Repo."
+                                continue
+                            }
                             # if package is in PROD, check if it exists in DEV as well --> make sure that if a nupkg is faulty on dev and gets deleted on dev server, it is pushed there again
                             # goal is to be sure that the same nupkg exists on all three servers
                             if ($Repo -eq "Prod") {
