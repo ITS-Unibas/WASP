@@ -168,10 +168,10 @@ function Start-PackageDistribution() {
                             $packageRootPath = Join-Path $packagePath $version
                             $FullVersion = ([xml](Get-Content -Path (Join-Path $packageRootPath "$package.nuspec"))).Package.metadata.version
                             $FullID = ([xml](Get-Content -Path (Join-Path $packageRootPath "$package.nuspec"))).Package.metadata.id
-                            $FileDate = (Get-ChildItem -Path $packageRootPath | Where-Object { $_.FullName -match "\.nupkg" }).CreationTime
+                            $FileDate = (Get-ChildItem -Path $packageRootPath | Where-Object { $_.FullName -match "\.nupkg" }).LastWriteTime
 
                             # check if package is being repackaged
-                            if ($repackagingBranches -match $package) {
+                            if ($repackagingBranches -match "$package@$FullVersion") {
                                 # only push it to test if the jira issue is in test
                                 if ($chocolateyDestinationServer -eq $config.Application.ChocoServerTEST) {
                                     if (Test-IssueStatus $package $version 'Testing') {
