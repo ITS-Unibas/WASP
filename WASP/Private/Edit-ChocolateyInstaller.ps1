@@ -53,13 +53,15 @@ function Edit-ChocolateyInstaller {
             $script:FilePathPresent = $false
             $script:RemoteFilePresent = $false
 
-            $InstallerContent = $InstallerContent | ForEach-Object { if ($_ -match "  RemoteFile          = `$true") { $script:RemoteFilePresent = $true } }
+            $InstallerContent | ForEach-Object { if ($_ -match "  RemoteFile          = `$true") { $script:RemoteFilePresent = $true } }
 
             # Do not remove url and checksum if a remote file is available
             if (-Not $script:RemoteFilePresent) {
                 $InstallerContent = $InstallerContent | Where-Object { $_ -notmatch $URLRegex -and $_ -notmatch $ChecksumRegex }  #| Set-Content -Path $NewFile
-            } else {
-                $InstallerContent = $InstallerContent | Where-Object { $_ -notmatch $RemoteFileRegex}
+            }
+            else {
+                Write-Log "Package uses remote files, url and checksums are not removed." -Severity 1
+                $InstallerContent = $InstallerContent | Where-Object { $_ -notmatch $RemoteFileRegex }
             }
             $InstallerContent = $InstallerContent | Where-Object { $_.trim() -ne "" }
 
