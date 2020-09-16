@@ -102,7 +102,7 @@ function Edit-ChocolateyInstaller {
             }
 
             # If a remote file is available, unzip path is empty
-            if ($UnzipPath) {
+            if ($UnzipPath -and (-Not $script:RemoteFilePresent)) {
                 Write-Log "Calling set unzip location and remove installzip, got unzip location $UnzipPath" -Severity 1
                 $InstallerContent = $InstallerContent | ForEach-Object { $_ -replace '.*unzipLocation[\s]*=[\s]*Get-PackageCacheLocation', "unzipLocation = $UnzipPath" }
                 $InstallerContent = $InstallerContent | ForEach-Object { $_ -replace 'Install-ChocolateyZipPackage\s*@packageArgs', "Install-ChocolateyInstallPackage @packageArgs" }
