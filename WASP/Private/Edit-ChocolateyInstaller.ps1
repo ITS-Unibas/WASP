@@ -20,8 +20,7 @@ function Edit-ChocolateyInstaller {
         [string]
         $ToolsPath,
 
-        [Parameter(Mandatory = $true)]
-        [ValidateNotNullOrEmpty()]
+        [Parameter(Mandatory = $false)]
         [string]
         $FileName,
 
@@ -44,14 +43,26 @@ function Edit-ChocolateyInstaller {
             #Regex
             $URLRegex = '.*url.*' #replace url
             $ChecksumRegex = '.*checksum.*' # replace checksum
+            $RemoteFileRegex = '.*remoteFile.*' # replace remoteFile
 
             $InstallerContent = Get-Content -Path $NewFile -ErrorAction Stop
 
             # Remove all comments in the template
             $InstallerContent = $InstallerContent | Where-Object { $_ -notmatch "^\s*#" } | ForEach-Object { $_ -replace '(^.*?)\s*?[^``]#.*', '$1' } #| Set-Content -Path $NewFile
-            $InstallerContent = $InstallerContent | Where-Object { $_ -notmatch $URLRegex -and $_ -notmatch $ChecksumRegex }  #| Set-Content -Path $NewFile
-            $InstallerContent = $InstallerContent | Where-Object { $_.trim() -ne "" }
+
             $script:FilePathPresent = $false
+            $script:RemoteFilePresent = $false
+
+            $InstallerContent = $InstallerContent | ForEach-Object { if ($_ -match "  RemoteFile          = `$true") { $script:RemoteFilePresent = $true } }
+
+            # Do not remove url and checksum if a remote file is available
+            if (-Not $script:RemoteFilePresent) {
+                $InstallerContent = $InstallerContent | Where-Object { $_ -notmatch $URLRegex -and $_ -notmatch $ChecksumRegex }  #| Set-Content -Path $NewFile
+            } else {
+                $InstallerContent = $InstallerContent | Where-Object { $_ -notmatch $RemoteFileRegex}
+            }
+            $InstallerContent = $InstallerContent | Where-Object { $_.trim() -ne "" }
+
             # Check if filepath already present
             $InstallerContent | ForEach-Object {
                 if ($_ -match '(file[\s]*=)') {
@@ -81,13 +92,14 @@ function Edit-ChocolateyInstaller {
                         elseif ($script:ToolsDirPresent) {
                             "  file          = (Join-Path `$toolsDir '$FileName')"
                         }
-                        else {
+                        elseif (-Not $script:RemoteFilePresent) {
                             "  file          = (Join-Path `$PSScriptRoot '$FileName')"
                         }
                     }
                 }
             }
 
+            # If a remote file is available, unzip path is empty
             if ($UnzipPath) {
                 Write-Log "Calling set unzip location and remove installzip, got unzip location $UnzipPath" -Severity 1
                 $InstallerContent = $InstallerContent | ForEach-Object { $_ -replace '.*unzipLocation[\s]*=[\s]*Get-PackageCacheLocation', "unzipLocation = $UnzipPath" }
@@ -157,7 +169,7 @@ function Edit-ChocolateyInstaller {
             $PostInstallerLine += "`r`n"
             $Regex = [regex]$Regex
             if (-Not $Regex.Matches($InstallerContentRaw).value) {
-                if ($InstallerContentRaw -match 'Install-ChocolateyZipPackage*') {
+                if ($InstallerContentRaw -match 'Install-ChocolateyZipPackage*' -and (-Not $script:RemoteFilePresent)) {
                     $InstallerLine = $InstallerContent | Where-Object { $_ -match "(I|i)nstall-Choco.*" }
                     $InstallerContent = $InstallerContent -replace $InstallerLine, "$($PreInstallerLine)Expand-Archive -Path (Join-Path `$toolsDir '$FileName') -DestinationPath `$toolsDir -Force`r`n$($InstallerLine)$($PostInstallerLine)"
                 }
