@@ -171,7 +171,11 @@ function Edit-ChocolateyInstaller {
             $PostInstallerLine += "`r`n"
             $Regex = [regex]$Regex
             if (-Not $Regex.Matches($InstallerContentRaw).value) {
-                if ($InstallerContentRaw -match 'Install-ChocolateyZipPackage*' -and (-Not $script:RemoteFilePresent)) {
+                if ($script:RemoteFilePresent) {
+                    $InstallerLine = $InstallerContent | Where-Object { $_ -match "(I|i)nstall-Choco.*" }
+                    $InstallerContent = $InstallerContent -replace $InstallerLine, "$($PreInstallerLine)$($InstallerLine)`$packageArgs.file = `$fileLocation`r`nInstall-ChocolateyInstallPackage @packageArgs`r`n$($PostInstallerLine)"
+                }
+                elseif ($InstallerContentRaw -match 'Install-ChocolateyZipPackage*') {
                     $InstallerLine = $InstallerContent | Where-Object { $_ -match "(I|i)nstall-Choco.*" }
                     $InstallerContent = $InstallerContent -replace $InstallerLine, "$($PreInstallerLine)Expand-Archive -Path (Join-Path `$toolsDir '$FileName') -DestinationPath `$toolsDir -Force`r`n$($InstallerLine)$($PostInstallerLine)"
                 }
