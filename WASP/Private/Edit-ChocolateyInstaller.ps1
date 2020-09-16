@@ -53,7 +53,7 @@ function Edit-ChocolateyInstaller {
             $script:FilePathPresent = $false
             $script:RemoteFilePresent = $false
 
-            $InstallerContent | ForEach-Object { if ($_ -match "  RemoteFile          = `$true") { $script:RemoteFilePresent = $true } }
+            $InstallerContent | ForEach-Object { if ($_ -match "  remoteFile          = `$true") { $script:RemoteFilePresent = $true } }
 
             # Do not remove url and checksum if a remote file is available
             if (-Not $script:RemoteFilePresent) {
