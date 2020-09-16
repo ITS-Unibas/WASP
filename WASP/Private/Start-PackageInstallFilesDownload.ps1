@@ -32,6 +32,12 @@ function Start-PackageInstallFilesDownload {
     }
 
     process {
+        # Check if package is using remote files
+        $InstallerContent = Get-Content -Path $original -ErrorAction SilentlyContinue
+        $InstallerContent | ForEach-Object { if ($_ -match "remoteFile.*=.*\`$true") {
+                Write-Log "Package uses remote files, override has been done."
+                return
+            } }
         if ($ForcedDownload) {
             Invoke-Expression -Command $packToolInstallPath
         }
@@ -54,6 +60,7 @@ function Start-PackageInstallFilesDownload {
                 }
             }
         }
+
     }
 
     end {
