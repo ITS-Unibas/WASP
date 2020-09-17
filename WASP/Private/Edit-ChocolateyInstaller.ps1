@@ -143,6 +143,18 @@ function Edit-ChocolateyInstaller {
                 }
             }
 
+            # Remove zip files when remote files are present
+            if ($script:RemoteFilePresent) {
+                $files = Get-ChildItem $LastVersionPath | Select-Object -ExpandProperty FullName
+                foreach ($file in $files) {
+                    # Fetch all files except the install/uninstallscripts from the last version
+                    if ($file -like "*.zip*") {
+                        Write-Log "Removing $file." -Severity 1
+                        Remove-item $file -Force -Recurse
+                    }
+                }
+            }
+
             # Create additional scripts if not yet existing
             foreach ($AdditionalScript in $AdditionalScripts) {
                 $ScriptPath = Join-Path -Path $ToolsPath -ChildPath $AdditionalScript
