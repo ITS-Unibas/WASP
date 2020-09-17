@@ -71,8 +71,8 @@ function Edit-ChocolateyInstaller {
                     $script:FilePathPresent = $true
                 }
             }
-            # if filepath is not already present, we have to set the filepath
-            if (-Not $script:FilePathPresent) {
+            # if filepath is not already present and this is not a remote file package, we have to set the filepath
+            if (-Not $script:FilePathPresent -and -Not $script:RemoteFilePresent) {
                 Write-Log "Calling Set File Path with path $ToolsPath" -Severity 1
                 $script:ToolsPathPresent = $false
                 $script:ToolsDirPresent = $false
@@ -94,7 +94,7 @@ function Edit-ChocolateyInstaller {
                         elseif ($script:ToolsDirPresent) {
                             "  file          = (Join-Path `$toolsDir '$FileName')"
                         }
-                        elseif (-Not $script:RemoteFilePresent) {
+                        else {
                             "  file          = (Join-Path `$PSScriptRoot '$FileName')"
                         }
                     }
