@@ -30,6 +30,7 @@ function Install-ChocolateyZipPackage() {
         [parameter(Mandatory = $false)][string] $checksumType = '',
         [parameter(Mandatory = $false)][string] $checksum64 = '',
         [parameter(Mandatory = $false)][string] $checksumType64 = '',
+        [parameter(Mandatory = $false)][bool] $remoteFile = $false,
         [parameter(Mandatory = $false)][hashtable] $options = @{Headers = @{ } },
         [alias("fileFullPath")][parameter(Mandatory = $false)][string] $file = '',
         [alias("fileFullPath64")][parameter(Mandatory = $false)][string] $file64 = '',
@@ -67,7 +68,8 @@ function Install-ChocolateyZipPackage() {
                 }
                 $checksum = Get-ChecksumFromVerificationFile @searchArgs
             }
-        } elseif ($url64bit -eq '' -or $url64bit -eq $null) {
+        }
+        elseif ($url64bit -eq '' -or $url64bit -eq $null) {
             if ($file64 -and (Test-Path $file64)) {
                 # first check whether we already have our zip file
                 Write-Log "$($packageName): The zip64 package is already present and no download is needed"
@@ -115,19 +117,21 @@ function Install-ChocolateyZipPackage() {
     }
 
     try {
-        $filePath = Get-ChocolateyWebFile -PackageName $packageName `
-            -FileFullPath $downloadFilePath `
-            -Url $url `
-            -Url64bit $url64bit `
-            -Checksum $checksum `
-            -ChecksumType $checksumType `
-            -Checksum64 $checksum64 `
-            -ChecksumType64 $checksumType64 `
-            -Options $options `
-            -GetOriginalFileName
-        $unzipLocation = (Join-Path (Get-Item -Path ".\").FullName "tools")
-        #Get-ChocolateyUnzip "$filePath" $unzipLocation $specificFolder $packageName
-        $FileName = Get-item $FilePath | Select-Object -ExpandProperty Name
+        if (-Not $remoteFile) {
+            $filePath = Get-ChocolateyWebFile -PackageName $packageName `
+                -FileFullPath $downloadFilePath `
+                -Url $url `
+                -Url64bit $url64bit `
+                -Checksum $checksum `
+                -ChecksumType $checksumType `
+                -Checksum64 $checksum64 `
+                -ChecksumType64 $checksumType64 `
+                -Options $options `
+                -GetOriginalFileName
+            $unzipLocation = (Join-Path (Get-Item -Path ".\").FullName "tools")
+            #Get-ChocolateyUnzip "$filePath" $unzipLocation $specificFolder $packageName
+            $FileName = Get-item $FilePath | Select-Object -ExpandProperty Name
+        }
         Edit-ChocolateyInstaller -ToolsPath (Join-Path (Get-Item -Path ".\").FullName "tools") -FileName $FileName -UnzipPath $unzipLocation
     }
     catch {

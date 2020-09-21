@@ -32,7 +32,14 @@ function Start-PackageInstallFilesDownload {
     }
 
     process {
-        if ($ForcedDownload) {
+        $script:remoteFilePresent = $false
+        # Check if package is using remote files
+        $InstallerContent = Get-Content -Path $original -ErrorAction SilentlyContinue
+        $InstallerContent | ForEach-Object { if ($_ -match "remoteFile.*=.*\`$true") {
+                Write-Log "Package uses remote files."
+                $script:remoteFilePresent = $true
+            } }
+        if ($ForcedDownload -and (-Not $script:remoteFilePresent)) {
             Invoke-Expression -Command $packToolInstallPath
         }
         else {
@@ -44,7 +51,11 @@ function Start-PackageInstallFilesDownload {
                 # Check if binary files exist, invoke expression to download otherwise
                 $extendedToolsPath = Join-Path $toolPath '*'
                 Write-Log "Searching for binaries in path $extendedToolsPath"
-                if ((Test-Path -Path $extendedToolsPath -Filter *.exe) -or (Test-Path -Path $extendedToolsPath -Filter *.msi) -or (Test-Path -Path $extendedToolsPath -Filter *.zip)) {
+                if ($script:remoteFilePresent) {
+                    Write-Log "Do not override again or download any binaries."
+                    return
+                }
+                elseif ((Test-Path -Path $extendedToolsPath -Filter *.exe) -or (Test-Path -Path $extendedToolsPath -Filter *.msi) -or (Test-Path -Path $extendedToolsPath -Filter *.zip)) {
                     Write-Log "Scripts were already overridden, no need to do it again."
                     return
                 }
@@ -54,6 +65,7 @@ function Start-PackageInstallFilesDownload {
                 }
             }
         }
+
     }
 
     end {

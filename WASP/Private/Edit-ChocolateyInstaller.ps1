@@ -20,8 +20,7 @@ function Edit-ChocolateyInstaller {
         [string]
         $ToolsPath,
 
-        [Parameter(Mandatory = $true)]
-        [ValidateNotNullOrEmpty()]
+        [Parameter(Mandatory = $false)]
         [string]
         $FileName,
 
@@ -44,22 +43,36 @@ function Edit-ChocolateyInstaller {
             #Regex
             $URLRegex = '.*url.*' #replace url
             $ChecksumRegex = '.*checksum.*' # replace checksum
+            $RemoteFileRegex = '.*remoteFile.*' # replace remoteFile
 
             $InstallerContent = Get-Content -Path $NewFile -ErrorAction Stop
 
             # Remove all comments in the template
             $InstallerContent = $InstallerContent | Where-Object { $_ -notmatch "^\s*#" } | ForEach-Object { $_ -replace '(^.*?)\s*?[^``]#.*', '$1' } #| Set-Content -Path $NewFile
-            $InstallerContent = $InstallerContent | Where-Object { $_ -notmatch $URLRegex -and $_ -notmatch $ChecksumRegex }  #| Set-Content -Path $NewFile
-            $InstallerContent = $InstallerContent | Where-Object { $_.trim() -ne "" }
+
             $script:FilePathPresent = $false
+            $script:RemoteFilePresent = $false
+
+            $InstallerContent | ForEach-Object { if ($_ -match "remoteFile.*=.*\`$true") { $script:RemoteFilePresent = $true } }
+
+            # Do not remove url and checksum if a remote file is available
+            if (-Not $script:RemoteFilePresent) {
+                $InstallerContent = $InstallerContent | Where-Object { $_ -notmatch $URLRegex -and $_ -notmatch $ChecksumRegex }  #| Set-Content -Path $NewFile
+            }
+            else {
+                Write-Log "Package uses remote files, url and checksums are not removed." -Severity 1
+                $InstallerContent = $InstallerContent | Where-Object { $_ -notmatch $RemoteFileRegex }
+            }
+            $InstallerContent = $InstallerContent | Where-Object { $_.trim() -ne "" }
+
             # Check if filepath already present
             $InstallerContent | ForEach-Object {
                 if ($_ -match '(file[\s]*=)') {
                     $script:FilePathPresent = $true
                 }
             }
-            # if filepath is not already present, we have to set the filepath
-            if (-Not $script:FilePathPresent) {
+            # if filepath is not already present and this is not a remote file package, we have to set the filepath
+            if (-Not $script:FilePathPresent -and -Not $script:RemoteFilePresent) {
                 Write-Log "Calling Set File Path with path $ToolsPath" -Severity 1
                 $script:ToolsPathPresent = $false
                 $script:ToolsDirPresent = $false
@@ -88,7 +101,8 @@ function Edit-ChocolateyInstaller {
                 }
             }
 
-            if ($UnzipPath) {
+            # If a remote file is available, unzip path is empty
+            if ($UnzipPath -and (-Not $script:RemoteFilePresent)) {
                 Write-Log "Calling set unzip location and remove installzip, got unzip location $UnzipPath" -Severity 1
                 $InstallerContent = $InstallerContent | ForEach-Object { $_ -replace '.*unzipLocation[\s]*=[\s]*Get-PackageCacheLocation', "unzipLocation = $UnzipPath" }
                 $InstallerContent = $InstallerContent | ForEach-Object { $_ -replace 'Install-ChocolateyZipPackage\s*@packageArgs', "Install-ChocolateyInstallPackage @packageArgs" }
@@ -129,6 +143,18 @@ function Edit-ChocolateyInstaller {
                 }
             }
 
+            # Remove zip files when remote files are present
+            if ($script:RemoteFilePresent) {
+                $files = Get-ChildItem $ToolsPath | Select-Object -ExpandProperty FullName
+                foreach ($file in $files) {
+                    # Fetch all files except the install/uninstallscripts from the last version
+                    if ($file -like "*.zip*") {
+                        Write-Log "Removing $file." -Severity 1
+                        Remove-item $file -Force -Recurse
+                    }
+                }
+            }
+
             # Create additional scripts if not yet existing
             foreach ($AdditionalScript in $AdditionalScripts) {
                 $ScriptPath = Join-Path -Path $ToolsPath -ChildPath $AdditionalScript
@@ -157,7 +183,11 @@ function Edit-ChocolateyInstaller {
             $PostInstallerLine += "`r`n"
             $Regex = [regex]$Regex
             if (-Not $Regex.Matches($InstallerContentRaw).value) {
-                if ($InstallerContentRaw -match 'Install-ChocolateyZipPackage*') {
+                if ($script:RemoteFilePresent) {
+                    $InstallerLine = $InstallerContent | Where-Object { $_ -match "(I|i)nstall-Choco.*" }
+                    $InstallerContent = $InstallerContent -replace $InstallerLine, "$($PreInstallerLine)$($InstallerLine)`r`n`$packageArgs.file = `$fileLocation`r`nInstall-ChocolateyInstallPackage @packageArgs`r`n$($PostInstallerLine)"
+                }
+                elseif ($InstallerContentRaw -match 'Install-ChocolateyZipPackage*') {
                     $InstallerLine = $InstallerContent | Where-Object { $_ -match "(I|i)nstall-Choco.*" }
                     $InstallerContent = $InstallerContent -replace $InstallerLine, "$($PreInstallerLine)Expand-Archive -Path (Join-Path `$toolsDir '$FileName') -DestinationPath `$toolsDir -Force`r`n$($InstallerLine)$($PostInstallerLine)"
                 }
