@@ -122,7 +122,9 @@ function Edit-ChocolateyInstaller {
                         }
                     }
                     $Version = $SplitVersion -join "."
-                    $null = $VersionList.Add($Version)
+                    # need to cast it to a version or else the sorting will not
+                    # work correctly, like for chrome
+                    $null = $VersionList.Add([version]$Version)
                 }
                 $VersionList.Sort()
                 $VersionList.Reverse()
