@@ -137,10 +137,28 @@ function Edit-ChocolateyInstaller {
             if ($LastVersion) {
                 $LastVersionPath = Join-Path -Path $ParentSWDirectory -ChildPath "$LastVersion\tools"
                 $files = Get-ChildItem $LastVersionPath | Select-Object -ExpandProperty FullName
-                foreach ($file in $files) {
-                    # Fetch all files except the install/uninstallscripts from the last version
-                    if (!($file -like "*chocolateyInstall.ps1*" -or $file -like "*chocolateyInstall_old.ps1*" -or $file -like "*.msi*" -or $file -like "*.exe*")) {
-                        Copy-item $file -Destination $ToolsPath -Force -Recurse
+                if ($files) {
+                    foreach ($file in $files) {
+                        # Fetch all files except the install/uninstallscripts from the last version
+                        if (!($file -like "*chocolateyInstall.ps1*" -or $file -like "*chocolateyInstall_old.ps1*" -or $file -like "*.msi*" -or $file -like "*.exe*")) {
+                            Copy-item $file -Destination $ToolsPath -Force -Recurse
+                        }
+                    }
+                }
+                else {
+                    if ($VersionList[2]) {
+                        Write-Log ("Previous version " + $VersionList[1] + "is in packaging. Using one version earlier: " + $VersionList[2]) -Severity 1
+                        $LastVersion = $VersionList[2]
+                        $LastVersionPath = Join-Path -Path $ParentSWDirectory -ChildPath "$LastVersion\tools"
+                        $files = Get-ChildItem $LastVersionPath | Select-Object -ExpandProperty FullName
+                        if ($files) {
+                            foreach ($file in $files) {
+                                # Fetch all files except the install/uninstallscripts from the last version
+                                if (!($file -like "*chocolateyInstall.ps1*" -or $file -like "*chocolateyInstall_old.ps1*" -or $file -like "*.msi*" -or $file -like "*.exe*")) {
+                                    Copy-item $file -Destination $ToolsPath -Force -Recurse
+                                }
+                            }
+                        }
                     }
                 }
             }
