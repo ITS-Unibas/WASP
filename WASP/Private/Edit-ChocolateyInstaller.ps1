@@ -108,6 +108,11 @@ function Edit-ChocolateyInstaller {
                 $InstallerContent = $InstallerContent | ForEach-Object { $_ -replace 'Install-ChocolateyZipPackage\s*@packageArgs', "Install-ChocolateyInstallPackage @packageArgs" }
             }
 
+            # Replace fixed version and name with generic expression
+            $InstallerContent = $InstallerContent | ForEach-Object { $_ -replace '\$version[\s]*=[\s]*.*', '\$version = \$env:ChocolateyPackageVersion' }
+            $InstallerContent = $InstallerContent | ForEach-Object { $_ -replace '\$packageVersion[\s]*=[\s]*.*', '\$version = \$env:ChocolateyPackageVersion' }
+            $InstallerContent = $InstallerContent | ForEach-Object { $_ -replace '\$packageName[\s]*=[\s]*.*', '\$packageName = \$env:ChocolateyPackageName' }
+
             # Now we're getting to check if there was already version packaged. If yes we're going to get the last version
             [string[]]$StringVersions = Get-ChildItem -Path $ParentSWDirectory -Directory | Select-Object -ExpandProperty Name # | Select-Object -ExpandProperty $_.Name # | Sort-object $_ -descending | Select-Object -First 2
             if ($StringVersions.Length -gt 1) {
