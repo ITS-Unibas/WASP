@@ -1,4 +1,24 @@
 function Get-LocalPackageVersionHistory {
+    <#
+    .SYNOPSIS
+        Get a history list of subfolders to a given directory that are named as versions.
+    .DESCRIPTION
+        Get a history list of subfolders to a given directory that are named as versions. Orders the versions in descending order.
+    .EXAMPLE
+        PS C:\> Get-LocalPackageVersionHistory C:\ProgramData\Unibasel\wasp\PackageGallery\firefoxesr
+        Lists all versions in descending order from subdirectory names for given directory
+    .INPUTS
+        Path to a package directory.
+    .OUTPUTS
+        List containing all versions found.
+    .NOTES
+        FileName: Get-LocalPackageVersionHistory
+        Author: Kevin Schaefer, Maximilian Burgert
+        Contact: its-wcs-ma@unibas.ch
+        Created: 2020-09-29
+        Updated: 2020-09-29
+        Version: 1.0.0
+    #>
     [CmdletBinding()]
     param (
         [Parameter()]
