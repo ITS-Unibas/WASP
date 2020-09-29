@@ -161,66 +161,67 @@ function Edit-ChocolateyInstaller {
                         }
                     }
                 }
+            }
 
-                # Remove zip files when remote files are present
+            # Remove zip files when remote files are present
+            if ($script:RemoteFilePresent) {
+                $files = Get-ChildItem $ToolsPath | Select-Object -ExpandProperty FullName
+                foreach ($file in $files) {
+                    # Fetch all files except the install/uninstallscripts from the last version
+                    if ($file -like "*.zip*") {
+                        Write-Log "Removing $file." -Severity 1
+                        Remove-item $file -Force -Recurse
+                    }
+                }
+            }
+
+            # Create additional scripts if not yet existing
+            foreach ($AdditionalScript in $AdditionalScripts) {
+                $ScriptPath = Join-Path -Path $ToolsPath -ChildPath $AdditionalScript
+                if (!(Test-Path $ScriptPath -ErrorAction SilentlyContinue)) {
+                    $null = New-Item -Path $ScriptPath -ErrorAction SilentlyContinue
+                    $null = Set-Content -Path $ScriptPath -Value '# This script is run prior/post to the installation.'
+                }
+            }
+
+            # Fetch the file content raw so we can check with a regex if the additional scripts are already included
+            $InstallerContentRaw = Get-Content -Path $NewFile -Raw -ErrorAction Stop
+
+            # Build regex dynamically with all additional scripts
+            $Regex = ""
+            $PreInstallerLine = ""
+            foreach ($PreAdditionalScript in $PreAdditionalScripts) {
+                $Regex += ".*$PreAdditionalScript.*\n"
+                $PreInstallerLine += "&(Join-Path `$PSScriptRoot $PreAdditionalScript)`r`n"
+            }
+            $Regex += "Install-Choco"
+            $PostInstallerLine = ""
+            foreach ($PostAdditionalScript in $PostAddtionalScripts) {
+                $Regex += ".*\n.*$PostAdditionalScript.*"
+                $PostInstallerLine += "`r`n&(Join-Path `$PSScriptRoot $PostAdditionalScript)"
+            }
+            $PostInstallerLine += "`r`n"
+            $Regex = [regex]$Regex
+            if (-Not $Regex.Matches($InstallerContentRaw).value) {
                 if ($script:RemoteFilePresent) {
-                    $files = Get-ChildItem $ToolsPath | Select-Object -ExpandProperty FullName
-                    foreach ($file in $files) {
-                        # Fetch all files except the install/uninstallscripts from the last version
-                        if ($file -like "*.zip*") {
-                            Write-Log "Removing $file." -Severity 1
-                            Remove-item $file -Force -Recurse
-                        }
-                    }
+                    $InstallerLine = $InstallerContent | Where-Object { $_ -match "(I|i)nstall-Choco.*" }
+                    $InstallerContent = $InstallerContent -replace $InstallerLine, "$($PreInstallerLine)$($InstallerLine)`r`n`$packageArgs.file = `$fileLocation`r`nInstall-ChocolateyInstallPackage @packageArgs`r`n$($PostInstallerLine)"
                 }
-
-                # Create additional scripts if not yet existing
-                foreach ($AdditionalScript in $AdditionalScripts) {
-                    $ScriptPath = Join-Path -Path $ToolsPath -ChildPath $AdditionalScript
-                    if (!(Test-Path $ScriptPath -ErrorAction SilentlyContinue)) {
-                        $null = New-Item -Path $ScriptPath -ErrorAction SilentlyContinue
-                        $null = Set-Content -Path $ScriptPath -Value '# This script is run prior/post to the installation.'
-                    }
+                elseif ($InstallerContentRaw -match 'Install-ChocolateyZipPackage*') {
+                    $InstallerLine = $InstallerContent | Where-Object { $_ -match "(I|i)nstall-Choco.*" }
+                    $InstallerContent = $InstallerContent -replace $InstallerLine, "$($PreInstallerLine)Expand-Archive -Path (Join-Path `$toolsDir '$FileName') -DestinationPath `$toolsDir -Force`r`n$($InstallerLine)$($PostInstallerLine)"
                 }
-
-                # Fetch the file content raw so we can check with a regex if the additional scripts are already included
-                $InstallerContentRaw = Get-Content -Path $NewFile -Raw -ErrorAction Stop
-
-                # Build regex dynamically with all additional scripts
-                $Regex = ""
-                $PreInstallerLine = ""
-                foreach ($PreAdditionalScript in $PreAdditionalScripts) {
-                    $Regex += ".*$PreAdditionalScript.*\n"
-                    $PreInstallerLine += "&(Join-Path `$PSScriptRoot $PreAdditionalScript)`r`n"
+                else {
+                    $InstallerLine = $InstallerContent | Where-Object { $_ -match "(I|i)nstall-Choco.*" }
+                    $InstallerContent = $InstallerContent -replace $InstallerLine, "$($PreInstallerLine)$($InstallerLine)$($PostInstallerLine)"
                 }
-                $Regex += "Install-Choco"
-                $PostInstallerLine = ""
-                foreach ($PostAdditionalScript in $PostAddtionalScripts) {
-                    $Regex += ".*\n.*$PostAdditionalScript.*"
-                    $PostInstallerLine += "`r`n&(Join-Path `$PSScriptRoot $PostAdditionalScript)"
-                }
-                $PostInstallerLine += "`r`n"
-                $Regex = [regex]$Regex
-                if (-Not $Regex.Matches($InstallerContentRaw).value) {
-                    if ($script:RemoteFilePresent) {
-                        $InstallerLine = $InstallerContent | Where-Object { $_ -match "(I|i)nstall-Choco.*" }
-                        $InstallerContent = $InstallerContent -replace $InstallerLine, "$($PreInstallerLine)$($InstallerLine)`r`n`$packageArgs.file = `$fileLocation`r`nInstall-ChocolateyInstallPackage @packageArgs`r`n$($PostInstallerLine)"
-                    }
-                    elseif ($InstallerContentRaw -match 'Install-ChocolateyZipPackage*') {
-                        $InstallerLine = $InstallerContent | Where-Object { $_ -match "(I|i)nstall-Choco.*" }
-                        $InstallerContent = $InstallerContent -replace $InstallerLine, "$($PreInstallerLine)Expand-Archive -Path (Join-Path `$toolsDir '$FileName') -DestinationPath `$toolsDir -Force`r`n$($InstallerLine)$($PostInstallerLine)"
-                    }
-                    else {
-                        $InstallerLine = $InstallerContent | Where-Object { $_ -match "(I|i)nstall-Choco.*" }
-                        $InstallerContent = $InstallerContent -replace $InstallerLine, "$($PreInstallerLine)$($InstallerLine)$($PostInstallerLine)"
-                    }
-                }
-
-                Set-Content -Path $NewFile -Value $InstallerContent
             }
-            catch {
-                Write-Log "$($_.Exception.Message)" -Severity 3
-            }
+
+            Set-Content -Path $NewFile -Value $InstallerContent
         }
-
+        catch {
+            Write-Log "$($_.Exception.Message)" -Severity 3
+        }
     }
+
+}
