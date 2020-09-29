@@ -34,6 +34,7 @@ function Get-LocalPackageVersionHistory {
         [string[]]$StringVersions = Get-ChildItem -Path $ParentSWDirectory -Directory | Select-Object -ExpandProperty Name
         if ($StringVersions.Length -gt 1) {
             $VersionList = New-Object System.Collections.ArrayList
+            $StringVersionList = New-Object System.Collections.ArrayList
             $StringVersions | ForEach-Object {
                 $SplitVersion = $_.Split('.')
                 # Ensure to have minimum x.x or else ps is not able to cast
@@ -46,12 +47,13 @@ function Get-LocalPackageVersionHistory {
                 $Version = $SplitVersion -join "."
                 # need to cast it to a version or else the sorting will not
                 # work correctly, like for chrome
-                $null = $VersionList.Add($Version)
+                $null = $VersionList.Add([version]$Version)
+                $null = $StringVersionList.Add($Version)
             }
             $VersionList.Sort()
             $VersionList.Reverse()
             Write-Log ("Previous version of package found: " + $VersionList[1]) -Severity 1
-            return $VersionList
+            return $VersionList, $StringVersionList
         }
     }
 
