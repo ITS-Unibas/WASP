@@ -64,6 +64,7 @@ function Edit-ChocolateyInstaller {
                         }
                     }
                 }
+                $InstallerContent = Get-Content -Path $NewFile -ErrorAction Stop
             }
             else {
                 Write-Log "No previous package version was found. Overriding $NewFile."
@@ -94,55 +95,55 @@ function Edit-ChocolateyInstaller {
                 }
                 $InstallerContent = $InstallerContent | Where-Object { $_.trim() -ne "" }
 
-                # Check if filepath already present
+            }
+            # Check if filepath already present
+            $InstallerContent | ForEach-Object {
+                if ($_ -match '(file[\s]*=)') {
+                    $script:FilePathPresent = $true
+                }
+            }
+            # if filepath is not already present and this is not a remote file package, we have to set the filepath
+            if (-Not $script:FilePathPresent -and -Not $script:RemoteFilePresent) {
+                Write-Log "Calling Set File Path with path $ToolsPath" -Severity 1
+                $script:ToolsPathPresent = $false
+                $script:ToolsDirPresent = $false
                 $InstallerContent | ForEach-Object {
-                    if ($_ -match '(file[\s]*=)') {
+                    if ($_ -match '(\$toolsPath =)') {
                         $script:FilePathPresent = $true
                     }
-                }
-                # if filepath is not already present and this is not a remote file package, we have to set the filepath
-                if (-Not $script:FilePathPresent -and -Not $script:RemoteFilePresent) {
-                    Write-Log "Calling Set File Path with path $ToolsPath" -Severity 1
-                    $script:ToolsPathPresent = $false
-                    $script:ToolsDirPresent = $false
-                    $InstallerContent | ForEach-Object {
-                        if ($_ -match '(\$toolsPath =)') {
-                            $script:FilePathPresent = $true
-                        }
-                        if ($_ -match '(\$toolsDir =)') {
-                            $script:ToolsDirPresent = $true
-                        }
-                    }
-
-                    $InstallerContent = $InstallerContent | ForEach-Object {
-                        $_
-                        if ($_ -match "packageArgs = @") {
-                            if ($script:ToolsPathPresent) {
-                                "  file          = (Join-Path `$toolsPath '$FileName')"
-                            }
-                            elseif ($script:ToolsDirPresent) {
-                                "  file          = (Join-Path `$toolsDir '$FileName')"
-                            }
-                            else {
-                                "  file          = (Join-Path `$PSScriptRoot '$FileName')"
-                            }
-                        }
+                    if ($_ -match '(\$toolsDir =)') {
+                        $script:ToolsDirPresent = $true
                     }
                 }
 
-                # If a remote file is available, unzip path is empty
-                if ($UnzipPath -and (-Not $script:RemoteFilePresent)) {
-                    Write-Log "Calling set unzip location and remove installzip, got unzip location $UnzipPath" -Severity 1
-                    $InstallerContent = $InstallerContent | ForEach-Object { $_ -replace '.*unzipLocation[\s]*=[\s]*Get-PackageCacheLocation', "unzipLocation = $UnzipPath" }
-                    $InstallerContent = $InstallerContent | ForEach-Object { $_ -replace 'Install-ChocolateyZipPackage\s*@packageArgs', "Install-ChocolateyInstallPackage @packageArgs" }
+                $InstallerContent = $InstallerContent | ForEach-Object {
+                    $_
+                    if ($_ -match "packageArgs = @") {
+                        if ($script:ToolsPathPresent) {
+                            "  file          = (Join-Path `$toolsPath '$FileName')"
+                        }
+                        elseif ($script:ToolsDirPresent) {
+                            "  file          = (Join-Path `$toolsDir '$FileName')"
+                        }
+                        else {
+                            "  file          = (Join-Path `$PSScriptRoot '$FileName')"
+                        }
+                    }
+
                 }
-
-                # Replace fixed version and name with generic expression
-                $InstallerContent = $InstallerContent | ForEach-Object { $_ -replace '\$version[\s]*=[\s]*.*', '\$version = \$env:ChocolateyPackageVersion' }
-                $InstallerContent = $InstallerContent | ForEach-Object { $_ -replace '\$packageVersion[\s]*=[\s]*.*', '\$version = \$env:ChocolateyPackageVersion' }
-                $InstallerContent = $InstallerContent | ForEach-Object { $_ -replace '\$packageName[\s]*=[\s]*.*', '\$packageName = \$env:ChocolateyPackageName' }
-
             }
+
+            # If a remote file is available, unzip path is empty
+            if ($UnzipPath -and (-Not $script:RemoteFilePresent)) {
+                Write-Log "Calling set unzip location and remove installzip, got unzip location $UnzipPath" -Severity 1
+                $InstallerContent = $InstallerContent | ForEach-Object { $_ -replace '.*unzipLocation[\s]*=[\s]*Get-PackageCacheLocation', "unzipLocation = $UnzipPath" }
+                $InstallerContent = $InstallerContent | ForEach-Object { $_ -replace 'Install-ChocolateyZipPackage\s*@packageArgs', "Install-ChocolateyInstallPackage @packageArgs" }
+            }
+
+            # Replace fixed version and name with generic expression
+            $InstallerContent = $InstallerContent | ForEach-Object { $_ -replace '\$version[\s]*=[\s]*.*', '\$version = \$env:ChocolateyPackageVersion' }
+            $InstallerContent = $InstallerContent | ForEach-Object { $_ -replace '\$packageVersion[\s]*=[\s]*.*', '\$version = \$env:ChocolateyPackageVersion' }
+            $InstallerContent = $InstallerContent | ForEach-Object { $_ -replace '\$packageName[\s]*=[\s]*.*', '\$packageName = \$env:ChocolatekPackage' }
 
             # Fetch the file content raw so we can check with a regex if the additional scripts are already included
             $InstallerContentRaw = Get-Content -Path $NewFile -Raw -ErrorAction Stop
