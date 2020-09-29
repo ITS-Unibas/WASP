@@ -43,28 +43,30 @@ function Edit-ChocolateyInstaller {
             $VersionHistory, $StringVersionHistory = Get-LocalPackageVersionHistory $ParentSWDirectory
             # Test if a previous chocolateyInstall file exist.
             if ($VersionHistory) {
-                $LastVersion = $StringVersionHistory | Where-Object {[version]$_ -eq $VersionHistory[1]} # 0 is the current, 1 the
+                $LastVersion = $StringVersionHistory | Where-Object { [version]$_ -eq $VersionHistory[1] } # 0 is the current, 1 the
                 Write-Log "A previous package version was found: $LastVersion. Copying previous install script."
 
                 Copy-Item -Path $NewFile -Destination $OriginalFile -ErrorAction Stop
 
                 $LastVersionPath = Join-Path -Path $ParentSWDirectory -ChildPath "$LastVersion\tools"
-                $prevChocolateyInstallFile = Get-ChildItem -Filter "chocolateyInstall.ps1" | Select-Object -ExpandProperty FullName
+                $prevChocolateyInstallFile = Join-Path -Path $LastVersionPath -ChildPath "chocolateyInstall.ps1"
                 if ($prevChocolateyInstallFile) {
-                    Copy-item $prevChocolateyInstallFile -Destination $ToolsPath -Force -Recurse
+                    Copy-Item $prevChocolateyInstallFile -Destination $ToolsPath -Force -Recurse
+
                 }
                 else {
                     if ($VersionHistory[2]) {
                         Write-Log ("Previous version " + $VersionHistory[1] + "is in packaging. Using one version earlier: " + $VersionHistory[2]) -Severity 1
-                        $LastVersion = $StringVersionHistory | Where-Object {[version]$_ -eq $VersionHistory[2]}
+                        $LastVersion = $StringVersionHistory | Where-Object { [version]$_ -eq $VersionHistory[2] }
                         $LastVersionPath = Join-Path -Path $ParentSWDirectory -ChildPath "$LastVersion\tools"
-                        $prevChocolateyInstallFile = Get-ChildItem -Filter "chocolateyInstall.ps1" | Select-Object -ExpandProperty FullName
+                        $prevChocolateyInstallFile = Join-Path -Path $LastVersionPath -ChildPath "chocolateyInstall.ps1"
                         if ($prevChocolateyInstallFile) {
-                            Copy-item $prevChocolateyInstallFile -Destination $ToolsPath -Force -Recurse
+                            Copy-Item $prevChocolateyInstallFile -Destination $ToolsPath -Force -Recurse
                         }
                     }
                 }
                 $InstallerContent = Get-Content -Path $NewFile -ErrorAction Stop
+                #Write-Host $InstallerContent
             }
             else {
                 Write-Log "No previous package version was found. Overriding $NewFile."
@@ -143,7 +145,8 @@ function Edit-ChocolateyInstaller {
             # Replace fixed version and name with generic expression
             $InstallerContent = $InstallerContent | ForEach-Object { $_ -replace '\$version[\s]*=[\s]*.*', '\$version = \$env:ChocolateyPackageVersion' }
             $InstallerContent = $InstallerContent | ForEach-Object { $_ -replace '\$packageVersion[\s]*=[\s]*.*', '\$version = \$env:ChocolateyPackageVersion' }
-            $InstallerContent = $InstallerContent | ForEach-Object { $_ -replace '\$packageName[\s]*=[\s]*.*', '\$packageName = \$env:ChocolatekPackage' }
+            $InstallerContent = $InstallerContent | ForEach-Object { $_ -replace '\$packageName[\s]*=[\s]*.*', '\$packageName = \$env:ChocolateyPackageName' }
+            $InstallerContent = $InstallerContent | ForEach-Object { $_ -replace '.*packageName[\s]*=[\s]*.*', 'packageName = \$env:ChocolateyPackageName' }
 
             # Fetch the file content raw so we can check with a regex if the additional scripts are already included
             $InstallerContentRaw = Get-Content -Path $NewFile -Raw -ErrorAction Stop
@@ -183,7 +186,7 @@ function Edit-ChocolateyInstaller {
             # Fetch the additional scripts and configs from the last version
             $AdditionalScripts = $PreAdditionalScripts + $PostAddtionalScripts
             if ($VersionHistory) {
-                $LastVersion = $StringVersionHistory | Where-Object {[version]$_ -eq $VersionHistory[1]}
+                $LastVersion = $StringVersionHistory | Where-Object { [version]$_ -eq $VersionHistory[1] }
                 $LastVersionPath = Join-Path -Path $ParentSWDirectory -ChildPath "$LastVersion\tools"
                 $files = Get-ChildItem $LastVersionPath | Select-Object -ExpandProperty FullName
                 if ($files) {
@@ -197,7 +200,7 @@ function Edit-ChocolateyInstaller {
                 else {
                     if ($VersionHistory[2]) {
                         Write-Log ("Previous version " + $VersionHistory[1] + "is in packaging. Using one version earlier: " + $VersionHistory[2]) -Severity 1
-                        $LastVersion = $StringVersionHistory | Where-Object {[version]$_ -eq $VersionHistory[2]}
+                        $LastVersion = $StringVersionHistory | Where-Object { [version]$_ -eq $VersionHistory[2] }
                         $LastVersionPath = Join-Path -Path $ParentSWDirectory -ChildPath "$LastVersion\tools"
                         $files = Get-ChildItem $LastVersionPath | Select-Object -ExpandProperty FullName
                         if ($files) {

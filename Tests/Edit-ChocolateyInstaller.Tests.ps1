@@ -101,6 +101,26 @@ Describe "Editing package installer script from chocolatey" {
             New-Item "TestDrive:\package\1.0.0\" -Name "tools" -ItemType Directory
             Set-Content "TestDrive:\package\1.0.0\tools\InitialScript.ps1" -Value 'This is a previous script.'
             Set-Content "TestDrive:\package\1.0.0\tools\FinalScript.ps1" -Value 'This is a previous script.'
+            Set-Content "TestDrive:\package\1.0.0\tools\chocolateyInstall.ps1" -Value '$ErrorActionPreference = "Stop"
+
+            # Install Sourcetree Enterprise
+            $PrevVersion = $true
+            $packageArgs = @{
+              packageName   = "sourcetree"
+              softwareName  = "Sourcetree*"
+              fileType      = "msi"
+              silentArgs    = "/qn /norestart ACCEPTEULA=1 /l*v `"$env:TEMP\log.log`""
+              validExitCodes= @(0,1641,3010)
+              url           = "https://product-downloads.atlassian.com/software/sourcetree/windows/ga/SourcetreeEnterpriseSetup_3.2.6.msi"
+              checksum      = "c8b34688d7f69185b41f9419d8c65d63a2709d9ec59752ce8ea57ee6922cbba4"
+              checksumType  = "sha256"
+              url64bit      = ""
+              checksum64    = ""
+              checksumType64= "sha256"
+            }
+
+            Install-ChocolateyPackage @packageArgs'
+
             Edit-ChocolateyInstaller $ToolsPath $FileName
             "$ToolsPath\chocolateyInstall_old.ps1" | Should -Not -FileContentMatchExactly 'InitialScript'
             "$ToolsPath\chocolateyInstall.ps1" | Should -FileContentMatchExactly 'InitialScript'
@@ -110,12 +130,70 @@ Describe "Editing package installer script from chocolatey" {
             "$ToolsPath\FinalScript.ps1" | Should -FileContentMatchExactly 'This is a previous script.'
         }
 
+        It "Finds one previous version and adds the install script as well" {
+            New-Item "TestDrive:\package\" -Name "1.0.0" -ItemType Directory
+            New-Item "TestDrive:\package\1.0.0\" -Name "tools" -ItemType Directory
+            Set-Content "TestDrive:\package\1.0.0\tools\InitialScript.ps1" -Value 'This is a previous script.'
+            Set-Content "TestDrive:\package\1.0.0\tools\FinalScript.ps1" -Value 'This is a previous script.'
+            Set-Content "TestDrive:\package\1.0.0\tools\chocolateyInstall.ps1" -Value '$ErrorActionPreference = "Stop"
+
+            # Install Sourcetree Enterprise
+            $PrevVersion = $true
+            $packageArgs = @{
+              packageName   = "sourcetree"
+              softwareName  = "Sourcetree*"
+              fileType      = "msi"
+              silentArgs    = "/qn /norestart ACCEPTEULA=1 /l*v `"$env:TEMP\log.log`""
+              validExitCodes= @(0,1641,3010)
+              url           = "https://product-downloads.atlassian.com/software/sourcetree/windows/ga/SourcetreeEnterpriseSetup_3.2.6.msi"
+              checksum      = "c8b34688d7f69185b41f9419d8c65d63a2709d9ec59752ce8ea57ee6922cbba4"
+              checksumType  = "sha256"
+              url64bit      = ""
+              checksum64    = ""
+              checksumType64= "sha256"
+            }
+
+            Install-ChocolateyPackage @packageArgs'
+
+            Edit-ChocolateyInstaller $ToolsPath $FileName
+
+            Write-Host
+            "$ToolsPath\chocolateyInstall_old.ps1" | Should -Not -FileContentMatchExactly 'InitialScript'
+            "$ToolsPath\chocolateyInstall.ps1" | Should -FileContentMatchExactly 'InitialScript'
+            "$ToolsPath\chocolateyInstall_old.ps1" | Should -Not -FileContentMatchExactly 'FinalScript'
+            "$ToolsPath\chocolateyInstall.ps1" | Should -FileContentMatchExactly 'FinalScript'
+            "$ToolsPath\InitialScript.ps1" | Should -FileContentMatchExactly 'This is a previous script.'
+            "$ToolsPath\FinalScript.ps1" | Should -FileContentMatchExactly 'This is a previous script.'
+            "$ToolsPath\chocolateyInstall.ps1" | Should -FileContentMatchExactly 'ChocolateyPackageName'
+            "$ToolsPath\chocolateyInstall.ps1" | Should -FileContentMatchExactly '\$PrevVersion'
+        }
+
         It "Finds one previous version with a config file and adds all additional files and the config" {
             New-Item "TestDrive:\package\" -Name "1.0.0" -ItemType Directory
             New-Item "TestDrive:\package\1.0.0\" -Name "tools" -ItemType Directory
             Set-Content "TestDrive:\package\1.0.0\tools\config.json" -Value '{"Test":0, "Test2":1}'
             Set-Content "TestDrive:\package\1.0.0\tools\InitialScript.ps1" -Value 'This is a previous script.'
             Set-Content "TestDrive:\package\1.0.0\tools\FinalScript.ps1" -Value 'This is a previous script.'
+            Set-Content "TestDrive:\package\1.0.0\tools\chocolateyInstall.ps1" -Value '$ErrorActionPreference = "Stop"
+
+            # Install Sourcetree Enterprise
+            $PrevVersion = $true
+            $packageArgs = @{
+              packageName   = "sourcetree"
+              softwareName  = "Sourcetree*"
+              fileType      = "msi"
+              silentArgs    = "/qn /norestart ACCEPTEULA=1 /l*v `"$env:TEMP\log.log`""
+              validExitCodes= @(0,1641,3010)
+              url           = "https://product-downloads.atlassian.com/software/sourcetree/windows/ga/SourcetreeEnterpriseSetup_3.2.6.msi"
+              checksum      = "c8b34688d7f69185b41f9419d8c65d63a2709d9ec59752ce8ea57ee6922cbba4"
+              checksumType  = "sha256"
+              url64bit      = ""
+              checksum64    = ""
+              checksumType64= "sha256"
+            }
+
+            Install-ChocolateyPackage @packageArgs'
+
             Edit-ChocolateyInstaller $ToolsPath $FileName
             "$ToolsPath\config.json" | Should -FileContentMatchExactly '{"Test":0, "Test2":1}'
             "$ToolsPath\InitialScript.ps1" | Should -FileContentMatchExactly 'This is a previous script.'
@@ -127,10 +205,50 @@ Describe "Editing package installer script from chocolatey" {
             New-Item "TestDrive:\package\1.5.0\" -Name "tools" -ItemType Directory
             Set-Content "TestDrive:\package\1.5.0\tools\InitialScript.ps1" -Value 'This is the previous script.'
             Set-Content "TestDrive:\package\1.5.0\tools\FinalScript.ps1" -Value 'This is the previous script.'
+            Set-Content "TestDrive:\package\1.5.0\tools\chocolateyInstall.ps1" -Value '$ErrorActionPreference = "Stop"
+
+            # Install Sourcetree Enterprise
+            $PrevVersion = $true
+            $packageArgs = @{
+              packageName   = "sourcetree"
+              softwareName  = "Sourcetree*"
+              fileType      = "msi"
+              silentArgs    = "/qn /norestart ACCEPTEULA=1 /l*v `"$env:TEMP\log.log`""
+              validExitCodes= @(0,1641,3010)
+              url           = "https://product-downloads.atlassian.com/software/sourcetree/windows/ga/SourcetreeEnterpriseSetup_3.2.6.msi"
+              checksum      = "c8b34688d7f69185b41f9419d8c65d63a2709d9ec59752ce8ea57ee6922cbba4"
+              checksumType  = "sha256"
+              url64bit      = ""
+              checksum64    = ""
+              checksumType64= "sha256"
+            }
+
+            Install-ChocolateyPackage @packageArgs'
+
             New-Item "TestDrive:\package\" -Name "1.0.0" -ItemType Directory
             New-Item "TestDrive:\package\1.0.0\" -Name "tools" -ItemType Directory
             Set-Content "TestDrive:\package\1.0.0\tools\InitialScript.ps1" -Value 'This is a previous script.'
             Set-Content "TestDrive:\package\1.0.0\tools\FinalScript.ps1" -Value 'This is a previous script.'
+            Set-Content "TestDrive:\package\1.0.0\tools\chocolateyInstall.ps1" -Value '$ErrorActionPreference = "Stop"
+
+            # Install Sourcetree Enterprise
+            $PrevVersion = $true
+            $packageArgs = @{
+              packageName   = "sourcetree"
+              softwareName  = "Sourcetree*"
+              fileType      = "msi"
+              silentArgs    = "/qn /norestart ACCEPTEULA=1 /l*v `"$env:TEMP\log.log`""
+              validExitCodes= @(0,1641,3010)
+              url           = "https://product-downloads.atlassian.com/software/sourcetree/windows/ga/SourcetreeEnterpriseSetup_3.2.6.msi"
+              checksum      = "c8b34688d7f69185b41f9419d8c65d63a2709d9ec59752ce8ea57ee6922cbba4"
+              checksumType  = "sha256"
+              url64bit      = ""
+              checksum64    = ""
+              checksumType64= "sha256"
+            }
+
+            Install-ChocolateyPackage @packageArgs'
+
             Edit-ChocolateyInstaller $ToolsPath $FileName
             "$ToolsPath\chocolateyInstall_old.ps1" | Should -Not -FileContentMatchExactly 'InitialScript'
             "$ToolsPath\chocolateyInstall.ps1" | Should -FileContentMatchExactly 'InitialScript'
@@ -289,6 +407,26 @@ Describe "Editing package installer script from chocolatey" {
             New-Item "TestDrive:\package\1.5.0.0891\" -Name "tools" -ItemType Directory
             Set-Content "TestDrive:\package\1.5.0.0891\tools\InitialScript.ps1" -Value 'This is the previous script.'
             Set-Content "TestDrive:\package\1.5.0.0891\tools\FinalScript.ps1" -Value 'This is the previous script.'
+            Set-Content "TestDrive:\package\1.5.0.0891\tools\chocolateyInstall.ps1" -Value '$ErrorActionPreference = "Stop"
+
+            # Install Sourcetree Enterprise
+            $PrevVersion = $true
+            $packageArgs = @{
+              packageName   = "sourcetree"
+              softwareName  = "Sourcetree*"
+              fileType      = "msi"
+              silentArgs    = "/qn /norestart ACCEPTEULA=1 /l*v `"$env:TEMP\log.log`""
+              validExitCodes= @(0,1641,3010)
+              url           = "https://product-downloads.atlassian.com/software/sourcetree/windows/ga/SourcetreeEnterpriseSetup_3.2.6.msi"
+              checksum      = "c8b34688d7f69185b41f9419d8c65d63a2709d9ec59752ce8ea57ee6922cbba4"
+              checksumType  = "sha256"
+              url64bit      = ""
+              checksum64    = ""
+              checksumType64= "sha256"
+            }
+
+            Install-ChocolateyPackage @packageArgs'
+
             Edit-ChocolateyInstaller $ToolsPath $FileName
             "$ToolsPath\chocolateyInstall_old.ps1" | Should -Not -FileContentMatchExactly 'InitialScript'
             "$ToolsPath\chocolateyInstall.ps1" | Should -FileContentMatchExactly 'InitialScript'
@@ -303,6 +441,25 @@ Describe "Editing package installer script from chocolatey" {
             New-Item "TestDrive:\package\1.5.01.0891\" -Name "tools" -ItemType Directory
             Set-Content "TestDrive:\package\1.5.01.0891\tools\InitialScript.ps1" -Value 'This is the previous script.'
             Set-Content "TestDrive:\package\1.5.01.0891\tools\FinalScript.ps1" -Value 'This is the previous script.'
+            Set-Content "TestDrive:\package\1.5.01.0891\tools\chocolateyInstall.ps1" -Value '$ErrorActionPreference = "Stop"
+
+            # Install Sourcetree Enterprise
+            $PrevVersion = $true
+            $packageArgs = @{
+              packageName   = "sourcetree"
+              softwareName  = "Sourcetree*"
+              fileType      = "msi"
+              silentArgs    = "/qn /norestart ACCEPTEULA=1 /l*v `"$env:TEMP\log.log`""
+              validExitCodes= @(0,1641,3010)
+              url           = "https://product-downloads.atlassian.com/software/sourcetree/windows/ga/SourcetreeEnterpriseSetup_3.2.6.msi"
+              checksum      = "c8b34688d7f69185b41f9419d8c65d63a2709d9ec59752ce8ea57ee6922cbba4"
+              checksumType  = "sha256"
+              url64bit      = ""
+              checksum64    = ""
+              checksumType64= "sha256"
+            }
+
+            Install-ChocolateyPackage @packageArgs'
             Edit-ChocolateyInstaller $ToolsPath $FileName
             "$ToolsPath\chocolateyInstall_old.ps1" | Should -Not -FileContentMatchExactly 'InitialScript'
             "$ToolsPath\chocolateyInstall.ps1" | Should -FileContentMatchExactly 'InitialScript'
