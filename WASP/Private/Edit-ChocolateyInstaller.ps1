@@ -50,18 +50,18 @@ function Edit-ChocolateyInstaller {
                 Copy-Item -Path $NewFile -Destination $OriginalFile -ErrorAction Stop
 
                 $LastVersionPath = Join-Path -Path $ParentSWDirectory -ChildPath "$LastVersion\tools"
-                $prevChocolateyInstallFile = Join-Path -Path $LastVersionPath -ChildPath "chocolateyInstall.ps1"
+                $prevChocolateyInstallFile = Join-Path -Path $LastVersionPath -ChildPath "chocolateyinstall.ps1"
                 if (Test-Path $prevChocolateyInstallFile) {
                     Write-Log "Copying $prevChocolateyInstallFile to $ToolsPath"
                     Copy-Item $prevChocolateyInstallFile -Destination $ToolsPath -Force -Recurse
                 }
                 else {
+                    Write-Log "File at $prevChocolateyInstallFile does not exist. Assume that the previous version is in packaging."
                     $LastVersion = $StringVersionHistory | Where-Object { [version]$_ -eq $VersionHistory[2] }
                     if ($LastVersion) {
-                        Write-Log ("Previous version " + $VersionHistory[1] + " is in packaging. Using one version earlier: " + $LastVersion) -Severity 1
-                        $LastVersion = $StringVersionHistory | Where-Object { [version]$_ -eq $VersionHistory[2] }
+                        Write-Log ("Previous version is in packaging. Using one version earlier: " + $LastVersion) -Severity 1
                         $LastVersionPath = Join-Path -Path $ParentSWDirectory -ChildPath "$LastVersion\tools"
-                        $prevChocolateyInstallFile = Join-Path -Path $LastVersionPath -ChildPath "chocolateyInstall.ps1"
+                        $prevChocolateyInstallFile = Join-Path -Path $LastVersionPath -ChildPath "chocolateyinstall.ps1"
                         if (Test-Path $prevChocolateyInstallFile) {
                             Write-Log "Copying $prevChocolateyInstallFile to $ToolsPath"
                             Copy-Item $prevChocolateyInstallFile -Destination $ToolsPath -Force -Recurse
@@ -69,7 +69,6 @@ function Edit-ChocolateyInstaller {
                     }
                 }
                 $InstallerContent = Get-Content -Path $NewFile -ErrorAction Stop
-                #Write-Host $InstallerContent
             }
             else {
                 Write-Log "No previous package version was found. Overriding $NewFile."
