@@ -249,7 +249,7 @@ function Edit-ChocolateyInstaller {
             }
         }
         catch {
-            Write-Log "$($_.Exception.Message)" -Severity 3
+            Write-Log "$($_.Exception.Message) at line: $($_.InvocationInfo.ScriptLineNumber)" -Severity 3
         }
     }
 
