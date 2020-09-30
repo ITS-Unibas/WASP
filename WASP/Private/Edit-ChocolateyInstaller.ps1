@@ -50,7 +50,7 @@ function Edit-ChocolateyInstaller {
 
                 $LastVersionPath = Join-Path -Path $ParentSWDirectory -ChildPath "$LastVersion\tools"
                 $prevChocolateyInstallFile = Join-Path -Path $LastVersionPath -ChildPath "chocolateyInstall.ps1"
-                if ($prevChocolateyInstallFile) {
+                if (Test-Path $prevChocolateyInstallFile) {
                     Copy-Item $prevChocolateyInstallFile -Destination $ToolsPath -Force -Recurse
 
                 }
@@ -61,7 +61,7 @@ function Edit-ChocolateyInstaller {
                         $LastVersion = $StringVersionHistory | Where-Object { [version]$_ -eq $VersionHistory[2] }
                         $LastVersionPath = Join-Path -Path $ParentSWDirectory -ChildPath "$LastVersion\tools"
                         $prevChocolateyInstallFile = Join-Path -Path $LastVersionPath -ChildPath "chocolateyInstall.ps1"
-                        if ($prevChocolateyInstallFile) {
+                        if (Test-Path $prevChocolateyInstallFile) {
                             Copy-Item $prevChocolateyInstallFile -Destination $ToolsPath -Force -Recurse
                         }
                     }
