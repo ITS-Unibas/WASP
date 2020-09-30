@@ -106,19 +106,21 @@ function Edit-ChocolateyInstaller {
                     $script:FilePathPresent = $true
                 }
             }
+
+            $script:ToolsPathPresent = $false
+            $script:ToolsDirPresent = $false
+            $InstallerContent | ForEach-Object {
+                if ($_ -match '(\$toolsPath =)') {
+                    $script:FilePathPresent = $true
+                }
+                if ($_ -match '(\$toolsDir =)') {
+                    $script:ToolsDirPresent = $true
+                }
+            }
+
             # if filepath is not already present and this is not a remote file package, we have to set the filepath
             if (-Not $script:FilePathPresent -and -Not $script:RemoteFilePresent) {
                 Write-Log "Calling Set File Path with path $ToolsPath" -Severity 1
-                $script:ToolsPathPresent = $false
-                $script:ToolsDirPresent = $false
-                $InstallerContent | ForEach-Object {
-                    if ($_ -match '(\$toolsPath =)') {
-                        $script:FilePathPresent = $true
-                    }
-                    if ($_ -match '(\$toolsDir =)') {
-                        $script:ToolsDirPresent = $true
-                    }
-                }
 
                 $InstallerContent = $InstallerContent | ForEach-Object {
                     $_
@@ -150,13 +152,13 @@ function Edit-ChocolateyInstaller {
             $InstallerContent = $InstallerContent | ForEach-Object { $_ -replace 'packageName[\s]*=[\s]*.*', 'packageName = $env:ChocolateyPackageName' }
 
             if ($script:ToolsPathPresent) {
-                $InstallerContent = $InstallerContent | ForEach-Object { $_ -replace 'file[\s]*=[\s]*.*', "file = (Join-Path `$toolsPath '$FileName')" }
+                $InstallerContent = $InstallerContent | ForEach-Object { $_ -replace '\Wfile[\s]*=[\s]*.*', "file = (Join-Path `$toolsPath '$FileName')" }
             }
             elseif ($script:ToolsDirPresent) {
-                $InstallerContent = $InstallerContent | ForEach-Object { $_ -replace 'file[\s]*=[\s]*.*', "file = (Join-Path `$toolsDir '$FileName')" }
+                $InstallerContent = $InstallerContent | ForEach-Object { $_ -replace '\Wfile[\s]*=[\s]*.*', "file = (Join-Path `$toolsDir '$FileName')" }
             }
             else {
-                $InstallerContent = $InstallerContent | ForEach-Object { $_ -replace 'file[\s]*=[\s]*.*', "file = (Join-Path `$PSScriptRoot '$FileName')" }
+                $InstallerContent = $InstallerContent | ForEach-Object { $_ -replace '\Wfile[\s]*=[\s]*.*', "file = (Join-Path `$PSScriptRoot '$FileName')" }
             }
 
             # Fetch the file content raw so we can check with a regex if the additional scripts are already included
@@ -169,7 +171,7 @@ function Edit-ChocolateyInstaller {
                 $Regex += ".*$PreAdditionalScript.*\n"
                 $PreInstallerLine += "&(Join-Path `$PSScriptRoot $PreAdditionalScript)`r`n"
             }
-            $Regex += "Install-Choco"
+            $Regex += ".*Install-Choco"
             $PostInstallerLine = ""
             foreach ($PostAdditionalScript in $PostAddtionalScripts) {
                 $Regex += ".*\n.*$PostAdditionalScript.*"
