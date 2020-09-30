@@ -31,7 +31,7 @@ Describe "Editing package installer script from chocolatey" {
 
     It "Catches error that the installer script does not exist" {
         Edit-ChocolateyInstaller $ToolsPath $FileName
-        Assert-MockCalled Write-Log -Exactly 2 -Scope It
+        Assert-MockCalled Write-Log -Exactly 3 -Scope It
     }
 
     Context "Installer script exists at path" {
