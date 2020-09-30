@@ -143,10 +143,10 @@ function Edit-ChocolateyInstaller {
             }
 
             # Replace fixed version and name with generic expression
-            $InstallerContent = $InstallerContent | ForEach-Object { $_ -replace '\$version[\s]*=[\s]*.*', '\$version = \$env:ChocolateyPackageVersion' }
-            $InstallerContent = $InstallerContent | ForEach-Object { $_ -replace '\$packageVersion[\s]*=[\s]*.*', '\$version = \$env:ChocolateyPackageVersion' }
-            $InstallerContent = $InstallerContent | ForEach-Object { $_ -replace '\$packageName[\s]*=[\s]*.*', '\$packageName = \$env:ChocolateyPackageName' }
-            $InstallerContent = $InstallerContent | ForEach-Object { $_ -replace '.*packageName[\s]*=[\s]*.*', 'packageName = \$env:ChocolateyPackageName' }
+            $InstallerContent = $InstallerContent | ForEach-Object { $_ -replace '$version[\s]*=[\s]*.*', '$version = $env:ChocolateyPackageVersion' }
+            $InstallerContent = $InstallerContent | ForEach-Object { $_ -replace '$packageVersion[\s]*=[\s]*.*', '$version = $env:ChocolateyPackageVersion' }
+            $InstallerContent = $InstallerContent | ForEach-Object { $_ -replace '$packageName[\s]*=[\s]*.*', '$packageName = $env:ChocolateyPackageName' }
+            $InstallerContent = $InstallerContent | ForEach-Object { $_ -replace 'packageName[\s]*=[\s]*.*', 'packageName = $env:ChocolateyPackageName' }
 
             # Fetch the file content raw so we can check with a regex if the additional scripts are already included
             $InstallerContentRaw = Get-Content -Path $NewFile -Raw -ErrorAction Stop

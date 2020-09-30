@@ -138,6 +138,7 @@ Describe "Editing package installer script from chocolatey" {
             Set-Content "TestDrive:\package\1.0.0\tools\chocolateyInstall.ps1" -Value '$ErrorActionPreference = "Stop"
 
             # Install Sourcetree Enterprise
+            $packageName   = "sourcetree"
             $PrevVersion = $true
             $packageArgs = @{
               packageName   = "sourcetree"
@@ -157,7 +158,6 @@ Describe "Editing package installer script from chocolatey" {
 
             Edit-ChocolateyInstaller $ToolsPath $FileName
 
-            Write-Host
             "$ToolsPath\chocolateyInstall_old.ps1" | Should -Not -FileContentMatchExactly 'InitialScript'
             "$ToolsPath\chocolateyInstall.ps1" | Should -FileContentMatchExactly 'InitialScript'
             "$ToolsPath\chocolateyInstall_old.ps1" | Should -Not -FileContentMatchExactly 'FinalScript'
@@ -166,6 +166,7 @@ Describe "Editing package installer script from chocolatey" {
             "$ToolsPath\FinalScript.ps1" | Should -FileContentMatchExactly 'This is a previous script.'
             "$ToolsPath\chocolateyInstall.ps1" | Should -FileContentMatchExactly 'ChocolateyPackageName'
             "$ToolsPath\chocolateyInstall.ps1" | Should -FileContentMatchExactly '\$PrevVersion'
+            "$ToolsPath\chocolateyInstall.ps1" | Should -FileContentMatchExactly '\$packageName'
         }
 
         It "Finds one previous version with a config file and adds all additional files and the config" {
