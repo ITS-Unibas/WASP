@@ -131,7 +131,6 @@ function Edit-ChocolateyInstaller {
                             "  file          = (Join-Path `$PSScriptRoot '$FileName')"
                         }
                     }
-
                 }
             }
 
@@ -147,6 +146,16 @@ function Edit-ChocolateyInstaller {
             $InstallerContent = $InstallerContent | ForEach-Object { $_ -replace '$packageVersion[\s]*=[\s]*.*', '$version = $env:ChocolateyPackageVersion' }
             $InstallerContent = $InstallerContent | ForEach-Object { $_ -replace '$packageName[\s]*=[\s]*.*', '$packageName = $env:ChocolateyPackageName' }
             $InstallerContent = $InstallerContent | ForEach-Object { $_ -replace 'packageName[\s]*=[\s]*.*', 'packageName = $env:ChocolateyPackageName' }
+
+            if ($script:ToolsPathPresent) {
+                $InstallerContent = $InstallerContent | ForEach-Object { $_ -replace 'file[\s]*=[\s]*.*', "file = (Join-Path `$toolsPath '$FileName')" }
+            }
+            elseif ($script:ToolsDirPresent) {
+                $InstallerContent = $InstallerContent | ForEach-Object { $_ -replace 'file[\s]*=[\s]*.*', "file = (Join-Path `$toolsDir '$FileName')" }
+            }
+            else {
+                $InstallerContent = $InstallerContent | ForEach-Object { $_ -replace 'file[\s]*=[\s]*.*', "file = (Join-Path `$PSScriptRoot '$FileName')" }
+            }
 
             # Fetch the file content raw so we can check with a regex if the additional scripts are already included
             $InstallerContentRaw = Get-Content -Path $NewFile -Raw -ErrorAction Stop
