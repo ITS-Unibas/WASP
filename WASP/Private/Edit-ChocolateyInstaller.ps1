@@ -55,8 +55,9 @@ function Edit-ChocolateyInstaller {
 
                 }
                 else {
-                    if ($VersionHistory[2]) {
-                        Write-Log ("Previous version " + $VersionHistory[1] + "is in packaging. Using one version earlier: " + $VersionHistory[2]) -Severity 1
+                    $LastVersion = $StringVersionHistory | Where-Object { [version]$_ -eq $VersionHistory[2] }
+                    if ($LastVersion) {
+                        Write-Log ("Previous version " + $VersionHistory[1] + "is in packaging. Using one version earlier: " + $LastVersion) -Severity 1
                         $LastVersion = $StringVersionHistory | Where-Object { [version]$_ -eq $VersionHistory[2] }
                         $LastVersionPath = Join-Path -Path $ParentSWDirectory -ChildPath "$LastVersion\tools"
                         $prevChocolateyInstallFile = Join-Path -Path $LastVersionPath -ChildPath "chocolateyInstall.ps1"
@@ -207,9 +208,9 @@ function Edit-ChocolateyInstaller {
                     }
                 }
                 else {
-                    if ($VersionHistory[2]) {
-                        Write-Log ("Previous version " + $VersionHistory[1] + "is in packaging. Using one version earlier: " + $VersionHistory[2]) -Severity 1
-                        $LastVersion = $StringVersionHistory | Where-Object { [version]$_ -eq $VersionHistory[2] }
+                    $LastVersion = $StringVersionHistory | Where-Object { [version]$_ -eq $VersionHistory[2] }
+                    if ($LastVersion) {
+                        Write-Log ("Previous version " + $LastVersion + "is in packaging") -Severity 1
                         $LastVersionPath = Join-Path -Path $ParentSWDirectory -ChildPath "$LastVersion\tools"
                         $files = Get-ChildItem $LastVersionPath | Select-Object -ExpandProperty FullName
                         if ($files) {
