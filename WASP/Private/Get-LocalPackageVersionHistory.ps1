@@ -52,7 +52,6 @@ function Get-LocalPackageVersionHistory {
             }
             $VersionList.Sort()
             $VersionList.Reverse()
-            Write-Log ("Previous version of package found: " +$StringVersionList[1]) -Severity 1
             return $VersionList, $StringVersionList
         }
     }
