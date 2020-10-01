@@ -101,7 +101,13 @@ function Start-PackageDistribution() {
                         Write-Log "Moving package to $tmpdir."
                         Move-Item -Path $nupkg -Destination "$tmpdir\$env:ChocolateyPackageName.$env:ChocolateyPackageVersion.nupkg"
                         $InvokeMessage = Invoke-Expression -Command ("choco pack $nuspecFile -s . -r")
-                        $InvokeMessage | ForEach-Object { Write-Log $_ }
+                        $InvokeMessage | ForEach-Object {
+                            $Severity = 0
+                            if($_ -match "cannot be empty") {
+                                $Severity = 3
+                            }
+                            Write-Log $_ -Severity $Severity
+                        }
                         $nupkgNew = (Get-ChildItem -Path $packageRootPath -Recurse -Filter *.nupkg).FullName
                         if (-Not $nupkgNew) {
                             Write-Log "Choco pack process of package $packageName $packageVersion failed. Continuing with next package." -Severity 3
@@ -124,7 +130,13 @@ function Start-PackageDistribution() {
                     else {
                         Write-Log "No nupkg exists. Packing package.."
                         $InvokeMessage = Invoke-Expression -Command ("choco pack $nuspecFile -s . -r")
-                        $InvokeMessage | ForEach-Object { Write-Log $_ }
+                        $InvokeMessage | ForEach-Object {
+                            $Severity = 0
+                            if($_ -match "cannot be empty") {
+                                $Severity = 3
+                            }
+                            Write-Log $_ -Severity $Severity
+                        }
                     }
                     Send-NupkgToServer $packageRootPath $config.Application.ChocoServerDEV
                     Set-Location $OldWorkingDir
