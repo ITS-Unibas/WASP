@@ -102,7 +102,7 @@ function Edit-ChocolateyInstaller {
             }
             # Check if filepath already present
             $InstallerContent | ForEach-Object {
-                if ($_ -match '(file[\s]*=)') {
+                if ($_ -match '(\sfile[\s]*=)') {
                     $script:FilePathPresent = $true
                 }
             }
@@ -111,7 +111,7 @@ function Edit-ChocolateyInstaller {
             $script:ToolsDirPresent = $false
             $InstallerContent | ForEach-Object {
                 if ($_ -match '(\$toolsPath =)') {
-                    $script:FilePathPresent = $true
+                    $script:ToolsPathPresent = $true
                 }
                 if ($_ -match '(\$toolsDir =)') {
                     $script:ToolsDirPresent = $true
