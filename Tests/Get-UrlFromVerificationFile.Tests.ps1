@@ -124,4 +124,33 @@ Describe "Getting checksum type from verification file" {
       Get-UrlFromVerificationFile -searchFor32Biturl $false -searchFor64BitUrl $true | Should -Be $null
     }
   }
+  Context "returns correct url when it does include a tilde" {
+    Set-Content "TestDrive:\verification.txt" -Value "VERIFICATION
+    Verification is intended to assist the Chocolatey moderators and community
+    in verifying that this package's contents are trustworthy.
+
+    The extension has been downloaded from their official download link listed on <http://www.chiark.greenend.org.uk/~sgtatham/putty/download.html>
+    and can be verified like this:
+
+
+    1. Download the following installers:
+      32-Bit: <https://the.earth.li/~sgtatham/putty/latest/w32/putty-0.74-installer.msi>
+      64-Bit: <https://the.earth.li/~sgtatham/putty/latest/w64/putty-64bit-0.74-installer.msi>
+    2. You can use one of the following methods to obtain the checksum
+      - Use powershell function 'Get-Filehash'
+      - Use chocolatey utility 'checksum.exe'
+
+      checksum type: sha256
+      checksum32: A630B507D726D7B378F1D82108B99FE7A0CC8713F7182957325AD07CF288228C
+      checksum64: 2A001DD1C5D81AE1C17DB97B0BB6C2C7CADA43888D4F30A814C18D55AA28FEB6
+
+    File 'LICENSE.txt' is obtained from <http://www.chiark.greenend.org.uk/~sgtatham/putty/licence.html>"
+
+    It "returns url for 32 bit" {
+      Get-UrlFromVerificationFile -searchFor32Biturl $true -searchFor64BitUrl $false | Should -Be 'https://the.earth.li/~sgtatham/putty/latest/w32/putty-0.74-installer.msi'
+    }
+    It "returns url for 64 bit" {
+      Get-UrlFromVerificationFile -searchFor32Biturl $false -searchFor64BitUrl $true | Should -Be 'https://the.earth.li/~sgtatham/putty/latest/w64/putty-64bit-0.74-installer.msi'
+    }
+  }
 }
