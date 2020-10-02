@@ -32,7 +32,7 @@ function Get-UrlFromVerificationFile() {
     # "x32: http...", "x86: http...", "32-bit: <http...>", "64-bit: <http...>"
     $regex32 = '(x32:\s.*|32-Bit:\s<.*>|x86:\s.*|32-Bit software:\s<.*>)'
     $regex64 = '(x64:\s.*|64-Bit:\s<.*>|64-Bit software:\s<.*>)'
-    $regexLink = '(http[:/\w\d.?&%^$=#\-@+\*]*)'
+    $regexLink = '(http[:/\w\d.~?&%^$=#\-@+\*]*)'
 
     if (Test-Path $verificationPath) {
         if ($searchFor32BitUrl) {
