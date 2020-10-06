@@ -150,7 +150,7 @@ function Start-PackageDistribution() {
                 }
                 catch [Exception] {
                     $ChocolateyPackageName = ([xml](Get-Content -Path $nuspecFile)).Package.metadata.id
-                    Write-Log ("Package " + $ChocolateyPackageName + " override process crashed. Skipping it.") -Severity 3
+                    Write-Log ("Package " + $ChocolateyPackageName + " override process crashed at line: $($_.InvocationInfo.ScriptLineNumber). Skipping it.") -Severity 3
                     Write-Log ($_.Exception | Format-List -force | Out-String) -Severity 3
                     Remove-Item -Path "$packageRootPath\unzipedNupkg" -ErrorAction SilentlyContinue
                     git -C $packageRootPath checkout -- *
