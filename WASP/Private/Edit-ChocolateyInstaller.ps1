@@ -146,9 +146,9 @@ function Edit-ChocolateyInstaller {
             }
 
             # Replace fixed version and name with generic expression
-            $InstallerContent = $InstallerContent | ForEach-Object { $_ -replace '$version[\s]*=[\s]*.*', '$version = $env:ChocolateyPackageVersion' }
-            $InstallerContent = $InstallerContent | ForEach-Object { $_ -replace '$packageVersion[\s]*=[\s]*.*', '$version = $env:ChocolateyPackageVersion' }
-            $InstallerContent = $InstallerContent | ForEach-Object { $_ -replace '$packageName[\s]*=[\s]*.*', '$packageName = $env:ChocolateyPackageName' }
+            $InstallerContent = $InstallerContent | ForEach-Object { $_ -replace '\$version[\s]*=[\s]*.*', '$version = $env:ChocolateyPackageVersion' }
+            $InstallerContent = $InstallerContent | ForEach-Object { $_ -replace '\$packageVersion[\s]*=[\s]*.*', '$version = $env:ChocolateyPackageVersion' }
+            $InstallerContent = $InstallerContent | ForEach-Object { $_ -replace '\$packageName[\s]*=[\s]*.*', '$packageName = $env:ChocolateyPackageName' }
             $InstallerContent = $InstallerContent | ForEach-Object { $_ -replace 'packageName[\s]*=[\s]*.*', 'packageName = $env:ChocolateyPackageName' }
 
             if ($script:ToolsPathPresent) {
