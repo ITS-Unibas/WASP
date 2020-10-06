@@ -201,11 +201,11 @@ function Edit-ChocolateyInstaller {
             if ($VersionHistory) {
                 $LastVersion = $StringVersionHistory | Where-Object { [version]$_ -eq $VersionHistory[1] }
                 $LastVersionPath = Join-Path -Path $ParentSWDirectory -ChildPath "$LastVersion\tools"
-                $files = Get-ChildItem $LastVersionPath | Select-Object -ExpandProperty FullName
+                $files = Get-ChildItem $LastVersionPath -Exclude *.msi,*.exe | Select-Object -ExpandProperty FullName
                 if ($files) {
                     foreach ($file in $files) {
                         # Fetch all files except the install/uninstallscripts from the last version
-                        if (!($file -like "*chocolateyInstall.ps1*" -or $file -like "*chocolateyInstall_old.ps1*" -or $file -like "*.msi*" -or $file -like "*.exe*")) {
+                        if (!($file -like "*chocolateyInstall.ps1*" -or $file -like "*chocolateyInstall_old.ps1*")) {
                             Copy-item $file -Destination $ToolsPath -Force -Recurse
                         }
                     }
@@ -213,13 +213,13 @@ function Edit-ChocolateyInstaller {
                 else {
                     $LastVersion = $StringVersionHistory | Where-Object { [version]$_ -eq $VersionHistory[2] }
                     if ($LastVersion) {
-                        Write-Log ("Previous version " + $LastVersion + "is in packaging") -Severity 1
+                        Write-Log ("Previous version " + $LastVersion + " is in packaging") -Severity 1
                         $LastVersionPath = Join-Path -Path $ParentSWDirectory -ChildPath "$LastVersion\tools"
-                        $files = Get-ChildItem $LastVersionPath | Select-Object -ExpandProperty FullName
+                        $files = Get-ChildItem $LastVersionPath -Exclude *.msi,*.exe | Select-Object -ExpandProperty FullName
                         if ($files) {
                             foreach ($file in $files) {
                                 # Fetch all files except the install/uninstallscripts from the last version
-                                if (!($file -like "*chocolateyInstall.ps1*" -or $file -like "*chocolateyInstall_old.ps1*" -or $file -like "*.msi*" -or $file -like "*.exe*")) {
+                                if (!($file -like "*chocolateyInstall.ps1*" -or $file -like "*chocolateyInstall_old.ps1*")) {
                                     Copy-item $file -Destination $ToolsPath -Force -Recurse
                                 }
                             }

@@ -251,7 +251,7 @@ Describe "Editing package installer script from chocolatey" {
         It "Finds previous version in packaging and copies additional files from one version previous" {
             New-Item "TestDrive:\package\" -Name "1.5.0" -ItemType Directory
             New-Item "TestDrive:\package\1.5.0\" -Name "tools" -ItemType Directory
-            Set-Content "TestDrive:\package\1.5.0\tools\config.json" -Value '{"Test":0, "Test2":1}'
+            Set-Content "TestDrive:\package\1.5.0\tools\config.exe" -Value '{"Test":0, "Test2":1}'
 
             New-Item "TestDrive:\package\" -Name "1.0.0" -ItemType Directory
             New-Item "TestDrive:\package\1.0.0\" -Name "tools" -ItemType Directory
@@ -284,8 +284,8 @@ Describe "Editing package installer script from chocolatey" {
             "$ToolsPath\chocolateyInstall_old.ps1" | Should -Not -FileContentMatchExactly 'FinalScript'
             "$ToolsPath\chocolateyInstall.ps1" | Should -FileContentMatchExactly 'FinalScript'
             "$ToolsPath\config.json" | Should -FileContentMatchExactly '{"Test":0, "Test2":3}'
-            "$ToolsPath\InitialScript.ps1" | Should -FileContentMatchExactly 'This is the previous script.'
-            "$ToolsPath\FinalScript.ps1" | Should -FileContentMatchExactly 'This is the previous script.'
+            "$ToolsPath\InitialScript.ps1" | Should -FileContentMatchExactly 'This is a previous script.'
+            "$ToolsPath\FinalScript.ps1" | Should -FileContentMatchExactly 'This is a previous script.'
         }
 
         It "Finds multiple previous versions and adds the latest as additional scripts" {
