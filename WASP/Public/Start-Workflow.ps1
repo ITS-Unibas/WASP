@@ -50,21 +50,7 @@ function Start-Workflow {
 
         # Manual updated packages
         $packagesManual = @(Get-ChildItem $PackagesManualPath)
-        foreach ($package in $packagesManual) {
-            # Use the latest created package as reference
-            $latest = Get-ChildItem -Path $package.FullName | Sort-Object CreationTime -Descending | Select-Object -First 1
-            try {
-                $version = ([xml](Get-Content -Path (Join-Path $latest.FullName "$package.nuspec"))).Package.metadata.version
-            }
-            catch {
-                Write-Log "Error reading $(Join-Path $latest.FullName "$package.nuspec")" -Severity 3
-                Write-Log "$($_.Exception.Message)" -Severity 3
-            }
-            $FoundPackagesManual = Search-Wishlist -packagePath $package -packageVersion $version -manual
-            if ($FoundPackagesManual) {
-                $null = $newPackages.Add($FoundPackagesManual)
-            }
-        }
+        $newPackages = Search-NewPackages -NewPackagesList $newPackages -Packages $packagesManual -Manual
 
         # Automatic updated packages
         $externalRepositories = @(Get-ChildItem $PackagesInboxPath)

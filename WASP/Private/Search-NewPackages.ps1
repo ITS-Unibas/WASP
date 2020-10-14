@@ -16,14 +16,24 @@ function Search-NewPackages {
 
         [Parameter(Mandatory)]
         [System.Object[]]
-        $Packages
+        $Packages,
+
+        [Parameter()]
+        [switch]
+        $Manual
     )
 
 
     foreach ($package in $Packages) {
-        $nuspec = Get-ChildItem -Path $package.FullName -recurse | Where-Object { $_.Extension -like "*nuspec*" }
-        if (-Not $nuspec -or $nuspec.GetType().ToString() -eq "System.Object[]") {
-            continue
+        if ($Manual) {
+            $latest = Get-ChildItem -Path $package.FullName | Sort-Object CreationTime -Descending | Select-Object -First 1
+            $nuspec = Get-Item (Join-Path $latest.FullName "$package.nuspec")
+        }
+        else {
+            $nuspec = Get-ChildItem -Path $package.FullName -recurse | Where-Object { $_.Extension -like "*nuspec*" }
+            if (-Not $nuspec -or $nuspec.GetType().ToString() -eq "System.Object[]") {
+                continue
+            }
         }
         try {
             $version = ([xml](Get-Content -Path $nuspec.FullName)).Package.metadata.version
@@ -33,11 +43,11 @@ function Search-NewPackages {
             Write-Log "$($_.Exception.Message)" -Severity 3
             continue
         }
-        $FoundPackages = Search-Wishlist $package $version
+        $FoundPackages = Search-Wishlist $package $version -manual:$Manual
         if ($FoundPackages) {
             $null = $NewPackagesList.Add($FoundPackages)
         }
     }
 
-    return ,$NewPackagesList
+    return , $NewPackagesList
 }
