@@ -178,4 +178,51 @@ Describe 'Search new package' {
             $newPackages.Count | Should -BeExactly 0
         }
     }
+
+    Context "Handle packages from packages-manual" {
+        BeforeAll {
+            1..3 | ForEach-Object {
+                $NuspecItem = New-Item "TestDrive:\packages-manual\package\$_.0\package.nuspec" -Force
+                $NuspecContent = @"
+<?xml version=`"1.0`" encoding=`"utf-8`"?>
+<package xmlns:xsi=`"http://www.w3.org/2001/XMLSchema-instance`" xmlns:xsd=`"http://www.w3.org/2001/XMLSchema`">
+    <metadata>
+    <id>package</id>
+    <title>7-Zip (Install)</title>
+    <version>$_.</version>
+    <authors>Igor Pavlov</authors>
+    <owners>chocolatey,Rob Reynolds</owners>
+    <summary>7-Zip is a file archiver with a high compression ratio.</summary>
+    <description>7-Zip is a file archiver with a high compression ratio.
+    </description>
+    <projectUrl>http://www.7-zip.org/</projectUrl>
+    <packageSourceUrl>https://github.com/chocolatey/chocolatey-coreteampackages/tree/master/automatic/7zip.install</packageSourceUrl>
+    <tags>7zip zip archiver admin cross-platform cli foss</tags>
+    <licenseUrl>http://www.7-zip.org/license.txt</licenseUrl>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <iconUrl>https://cdn.jsdelivr.net/gh/chocolatey/chocolatey-coreteampackages@68b91a851cee97e55c748521aa6da6211dd37c98/icons/7zip.svg</iconUrl>
+    <docsUrl>http://www.7-zip.org/faq.html</docsUrl>
+    <mailingListUrl>https://sourceforge.net/p/sevenzip/discussion/45797/</mailingListUrl>
+    <bugTrackerUrl>https://sourceforge.net/p/sevenzip/_list/tickets?source=navbar</bugTrackerUrl>
+    <dependencies></dependencies>
+    </metadata>
+    <files>
+    <file src='tools\**' target='tools' />
+    </files>
+</package>
+"@
+                Set-Content $NuspecItem.FullName -Value $NuspecContent
+            }
+            $packagesManual = @(Get-ChildItem "TestDrive:\packages-manual\")
+        }
+
+        It "Should be able to find a manual packages with more than one version" {
+            $packagesManual.Count | Should -BeExactly 1
+            Mock Search-Wishlist {New-Object psobject @{'path' = $NuspecItem.FullName; 'name' = 'package'; 'version' = '3.0' }}
+            $newPackages = New-Object System.Collections.ArrayList
+            $newPackages = Search-NewPackages -Packages $packagesManual -NewPackagesList $newPackages -Manual
+            Assert-MockCalled Search-Wishlist -Times 1
+            $newPackages.Count | Should -BeExactly 1
+        }
+    }
 }

@@ -31,9 +31,9 @@ function Search-NewPackages {
         }
         else {
             $nuspec = Get-ChildItem -Path $package.FullName -recurse | Where-Object { $_.Extension -like "*nuspec*" }
-            if (-Not $nuspec -or $nuspec.GetType().ToString() -eq "System.Object[]") {
-                continue
-            }
+        }
+        if (-Not $nuspec -or $nuspec.GetType().ToString() -eq "System.Object[]") {
+            continue
         }
         try {
             $version = ([xml](Get-Content -Path $nuspec.FullName)).Package.metadata.version
