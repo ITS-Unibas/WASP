@@ -88,12 +88,15 @@ function Start-Workflow {
                 $automaticPath = Join-Path -Path $repository.FullName -ChildPath 'automatic'
                 $automaticPackages = @(Get-ChildItem $automaticPath | Where-Object { $_.PSIsContainer })
                 $newPackages = Search-NewPackages -NewPackagesList $newPackages -Packages $automaticPackages
-            } elseif ($manual) {
+            }
+
+            if ($manual) {
                 $manualPath = Join-Path -Path $repository.FullName -ChildPath 'manual'
                 $manualPackages = @(Get-ChildItem $manualPath | Where-Object { $_.PSIsContainer })
                 $newPackages = Search-NewPackages -NewPackagesList $newPackages -Packages $manualPackages
             }
-            else {
+
+            if(-not $manual -and -not $automatic) {
                 $newPackages = Search-NewPackages -NewPackagesList $newPackages -Packages $packages
             }
         }
