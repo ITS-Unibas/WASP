@@ -74,53 +74,27 @@ function Start-Workflow {
             }
 
             $automatic = $false
+            $manual = $false
             $packages = @(Get-ChildItem $repository.FullName | Where-Object { $_.PSIsContainer })
             foreach ($package in $packages) {
                 if ($package.Name -like '*automatic*') {
                     $automatic = $true
+                } elseif ($package.Name -like "*manual*") {
+                    $manual = $true
                 }
             }
 
             if ($automatic) {
                 $automaticPath = Join-Path -Path $repository.FullName -ChildPath 'automatic'
                 $automaticPackages = @(Get-ChildItem $automaticPath | Where-Object { $_.PSIsContainer })
-                foreach ($package in $automaticPackages) {
-                    $nuspec = Get-ChildItem -Path $package.FullName -recurse | Where-Object { $_.Extension -like "*nuspec*" }
-                    if (-Not $nuspec -or $nuspec.GetType().ToString() -eq "System.Object[]") {
-                        continue
-                    }
-                    try {
-                        $version = ([xml](Get-Content -Path $nuspec.FullName)).Package.metadata.version
-                    }
-                    catch {
-                        Write-Log "Error reading $($nuspec.FullName)" -Severity 3
-                        Write-Log "$($_.Exception.Message)" -Severity 3
-                        continue
-                    }
-                    $FoundPackagesAutomatic = Search-Wishlist $package $version
-                    if ($FoundPackagesAutomatic) {
-                        $null = $newPackages.Add($FoundPackagesAutomatic)
-                    }
-                }
+                $newPackages = Search-NewPackages -NewPackagesList $newPackages -Packages $automaticPackages
+            } elseif ($manual) {
+                $manualPath = Join-Path -Path $repository.FullName -ChildPath 'manual'
+                $manualPackages = @(Get-ChildItem $manualPath | Where-Object { $_.PSIsContainer })
+                $newPackages = Search-NewPackages -NewPackagesList $newPackages -Packages $manualPackages
             }
             else {
-                foreach ($package in $packages) {
-                    $nuspec = Get-ChildItem -Path $package.FullName -recurse | Where-Object { $_.Extension -like "*nuspec*" }
-                    if (-Not $nuspec -or $nuspec.GetType().ToString() -eq "System.Object[]") {
-                        continue
-                    }
-                    try {
-                        $version = ([xml](Get-Content -Path $nuspec.FullName)).Package.metadata.version
-                    }
-                    catch {
-                        Write-Log "Error reading $($nuspec.FullName)" -Severity 3
-                        Write-Log "$($_.Exception.Message)" -Severity 3
-                    }
-                    $FoundPackages = Search-Wishlist $package $version
-                    if ($FoundPackages) {
-                        $null = $newPackages.Add($FoundPackages)
-                    }
-                }
+                $newPackages = Search-NewPackages -NewPackagesList $newPackages -Packages $packages
             }
         }
 
