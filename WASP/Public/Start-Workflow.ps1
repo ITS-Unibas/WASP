@@ -50,21 +50,7 @@ function Start-Workflow {
 
         # Manual updated packages
         $packagesManual = @(Get-ChildItem $PackagesManualPath)
-        foreach ($package in $packagesManual) {
-            # Use the latest created package as reference
-            $latest = Get-ChildItem -Path $package.FullName | Sort-Object CreationTime -Descending | Select-Object -First 1
-            try {
-                $version = ([xml](Get-Content -Path (Join-Path $latest.FullName "$package.nuspec"))).Package.metadata.version
-            }
-            catch {
-                Write-Log "Error reading $(Join-Path $latest.FullName "$package.nuspec")" -Severity 3
-                Write-Log "$($_.Exception.Message)" -Severity 3
-            }
-            $FoundPackagesManual = Search-Wishlist -packagePath $package -packageVersion $version -manual
-            if ($FoundPackagesManual) {
-                $null = $newPackages.Add($FoundPackagesManual)
-            }
-        }
+        $newPackages = Search-NewPackages -NewPackagesList $newPackages -Packages $packagesManual -Manual
 
         # Automatic updated packages
         $externalRepositories = @(Get-ChildItem $PackagesInboxPath)
@@ -74,53 +60,30 @@ function Start-Workflow {
             }
 
             $automatic = $false
+            $manual = $false
             $packages = @(Get-ChildItem $repository.FullName | Where-Object { $_.PSIsContainer })
             foreach ($package in $packages) {
                 if ($package.Name -like '*automatic*') {
                     $automatic = $true
+                } elseif ($package.Name -like "*manual*") {
+                    $manual = $true
                 }
             }
 
             if ($automatic) {
                 $automaticPath = Join-Path -Path $repository.FullName -ChildPath 'automatic'
                 $automaticPackages = @(Get-ChildItem $automaticPath | Where-Object { $_.PSIsContainer })
-                foreach ($package in $automaticPackages) {
-                    $nuspec = Get-ChildItem -Path $package.FullName -recurse | Where-Object { $_.Extension -like "*nuspec*" }
-                    if (-Not $nuspec -or $nuspec.GetType().ToString() -eq "System.Object[]") {
-                        continue
-                    }
-                    try {
-                        $version = ([xml](Get-Content -Path $nuspec.FullName)).Package.metadata.version
-                    }
-                    catch {
-                        Write-Log "Error reading $($nuspec.FullName)" -Severity 3
-                        Write-Log "$($_.Exception.Message)" -Severity 3
-                        continue
-                    }
-                    $FoundPackagesAutomatic = Search-Wishlist $package $version
-                    if ($FoundPackagesAutomatic) {
-                        $null = $newPackages.Add($FoundPackagesAutomatic)
-                    }
-                }
+                $newPackages = Search-NewPackages -NewPackagesList $newPackages -Packages $automaticPackages
             }
-            else {
-                foreach ($package in $packages) {
-                    $nuspec = Get-ChildItem -Path $package.FullName -recurse | Where-Object { $_.Extension -like "*nuspec*" }
-                    if (-Not $nuspec -or $nuspec.GetType().ToString() -eq "System.Object[]") {
-                        continue
-                    }
-                    try {
-                        $version = ([xml](Get-Content -Path $nuspec.FullName)).Package.metadata.version
-                    }
-                    catch {
-                        Write-Log "Error reading $($nuspec.FullName)" -Severity 3
-                        Write-Log "$($_.Exception.Message)" -Severity 3
-                    }
-                    $FoundPackages = Search-Wishlist $package $version
-                    if ($FoundPackages) {
-                        $null = $newPackages.Add($FoundPackages)
-                    }
-                }
+
+            if ($manual) {
+                $manualPath = Join-Path -Path $repository.FullName -ChildPath 'manual'
+                $manualPackages = @(Get-ChildItem $manualPath | Where-Object { $_.PSIsContainer })
+                $newPackages = Search-NewPackages -NewPackagesList $newPackages -Packages $manualPackages
+            }
+
+            if(-not $manual -and -not $automatic) {
+                $newPackages = Search-NewPackages -NewPackagesList $newPackages -Packages $packages
             }
         }
 
