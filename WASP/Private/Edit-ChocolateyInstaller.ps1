@@ -152,13 +152,13 @@ function Edit-ChocolateyInstaller {
             $InstallerContent = $InstallerContent | ForEach-Object { $_ -replace 'packageName[\s]*=[\s]*.*', 'packageName = $env:ChocolateyPackageName' }
 
             if ($script:ToolsPathPresent) {
-                $InstallerContent = $InstallerContent | ForEach-Object { $_ -replace '\sfile[\s]*=[\s]*.*', "file = (Join-Path `$toolsPath '$FileName')" }
+                $InstallerContent = $InstallerContent | ForEach-Object { $_ -replace '\sfile[\s]*=[\s]*.*', " file = (Join-Path `$toolsPath '$FileName')" }
             }
             elseif ($script:ToolsDirPresent) {
-                $InstallerContent = $InstallerContent | ForEach-Object { $_ -replace '\sfile[\s]*=[\s]*.*', "file = (Join-Path `$toolsDir '$FileName')" }
+                $InstallerContent = $InstallerContent | ForEach-Object { $_ -replace '\sfile[\s]*=[\s]*.*', " file = (Join-Path `$toolsDir '$FileName')" }
             }
             else {
-                $InstallerContent = $InstallerContent | ForEach-Object { $_ -replace '\sfile[\s]*=[\s]*.*', "file = (Join-Path `$PSScriptRoot '$FileName')" }
+                $InstallerContent = $InstallerContent | ForEach-Object { $_ -replace '\sfile[\s]*=[\s]*.*', " file = (Join-Path `$PSScriptRoot '$FileName')" }
             }
 
             # Fetch the file content raw so we can check with a regex if the additional scripts are already included
@@ -201,7 +201,7 @@ function Edit-ChocolateyInstaller {
             if ($VersionHistory) {
                 $LastVersion = $StringVersionHistory | Where-Object { [version]$_ -eq $VersionHistory[1] }
                 $LastVersionPath = Join-Path -Path $ParentSWDirectory -ChildPath "$LastVersion\tools"
-                $files = Get-ChildItem $LastVersionPath -Exclude *.msi,*.exe | Select-Object -ExpandProperty FullName
+                $files = Get-ChildItem $LastVersionPath -Exclude *.msi, *.exe | Select-Object -ExpandProperty FullName
                 if ($files) {
                     foreach ($file in $files) {
                         # Fetch all files except the install/uninstallscripts from the last version
@@ -215,7 +215,7 @@ function Edit-ChocolateyInstaller {
                     if ($LastVersion) {
                         Write-Log ("Previous version " + $LastVersion + " is in packaging") -Severity 1
                         $LastVersionPath = Join-Path -Path $ParentSWDirectory -ChildPath "$LastVersion\tools"
-                        $files = Get-ChildItem $LastVersionPath -Exclude *.msi,*.exe | Select-Object -ExpandProperty FullName
+                        $files = Get-ChildItem $LastVersionPath -Exclude *.msi, *.exe | Select-Object -ExpandProperty FullName
                         if ($files) {
                             foreach ($file in $files) {
                                 # Fetch all files except the install/uninstallscripts from the last version

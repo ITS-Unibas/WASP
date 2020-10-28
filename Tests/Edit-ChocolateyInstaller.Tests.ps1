@@ -258,25 +258,40 @@ Describe "Editing package installer script from chocolatey" {
             Set-Content "TestDrive:\package\1.0.0\tools\config.json" -Value '{"Test":0, "Test2":3}'
             Set-Content "TestDrive:\package\1.0.0\tools\InitialScript.ps1" -Value 'This is a previous script.'
             Set-Content "TestDrive:\package\1.0.0\tools\FinalScript.ps1" -Value 'This is a previous script.'
-            Set-Content "TestDrive:\package\1.0.0\tools\chocolateyInstall.ps1" -Value '$ErrorActionPreference = "Stop"
+            Set-Content "TestDrive:\package\1.0.0\tools\chocolateyInstall.ps1" -Value '$ErrorActionPreference = "Stop";
 
-            # Install Sourcetree Enterprise
-            $PrevVersion = $true
-            $packageArgs = @{
-              packageName   = "sourcetree"
-              softwareName  = "Sourcetree*"
-              fileType      = "msi"
-              silentArgs    = "/qn /norestart ACCEPTEULA=1 /l*v `"$env:TEMP\log.log`""
-              validExitCodes= @(0,1641,3010)
-              url           = "https://product-downloads.atlassian.com/software/sourcetree/windows/ga/SourcetreeEnterpriseSetup_3.2.6.msi"
-              checksum      = "c8b34688d7f69185b41f9419d8c65d63a2709d9ec59752ce8ea57ee6922cbba4"
-              checksumType  = "sha256"
-              url64bit      = ""
-              checksum64    = ""
-              checksumType64= "sha256"
-            }
+$toolsDir = Split-Path $MyInvocation.MyCommand.Definition
+$Transforms = Join-Path $toolsdir "base.mst"
+$TimeStamp = Get-Date -Format yyyyMMdd-HHmmss
+$LogPath = "$env:SWP\"
+$Transforms = Join-Path $toolsdir "base.mst"
+$LogFileName = "Install_Zoom_$($TimeStamp).log"
+$Logfile = Join-Path $LogPath $LogFileName
 
-            Install-ChocolateyPackage @packageArgs'
+$packageArgs = @{
+    file = (Join-Path $toolsDir "ZoomInstallerFull.msi")
+    packageName = $env:ChocolateyPackageName
+    fileType       = "msi"
+    validExitCodes = @(0)
+    softwareName   = "Zoom*"
+    unzipLocation  = $toolsDir
+    silentArgs     = "TRANSFORMS=`"$($Transforms)`" ALLUSERS=1 REBOOT=ReallySuppress ZoomAutoUpdate=`"true`" /qn /L*v `"$Logfile`""
+}
+$SWInstalled = Get-UninstallRegistryKey -softwareName "Zoom"
+$NotInstalled = $true
+if($null -ne $SWInstalled) {
+    $FileVersion = Get-Item "C:\Program Files (x86)\Zoom\bin\Zoom.exe" | Select-Object -ExpandProperty VersionInfo | Select-Object -ExpandProperty ProductVersion
+    $FileVersion = [version]($FileVersion.Replace(", ","."))
+    $NotInstalled = $FileVersion -lt [version]($env:ChocolateyPackageVersion)
+}
+
+if($NotInstalled) {
+    &(Join-Path $PSScriptRoot InitialScript.ps1)
+    Install-ChocolateyPackage @packageArgs
+    &(Join-Path $PSScriptRoot FinalScript.ps1)
+} else {
+    Set-PowerShellExitCode -exitCode 0
+}'
 
             Edit-ChocolateyInstaller $ToolsPath $FileName
             "$ToolsPath\chocolateyInstall_old.ps1" | Should -Not -FileContentMatchExactly 'InitialScript'
@@ -286,6 +301,9 @@ Describe "Editing package installer script from chocolatey" {
             "$ToolsPath\config.json" | Should -FileContentMatchExactly '{"Test":0, "Test2":3}'
             "$ToolsPath\InitialScript.ps1" | Should -FileContentMatchExactly 'This is a previous script.'
             "$ToolsPath\FinalScript.ps1" | Should -FileContentMatchExactly 'This is a previous script.'
+            $select = (get-content "$ToolsPath\chocolateyInstall.ps1" | select-string -pattern "\sfile =")
+            $count = $select.length
+            $count | Should -MatchExactly 1
         }
 
         It "Finds multiple previous versions and adds the latest as additional scripts" {
