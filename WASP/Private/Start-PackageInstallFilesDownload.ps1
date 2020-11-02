@@ -58,7 +58,7 @@ function Start-PackageInstallFilesDownload {
                     return
                 }
                 elseif ((Test-Path -Path $extendedToolsPath -Filter *.exe) -or (Test-Path -Path $extendedToolsPath -Filter *.msi) -or (Test-Path -Path $extendedToolsPath -Filter *.zip) `
-                            -or (Test-Path -Path (Join-Path $toolPath "overriden.info"))) {
+                            -or (Test-Path -Path $extendedToolsPath -Filter "overridden.info")) {
                     Write-Log "Scripts were already overridden, no need to do it again."
                     return
                 }
