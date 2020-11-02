@@ -40,10 +40,12 @@ function Start-PackageInstallFilesDownload {
                 $script:remoteFilePresent = $true
             } }
         if ($ForcedDownload -and (-Not $script:remoteFilePresent)) {
+            Write-Log "Forced download, start override."
             Invoke-Expression -Command $packToolInstallPath
         }
         else {
             if (-Not (Test-Path $original)) {
+                Write-Log "No overriden install script found, start override."
                 Invoke-Expression -Command $packToolInstallPath
             }
             else {
