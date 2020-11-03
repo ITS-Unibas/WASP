@@ -81,12 +81,14 @@ function Search-Wishlist {
                     }
 
                     #Create directory structure if not existing
-                    if ($manual) {
-                        $destPath = Join-Path $PackagesInbxFilteredPath $packageName
-                    }
-                    else {
-                        $destPath = Join-Path $PackagesInbxFilteredPath (Join-Path $packageName $packageVersion)
-                    }
+                    # if ($manual) {
+                    #     $destPath = Join-Path $PackagesInbxFilteredPath $packageName
+                    # }
+                    # else {
+                    #     $destPath = Join-Path $PackagesInbxFilteredPath (Join-Path $packageName $packageVersion)
+                    # }
+
+                    $destPath = Join-Path $PackagesInbxFilteredPath (Join-Path $packageName $packageVersion)
 
                     try {
                         Write-Log "Copying $($packagePath.FullName) to $destPath"
