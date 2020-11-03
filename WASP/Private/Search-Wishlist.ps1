@@ -92,7 +92,12 @@ function Search-Wishlist {
 
                     try {
                         Write-Log "Copying $($packagePath.FullName) to $destPath"
-                        Copy-Item $packagePath.FullName -Destination $destPath -Recurse -Force
+                        if ($manual) {
+                            $sourcePath = Join-Path $packagePath.FullName $packageVersion
+                        } else {
+                            $sourcePath = $packagePath.FullName
+                        }
+                        Copy-Item $sourcePath -Destination $destPath -Recurse -Force
                     }
                     catch {
                         Write-Host "$($_.Exception)"
