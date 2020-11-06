@@ -51,23 +51,20 @@ function Edit-ChocolateyInstaller {
 
                 $LastVersionPath = Join-Path -Path $ParentSWDirectory -ChildPath "$LastVersion\tools"
                 $prevChocolateyInstallFile = Join-Path -Path $LastVersionPath -ChildPath "chocolateyinstall.ps1"
-                if (Test-Path $prevChocolateyInstallFile) {
-                    Write-Log "Copying $prevChocolateyInstallFile to $ToolsPath"
-                    Copy-Item $prevChocolateyInstallFile -Destination $ToolsPath -Force -Recurse
+
+                # search for the next preceeding version that is not in packaging to copy the install content
+                $counter = 1
+                while (-Not (Test-Path $prevChocolateyInstallFile) -and ($counter -lt $VersionHistory.Count)) {
+                    #Write-Host "$counter"
+                    $counter += 1
+                    $LastVersion = $StringVersionHistory | Where-Object { [version]$_ -eq $VersionHistory[$counter] }
+                    $LastVersionPath = Join-Path -Path $ParentSWDirectory -ChildPath "$LastVersion\tools"
+                    $prevChocolateyInstallFile = Join-Path -Path $LastVersionPath -ChildPath "chocolateyinstall.ps1"
                 }
-                else {
-                    Write-Log "File at $prevChocolateyInstallFile does not exist. Assume that the previous version is in packaging."
-                    $LastVersion = $StringVersionHistory | Where-Object { [version]$_ -eq $VersionHistory[2] }
-                    if ($LastVersion) {
-                        Write-Log ("Previous version is in packaging. Using one version earlier: " + $LastVersion) -Severity 1
-                        $LastVersionPath = Join-Path -Path $ParentSWDirectory -ChildPath "$LastVersion\tools"
-                        $prevChocolateyInstallFile = Join-Path -Path $LastVersionPath -ChildPath "chocolateyinstall.ps1"
-                        if (Test-Path $prevChocolateyInstallFile) {
-                            Write-Log "Copying $prevChocolateyInstallFile to $ToolsPath"
-                            Copy-Item $prevChocolateyInstallFile -Destination $ToolsPath -Force -Recurse
-                        }
-                    }
-                }
+
+                Write-Log "Copying $prevChocolateyInstallFile to $ToolsPath"
+                Copy-Item $prevChocolateyInstallFile -Destination $ToolsPath -Force -Recurse
+
                 $InstallerContent = Get-Content -Path $NewFile -ErrorAction Stop
             }
             else {
@@ -202,28 +199,20 @@ function Edit-ChocolateyInstaller {
                 $LastVersion = $StringVersionHistory | Where-Object { [version]$_ -eq $VersionHistory[1] }
                 $LastVersionPath = Join-Path -Path $ParentSWDirectory -ChildPath "$LastVersion\tools"
                 $files = Get-ChildItem $LastVersionPath -Exclude *.msi, *.exe | Select-Object -ExpandProperty FullName
-                if ($files) {
-                    foreach ($file in $files) {
-                        # Fetch all files except the install/uninstallscripts from the last version
-                        if (!($file -like "*chocolateyInstall.ps1*" -or $file -like "*chocolateyInstall_old.ps1*")) {
-                            Copy-item $file -Destination $ToolsPath -Force -Recurse
-                        }
-                    }
+
+                # search for the next preceeding version that is not in packaging to copy the install content
+                $counter = 1
+                while (-Not ($files) -and ($counter -lt $VersionHistory.Count)) {
+                    $counter += 1
+                    $LastVersion = $StringVersionHistory | Where-Object { [version]$_ -eq $VersionHistory[$counter] }
+                    $LastVersionPath = Join-Path -Path $ParentSWDirectory -ChildPath "$LastVersion\tools"
+                    $files = Get-ChildItem $LastVersionPath -Exclude *.msi, *.exe | Select-Object -ExpandProperty FullName
                 }
-                else {
-                    $LastVersion = $StringVersionHistory | Where-Object { [version]$_ -eq $VersionHistory[2] }
-                    if ($LastVersion) {
-                        Write-Log ("Previous version " + $LastVersion + " is in packaging") -Severity 1
-                        $LastVersionPath = Join-Path -Path $ParentSWDirectory -ChildPath "$LastVersion\tools"
-                        $files = Get-ChildItem $LastVersionPath -Exclude *.msi, *.exe | Select-Object -ExpandProperty FullName
-                        if ($files) {
-                            foreach ($file in $files) {
-                                # Fetch all files except the install/uninstallscripts from the last version
-                                if (!($file -like "*chocolateyInstall.ps1*" -or $file -like "*chocolateyInstall_old.ps1*")) {
-                                    Copy-item $file -Destination $ToolsPath -Force -Recurse
-                                }
-                            }
-                        }
+
+                # Fetch all files except the install/uninstallscripts from the last version
+                foreach ($file in $files) {
+                    if (!($file -like "*chocolateyInstall.ps1*" -or $file -like "*chocolateyInstall_old.ps1*")) {
+                        Copy-item $file -Destination $ToolsPath -Force -Recurse
                     }
                 }
             }
