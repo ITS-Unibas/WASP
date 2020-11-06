@@ -55,7 +55,6 @@ function Edit-ChocolateyInstaller {
                 # search for the next preceeding version that is not in packaging to copy the install content
                 $counter = 1
                 while (-Not (Test-Path $prevChocolateyInstallFile) -and ($counter -lt $VersionHistory.Count)) {
-                    #Write-Host "$counter"
                     $counter += 1
                     $LastVersion = $StringVersionHistory | Where-Object { [version]$_ -eq $VersionHistory[$counter] }
                     $LastVersionPath = Join-Path -Path $ParentSWDirectory -ChildPath "$LastVersion\tools"
