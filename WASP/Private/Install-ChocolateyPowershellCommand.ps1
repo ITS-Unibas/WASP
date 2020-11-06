@@ -50,6 +50,7 @@ function Install-ChocolateyPowershellCommand() {
         }
         Write-Log "Starting editing chocolateyInstall at $filePath."
         Edit-ChocolateyInstaller -ToolsPath (Join-Path (Get-Item -Path ".\").FullName "tools") -FileName $FileName
+        New-Item -Path (Join-Path (Join-Path (Get-Item -Path ".\").FullName "tools") "overridden.info") -Force
     }
     else {
         Write-Log "No url in install script of $packageName found. We can continue."
