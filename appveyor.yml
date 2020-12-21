@@ -2,17 +2,12 @@ os: WMF 5
 
 install:
   - ps: |
-      Install-PackageProvider -Name NuGet -MinimumVersion 2.8.5.201 -Force | Out-Null
-      Install-Module Pester -MinimumVersion 4.9.0 -Scope CurrentUser -Force | Out-Null
-      Install-Module "WASP" -Force
+      Install-PackageProvider -Name NuGet -Force | Out-Null
+      Install-Module Pester -MinimumVersion 4.10.1 -Scope CurrentUser -Force | Out-Null
 
 skip_commits:
   files:
     - readme.md
-
-skip_branch_with_pr: true
-
-build: false
 
 test_script:
     - ps: |
