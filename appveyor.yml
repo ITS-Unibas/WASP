@@ -9,6 +9,8 @@ skip_commits:
   files:
     - readme.md
 
+build: false
+
 test_script:
     - ps: |
         $testResultsFile = ".\TestsResults.xml"
