@@ -1,0 +1,42 @@
+os: WMF 5
+
+install:
+  - ps: |
+      Install-PackageProvider -Name NuGet -MinimumVersion 2.8.5.201 -Force | Out-Null
+      Install-Module Pester -MinimumVersion 3.4.6 -Scope CurrentUser -Force | Out-Null
+      Install-Module "WASP" -Force
+
+skip_commits:
+  files:
+    - readme.md
+
+skip_branch_with_pr: true
+
+build: false
+
+test_script:
+  - ps: |
+      $testResultsFile = Join-Path $Env:APPVEYOR_BUILD_FOLDER TestResults.xml
+      $pesterParams = @{
+          Script       = "$Env:APPVEYOR_BUILD_FOLDER\tests"
+          OutputFile   = $testResultsFile
+          OutputFormat = "NUnitXml"
+          PassThru     = $true
+          Verbose      = $VerbosePreference
+      }
+      Import-Module Pester
+      (get-module pester).version.ToString()
+      $res = Invoke-Pester @pesterParams
+      [xml]$content = Get-Content $testResultsFile
+      $content.'test-results'.'test-suite'.type = "Powershell"
+      $content.Save($testResultsFile)
+      if (Test-Path $testResultsFile) {
+          (New-Object 'System.Net.WebClient').UploadFile("https://ci.appveyor.com/api/testresults/nunit/$($env:APPVEYOR_JOB_ID)", $testResultsFile)
+      } else {
+          Write-Warning ("Testfile {0} not found!" -f $testResultsFile)
+      }
+      if ($res.FailedCount -gt 0) {
+          # Terminate the script to fail the build
+          $Error | Format-List * -Force
+          exit 1
+      }
