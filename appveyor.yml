@@ -15,28 +15,10 @@ skip_branch_with_pr: true
 build: false
 
 test_script:
-  - ps: |
-      $testResultsFile = Join-Path $Env:APPVEYOR_BUILD_FOLDER TestResults.xml
-      $pesterParams = @{
-          Script       = "$Env:APPVEYOR_BUILD_FOLDER\tests"
-          OutputFile   = $testResultsFile
-          OutputFormat = "NUnitXml"
-          PassThru     = $true
-          Verbose      = $VerbosePreference
-      }
-      Import-Module Pester
-      (get-module pester).version.ToString()
-      $res = Invoke-Pester @pesterParams
-      [xml]$content = Get-Content $testResultsFile
-      $content.'test-results'.'test-suite'.type = "Powershell"
-      $content.Save($testResultsFile)
-      if (Test-Path $testResultsFile) {
-          (New-Object 'System.Net.WebClient').UploadFile("https://ci.appveyor.com/api/testresults/nunit/$($env:APPVEYOR_JOB_ID)", $testResultsFile)
-      } else {
-          Write-Warning ("Testfile {0} not found!" -f $testResultsFile)
-      }
-      if ($res.FailedCount -gt 0) {
-          # Terminate the script to fail the build
-          $Error | Format-List * -Force
-          exit 1
-      }
+    - ps: |
+        $testResultsFile = ".\TestsResults.xml"
+        $res = Invoke-Pester -OutputFormat NUnitXml -OutputFile $testResultsFile -PassThru
+        (New-Object 'System.Net.WebClient').UploadFile("https://ci.appveyor.com/api/testresults/nunit/$($env:APPVEYOR_JOB_ID)", (Resolve-Path $testResultsFile))
+        if ($res.FailedCount -gt 0) {
+            throw "$($res.FailedCount) tests failed."
+        }
