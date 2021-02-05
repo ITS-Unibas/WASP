@@ -65,7 +65,8 @@ function Start-Workflow {
             foreach ($package in $packages) {
                 if ($package.Name -like '*automatic*') {
                     $automatic = $true
-                } elseif ($package.Name -like "*manual*") {
+                }
+                elseif ($package.Name -like "*manual*") {
                     $manual = $true
                 }
             }
@@ -82,7 +83,7 @@ function Start-Workflow {
                 $newPackages = Search-NewPackages -NewPackagesList $newPackages -Packages $manualPackages
             }
 
-            if(-not $manual -and -not $automatic) {
+            if (-not $manual -and -not $automatic) {
                 $newPackages = Search-NewPackages -NewPackagesList $newPackages -Packages $packages
             }
         }
@@ -112,6 +113,6 @@ function Start-Workflow {
 
     end {
         $Duration = New-TimeSpan -Start $StartTime -End (Get-Date)
-        Write-Log "The process took $Duration" -Severity 1
+        Write-Log "The process took $Duration. Workflow finished." -Severity 1
     }
 }

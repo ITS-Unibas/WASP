@@ -45,7 +45,7 @@ function Edit-ChocolateyInstaller {
             # Test if a previous chocolateyInstall file exist.
             if ($VersionHistory) {
                 $LastVersion = $StringVersionHistory | Where-Object { [version]$_ -eq $VersionHistory[1] } # 0 is the current, 1 the
-                Write-Log "A previous package version was found: $LastVersion. Copying previous install script."
+                Write-Log "Copying previous package version: $LastVersion." -Severity 1
 
                 Copy-Item -Path $NewFile -Destination $OriginalFile -ErrorAction Stop
 
@@ -67,7 +67,7 @@ function Edit-ChocolateyInstaller {
                 $InstallerContent = Get-Content -Path $NewFile -ErrorAction Stop
             }
             else {
-                Write-Log "No previous package version was found. Overriding $NewFile."
+                Write-Log "No previous package version found. Start overriding $NewFile."
 
                 Copy-Item -Path $NewFile -Destination $OriginalFile -ErrorAction Stop
                 #Regex
@@ -134,9 +134,9 @@ function Edit-ChocolateyInstaller {
                 }
             }
 
-            # If a remote file is available, unzip path is empty
+            # If a remote file is available, unzip location is empty
             if ($UnzipPath -and (-Not $script:RemoteFilePresent)) {
-                Write-Log "Calling set unzip location and remove installzip, got unzip location $UnzipPath" -Severity 1
+                Write-Log "Set unzip location to $UnzipPath" -Severity 1
                 $InstallerContent = $InstallerContent | ForEach-Object { $_ -replace '.*unzipLocation[\s]*=[\s]*Get-PackageCacheLocation', "unzipLocation = $UnzipPath" }
                 $InstallerContent = $InstallerContent | ForEach-Object { $_ -replace 'Install-ChocolateyZipPackage\s*@packageArgs', "Install-ChocolateyInstallPackage @packageArgs" }
             }
