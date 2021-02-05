@@ -28,13 +28,13 @@ function Remove-RemoteBranch {
     process {
         $remoteBranches = Get-RemoteBranches $Repo
         if ($remoteBranches.Contains($Branch)) {
-            Write-Log "Branch $Branch will be deleted."
+            Write-Log "Branch $Branch will be deleted." -Severity 1
             $url = ("{0}/rest/branch-utils/1.0/projects/{1}/repos/{2}/branches" -f $config.Application.GitBaseURL, $config.Application.GitProject, $Repo)
             $json = @{"name" = "refs/heads/$Branch"; "dryRun" = "false" } | ConvertTo-Json
             Invoke-DeleteRequest $url $json
         }
         else {
-            Write-Log "Branch $Branch to delete does not exist."
+            Write-Log "Branch $Branch to delete does not exist." -Severity 1
         }
     }
 

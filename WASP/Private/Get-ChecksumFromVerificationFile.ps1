@@ -32,7 +32,7 @@ function Get-ChecksumFromVerificationFile() {
     $regexChecksum64 = '(checksum64:\s[\w]+)'
     if (Test-Path $verificationPath) {
         if ($searchFor32BitChecksum) {
-            Write-Log "$($packageName): Searching for 32 bit Checksum"
+            Write-Log "$($packageName): Search for 32bit Checksum."
             $checksumMatches32 = (Select-String -Path $verificationPath -Pattern $regexChecksum32).Matches
             if ($checksumMatches32) {
                 $checksum32 = $checksumMatches32 -Replace '[\s]*checksum[32]*:[\s]*', ''
@@ -40,7 +40,7 @@ function Get-ChecksumFromVerificationFile() {
             }
         }
         elseif ($searchFor64BitChecksum) {
-            Write-Log "$($packageName): Searching for 64 bit Checksum"
+            Write-Log "$($packageName): Search for 64bit Checksum."
             $checksumMatches64 = (Select-String -Path $verificationPath -Pattern $regexChecksum64).Matches
             if ($checksumMatches64) {
                 $checksum64 = $checksumMatches64 -Replace '[\s]*checksum64:[\s]*', ''

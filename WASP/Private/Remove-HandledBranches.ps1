@@ -24,7 +24,7 @@ function Remove-HandledBranches {
     }
 
     process {
-        Write-Log "Getting branches with pull request status: Open"
+        Write-Log "Getting branches with PR status: Open"
         # Get all branches which have open pull requests in windows software repo from packages incoming filtered
         $pullrequestsOpen = Get-RemoteBranchesByStatus $PackageGalleryRepositoryName 'Open'
         # Get all branches in packages incoming filtered repository
@@ -33,7 +33,7 @@ function Remove-HandledBranches {
         Switch-GitBranch $PackagesInboxFilteredPath 'master'
         ForEach ($remoteBranch in $PackagesInboxFilteredBranches) {
             if ((-Not ($remoteBranch -eq 'master')) -and (($pullrequestsOpen.Count -eq 0 -or -Not $pullrequestsOpen.contains($remoteBranch)))) {
-                Write-Log "The pull request for $remoteBranch is was either declined or merged and can therefore be deleted."
+                Write-Log "Pull request for $remoteBranch was declined or merged and can be deleted."
                 # Remove remote package branch in filtered repository
                 Remove-RemoteBranch $PackagesInboxFilteredRepoName $remoteBranch
             }
