@@ -25,7 +25,7 @@
 
         }
         catch {
-            Write-Error -Exception $_.Exception
+            Write-Log $_.Exception -Severity 3
         }
     } end {
         return $config

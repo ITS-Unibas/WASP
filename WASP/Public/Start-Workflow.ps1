@@ -10,7 +10,7 @@ function Start-Workflow {
     )
 
     begin {
-        Write-Log "Starting Workflow"
+        Write-Log "Starting Workflow" -Severity 1
         $StartTime = Get-Date
 
         $config = Read-ConfigFile
@@ -65,7 +65,8 @@ function Start-Workflow {
             foreach ($package in $packages) {
                 if ($package.Name -like '*automatic*') {
                     $automatic = $true
-                } elseif ($package.Name -like "*manual*") {
+                }
+                elseif ($package.Name -like "*manual*") {
                     $manual = $true
                 }
             }
@@ -82,21 +83,21 @@ function Start-Workflow {
                 $newPackages = Search-NewPackages -NewPackagesList $newPackages -Packages $manualPackages
             }
 
-            if(-not $manual -and -not $automatic) {
+            if (-not $manual -and -not $automatic) {
                 $newPackages = Search-NewPackages -NewPackagesList $newPackages -Packages $packages
             }
         }
 
         # Commit and push changes to wishlist located in the path
         if ($newPackages) {
-            Write-Log "Found the following new packages: $($newPackages.ForEach({$_.name}))" -Severity 2
+            Write-Log "Found new packages: $($newPackages.ForEach({$_.name}))" -Severity 1
             # Initialize branches for each new package
             try {
                 Update-PackageInboxFiltered $newPackages
                 Update-Wishlist $PackagesWishlistPath 'master'
             }
             catch {
-                Write-Log "Error occurred in Update-PackageInboxFiltered workflow or while updating the wishlist. The following error occurred:`n$($_.Exception.Message)." -Severity 3
+                Write-Log "Error in Update-PackageInboxFiltered workflow or while updating wishlist:`n$($_.Exception.Message)." -Severity 3
             }
         }
 
@@ -112,6 +113,6 @@ function Start-Workflow {
 
     end {
         $Duration = New-TimeSpan -Start $StartTime -End (Get-Date)
-        Write-Log "The process took $Duration"
+        Write-Log "The process took $Duration. Workflow finished." -Severity 1
     }
 }

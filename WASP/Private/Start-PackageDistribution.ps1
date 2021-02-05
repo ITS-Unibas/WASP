@@ -33,14 +33,14 @@ function Start-PackageDistribution() {
     }
 
     process {
-        Write-Log "--- Starting package distribution ---"
+        Write-Log "--- Starting package distribution ---" -Severity 1
 
         Switch-GitBranch $PackageGalleryPath $config.Application.GitBranchPROD
 
         $remoteBranches = Get-RemoteBranches $GitFolderName
         $repackagingBranches = $remoteBranches | Where-Object { ($_ -split '@').Length -eq 3 }
 
-        Write-Log "The following remote branches were found: $remoteBranches"
+        Write-Log "Remote branches found: $remoteBranches"
 
         $wishlist = Get-Content -Path $wishlistPath | Where-Object { $_ -notlike "#*" }
 
@@ -60,17 +60,17 @@ function Start-PackageDistribution() {
                     }
                 }
                 if (!$foundInWishlist) {
-                    Write-Log "Skipping package $packageName@$PackageVersion, because it is not in wishlist." -Severity 2
+                    Write-Log "Skip $packageName@$PackageVersion : deactivated in wishlist." -Severity 1
                     continue
                 }
                 $packageRootPath = Join-Path $PackageGalleryPath (Join-Path $packageName $packageVersion)
                 if (-Not (Test-Path $packageRootPath)) {
-                    Write-Log "PR for $packageName was not yet merged. Continuing .." -Severity 1
+                    Write-Log "Skip $packageName@$PackageVersion : PR was not yet merged." -Severity 1
                     continue
                 }
                 $toolsPath = Join-Path -Path $packageRootPath -ChildPath "tools"
                 if (-Not (Test-Path $toolsPath)) {
-                    Write-Log ("No tools folder, skipping package $packageName $packageVersion") -Severity 2
+                    Write-Log ("Skip $packageName@$PackageVersion : No tools/ folder.") -Severity 3
                     continue
                 }
                 # Call Override Function with the wanted package to override
@@ -78,21 +78,21 @@ function Start-PackageDistribution() {
                     Set-Location "$PackageGalleryPath\$packageName\$packageVersion"
                     $nuspecFile = (Get-ChildItem -Path $packageRootPath -Recurse -Filter *.nuspec).FullName
                     if (-Not $nuspecFile) {
-                        Write-Log "No nuspec file in package $packageName $packageVersion. Continuing with next package" -Severity 2
+                        Write-Log "Skip $packageName@$PackageVersion : No nuspec file found." -Severity 3
                         continue
                     }
                     $env:ChocolateyPackageName = ([xml](Get-Content -Path $nuspecFile)).Package.metadata.id
                     $env:ChocolateyPackageVersion = ([xml](Get-Content -Path $nuspecFile)).Package.metadata.version
                     Start-PackageInstallFilesDownload ( Join-Path $toolsPath "chocolateyInstall.ps1") $ForcedDownload
                     if ($LASTEXITCODE -eq 1) {
-                        Write-Log "Override-Function terminated with an error. Exiting.." -Severity 3
+                        Write-Log "Skip $packageName@$PackageVersion : Override-Function terminated with an error." -Severity 3
                         continue
                     }
-                    Write-Log "Check if nupkg already exists."
+                    Write-Log "Check if nupkg exists."
                     # Check if a nupkg already exists
                     $nupkg = (Get-ChildItem -Path $packageRootPath -Recurse -Filter *.nupkg).FullName
                     if ($nupkg) {
-                        Write-Log "Nupkg already exists: $nupkg. Checking if changes occured."
+                        Write-Log "Nupkg already exists: $nupkg. Check for changes."
                         # Nupkg exists already, now we have to check if anything has changed and if yes we have to add a release version into the nuspec
                         # Get hash of the newest existing nupkg and save the version of the existing nupkg
                         $hashOldNupkg = Get-NupkgHash $nupkg $packageRootPath
@@ -103,36 +103,36 @@ function Start-PackageDistribution() {
                         $InvokeMessage = Invoke-Expression -Command ("choco pack $nuspecFile -s . -r")
                         $InvokeMessage | ForEach-Object {
                             $Severity = 0
-                            if($_ -match "cannot be empty") {
+                            if ($_ -match "cannot be empty") {
                                 $Severity = 3
                             }
                             Write-Log $_ -Severity $Severity
                         }
                         $nupkgNew = (Get-ChildItem -Path $packageRootPath -Recurse -Filter *.nupkg).FullName
                         if (-Not $nupkgNew) {
-                            Write-Log "Choco pack process of package $packageName $packageVersion failed. Continuing with next package." -Severity 3
+                            Write-Log "Choco pack process of $packageName@$PackageVersion failed." -Severity 3
                             continue
                         }
                         Write-Log "Calculating hash for nupkg: $nupkgNew."
                         $hashNewNupkg = Get-NupkgHash $nupkgNew $packageRootPath
                         if ($hashNewNupkg -eq $hashOldNupkg) {
-                            Write-Log "No changes detected for package $packageName. Removing "
+                            Write-Log "No changes detected for $packageName@$PackageVersion."
                             Remove-Item -Path "$packageRootPath\*.nupkg"
                             Write-Log "Moving $packageName from $tmpdir to $packageRootPath."
                             Move-Item -Path  "$tmpdir\$env:ChocolateyPackageName.$env:ChocolateyPackageVersion.nupkg" -Destination $packageRootPath
                             continue
                         }
                         else {
-                            Write-Log "Hashes do not match, removing $packageName from $tmpdir and push new package to server."
+                            Write-Log "Hashes do not match, removing $packageName from $tmpdir and push new package to server." -Severity 1
                             Remove-Item "$tmpdir\$env:ChocolateyPackageName.$env:ChocolateyPackageVersion.nupkg"
                         }
                     }
                     else {
-                        Write-Log "No nupkg exists. Packing package.."
+                        Write-Log "No nupkg exists. Packing package." -Severity 1
                         $InvokeMessage = Invoke-Expression -Command ("choco pack $nuspecFile -s . -r")
                         $InvokeMessage | ForEach-Object {
                             $Severity = 0
-                            if($_ -match "cannot be empty") {
+                            if ($_ -match "cannot be empty") {
                                 $Severity = 3
                             }
                             Write-Log $_ -Severity $Severity
@@ -140,7 +140,7 @@ function Start-PackageDistribution() {
                     }
                     Send-NupkgToServer $packageRootPath $config.Application.ChocoServerDEV
                     Set-Location $OldWorkingDir
-                    Write-Log "Commiting and pushing changed files."
+                    Write-Log "Commiting and pushing changed files." -Severity 1
                     Write-Log ([string] (git -C $packageRootPath add . 2>&1))
                     Write-Log ([string] (git -C $packageRootPath commit -m "Created override for $packageName $packageVersion" 2>&1))
                     Write-Log ([string] (git -C $packageRootPath push 2>&1))
@@ -150,7 +150,7 @@ function Start-PackageDistribution() {
                 }
                 catch [Exception] {
                     $ChocolateyPackageName = ([xml](Get-Content -Path $nuspecFile)).Package.metadata.id
-                    Write-Log ("Package " + $ChocolateyPackageName + " override process crashed at line: $($_.InvocationInfo.ScriptLineNumber). Skipping it.") -Severity 3
+                    Write-Log ("Package " + $ChocolateyPackageName + " override process crashed at line: $($_.InvocationInfo.ScriptLineNumber). Skip.") -Severity 3
                     Write-Log ($_.Exception | Format-List -force | Out-String) -Severity 3
                     Remove-Item -Path "$packageRootPath\unzipedNupkg" -ErrorAction SilentlyContinue
                     git -C $packageRootPath checkout -- *
@@ -158,7 +158,7 @@ function Start-PackageDistribution() {
                 }
             }
             elseif (($branch -eq $config.Application.GitBranchPROD) -or ($branch -eq $config.Application.GitBranchTEST)) {
-                # if packages are moved to prod and testing, push them to the appropriate choco servers
+                # if packages are moved to prod and testing, push them to the appropriate nuget repository servers
                 if ($branch -eq $config.Application.GitBranchPROD) {
                     $chocolateyDestinationServer = $config.Application.ChocoServerPROD
                     $Repo = "Prod"
@@ -175,6 +175,8 @@ function Start-PackageDistribution() {
                 foreach ($package in $packagesList) {
                     $packagePath = Join-Path $PackageGalleryPath $package
                     $versionsList = Get-ChildItem $packagePath -Directory
+                    #TODO: Add changes to version history here
+                    #$versionsList = $versionsList | select -Last 5
                     foreach ($version in $versionsList) {
                         if (Test-ExistPackageVersion $GitFolderName $package $version $branch) {
                             $packageRootPath = Join-Path $packagePath $version
@@ -188,16 +190,16 @@ function Start-PackageDistribution() {
                                 if ($chocolateyDestinationServer -eq $config.Application.ChocoServerTEST) {
                                     if (Test-IssueStatus $package $version 'Testing') {
                                         if (-Not (Test-ExistsOnRepo -PackageName $FullID -PackageVersion $FullVersion -Repository $Repo -FileCreationDate $FileDate)) {
-                                            Write-Log "Package $FullID with version $FullVersion doesn't exist on $chocolateyDestinationServer. Going to push..."
+                                            Write-Log "Pushing $FullID@$FullVersion to $chocolateyDestinationServer." -Severity 1
                                             Send-NupkgToServer $packageRootPath $chocolateyDestinationServer
                                         }
                                         else {
-                                            Write-Log "Package $FullID with version $FullVersion already exists on $chocolateyDestinationServer. Doing nothing."
+                                            Write-Log "$FullID@$FullVersion exists on $chocolateyDestinationServer."
                                         }
                                         continue
                                     }
                                 }
-                                Write-Log "Package $package is in repackaging and its nupkg is not pushed to $Repo."
+                                Write-Log "$package is in repackaging and its nupkg is not pushed to $Repo."
                                 continue
                             }
                             # if package is in PROD, check if it exists in DEV as well --> make sure that if a nupkg is faulty on dev and gets deleted on dev server, it is pushed there again
@@ -205,19 +207,19 @@ function Start-PackageDistribution() {
                             if ($Repo -eq "Prod") {
                                 $tmpChocolateyDestinationServer = $config.Application.ChocoServerDEV
                                 if (-Not (Test-ExistsOnRepo -PackageName $FullID -PackageVersion $FullVersion -Repository "Dev" -FileCreationDate $FileDate)) {
-                                    Write-Log "Package $FullID with version $FullVersion doesn't exist on $tmpchocolateyDestinationServer. Going to push..."
+                                    Write-Log "Pushing $FullID@$FullVersion to $chocolateyDestinationServer." -Severity 1
                                     Send-NupkgToServer $packageRootPath $tmpchocolateyDestinationServer
                                 }
                                 else {
-                                    Write-Log "Package $FullID with version $FullVersion already exists on $tmpchocolateyDestinationServer. Doing nothing."
+                                    Write-Log "$FullID@$FullVersion exists on $chocolateyDestinationServer."
                                 }
                             }
                             if (-Not (Test-ExistsOnRepo -PackageName $FullID -PackageVersion $FullVersion -Repository $Repo -FileCreationDate $FileDate)) {
-                                Write-Log "Package $FullID with version $FullVersion doesn't exist on $chocolateyDestinationServer. Going to push..."
+                                Write-Log "Pushing $FullID@$FullVersion to $chocolateyDestinationServer." -Severity 1
                                 Send-NupkgToServer $packageRootPath $chocolateyDestinationServer
                             }
                             else {
-                                Write-Log "Package $FullID with version $FullVersion already exists on $chocolateyDestinationServer. Doing nothing."
+                                Write-Log "$FullID@$FullVersion exists on $chocolateyDestinationServer."
                             }
                         }
                     }

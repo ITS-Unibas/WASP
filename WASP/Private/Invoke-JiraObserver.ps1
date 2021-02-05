@@ -27,7 +27,7 @@ function Invoke-JiraObserver {
         # Check if path exists and that pyhton is in path variables
         try {
             $filePath = Join-Path $JiraObserverPath "JiraObserver.py"
-            Write-Log ([string] (python $filePath 2>&1))
+            Write-Log ([string] (python $filePath 2>&1)) -Severity 1
         }
         catch {
             Write-Log "$($_.Exception)" -Severity 3

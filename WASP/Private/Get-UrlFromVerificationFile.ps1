@@ -37,33 +37,33 @@ function Get-UrlFromVerificationFile() {
     if (Test-Path $verificationPath) {
         if ($searchFor32BitUrl) {
             # We only want to search for 32bit urls in our verification text
-            Write-Log "$($packageName): Searching for 32bit urls"
+            Write-Log "$($packageName): Search for 32bit urls."
             $matches32 = (Select-String -Path $verificationPath -Pattern $regex32).Matches
             if ($matches32) {
                 $url32Matches = ($matches32[0] | Select-String -Pattern $regexLink).Matches
                 if ($url32Matches) {
-                    Write-Log "$($packageName): Returning 32bit url"
+                    Write-Log "$($packageName): Found 32bit url."
                     return $url32Matches[0].Value
                 }
             }
             # We couldn't find an url for 32bit so we search for an independent url
             # We handle the found architecture independent url as a 32bit file (default)
-            Write-Log "$($packageName): Searching for any urls with file endings (.msi|.exe|.zip|.tar.gz|.msu)..."
+            Write-Log "$($packageName): Search for any urls with file endings (.msi|.exe|.zip|.tar.gz|.msu)."
             $regexLinkWithFileExtension = '(http[:/\w\d.&%^$=#\-@+\*]*(\.msi|\.exe|\.zip|\.tar\.gz|\.msu))'
             $urlMatches = (Select-String -Path $verificationPath -Pattern $regexLinkWithFileExtension).Matches
             if ($urlMatches) {
-                Write-Log "$($packageName): Returning architecture independent url"
+                Write-Log "$($packageName): Found architecture independent url."
                 return $urlMatches[0].Value
             }
         }
         elseif ($searchFor64BitUrl) {
             # We only want to search for 64bit urls in our verification text
-            Write-Log "$($packageName): Searching for 64bit urls"
+            Write-Log "$($packageName): Search for 64bit urls."
             $matches64 = (Select-String -Path $verificationPath -Pattern $regex64).Matches
             if ($matches64) {
                 $url64Matches = ($matches64[0] | Select-String -Pattern $regexLink).Matches
                 if ($url64Matches) {
-                    Write-Log "$($packageName): Returning 64bit url"
+                    Write-Log "$($packageName): Found 64bit url."
                     return $url64Matches[0].Value
                 }
             }

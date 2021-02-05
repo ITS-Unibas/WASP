@@ -18,7 +18,7 @@ function Initialize-Prerequisites {
     process {
         $ChocoPath = $env:ChocolateyInstall
         if (-Not $ChocoPath) {
-            Write-Log "Chocolatey seems not to be installed, please run 'Register-ChocolateyPackagingServer' first."
+            Write-Log "Chocolatey seems not to be installed, please run 'Register-ChocolateyPackagingServer' first." -Severity 3
             return
         }
 
@@ -26,7 +26,7 @@ function Initialize-Prerequisites {
         $ChocoFunctionsPath = Join-Path -Path $ChocoHelperPath -ChildPath "functions"
         Get-ChildItem $ChocoFunctionsPath -Filter "Install*.ps1" | Foreach-Object { Rename-Item $_.FullName "$($_.FullName).old" -Force }
         Import-Module "$ChocoHelperPath\chocolateyInstaller.psm1" -Force
-        Get-ChildItem $ChocoFunctionsPath -Filter "Install*.old" | Foreach-Object { Rename-Item $_.FullName "$($_.FullName.replace('.old', ''))" -Force}
+        Get-ChildItem $ChocoFunctionsPath -Filter "Install*.old" | Foreach-Object { Rename-Item $_.FullName "$($_.FullName.replace('.old', ''))" -Force }
         [Net.ServicePointManager]::SecurityProtocol = 'tls12, tls11, tls'
     }
 

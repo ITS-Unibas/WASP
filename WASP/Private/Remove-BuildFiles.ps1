@@ -41,7 +41,7 @@ function Remove-BuildFiles {
                     $Line = $Line.replace("!", "")
                 }
                 $path = Join-Path $PackagePath $Line
-                Write-Log "Removing $path"
+                Write-Log "Removing $path" -Severity 1
                 Remove-Item -Path $path -ErrorAction SilentlyContinue
             }
         }

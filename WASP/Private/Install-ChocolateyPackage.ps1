@@ -56,11 +56,11 @@ function Install-ChocolateyPackage() {
             # If it is a zip package the file param should be provided but not as fullpath, just the main packages name
             $FileName = $file
         }
-        Write-Log "Starting editing chocolateyInstall at $filePath."
+        Write-Log "Start editing chocolateyInstall at $filePath." -Severity 1
         Edit-ChocolateyInstaller -ToolsPath (Join-Path (Get-Item -Path ".\").FullName "tools") -FileName $FileName
     }
     else {
-        Write-Log "No url in install script of $packageName found. We can continue."
+        Write-Log "No url in install script of $packageName found. Skip."
     }
     exit 0
 }

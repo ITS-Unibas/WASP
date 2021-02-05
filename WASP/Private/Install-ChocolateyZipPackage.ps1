@@ -42,14 +42,14 @@ function Install-ChocolateyZipPackage() {
 
     # Check if url and checksum is given as parameters.
     if (($url -and $checksum) -or (($url64 -and $checksum64))) {
-        Write-Log "$($packageName): URL and CHECKSUM available in chocolateyInstall.ps1. No need to look elsewhere"
+        Write-Log "$($packageName): URL and CHECKSUM found in chocolateyInstall.ps1."
     }
     else {
-        Write-Log "$($packageName): URL and CHECKSUM not present in chocolateyInstall.ps1. Looking for VERIFICATION.txt"
+        Write-Log "$($packageName): URL and CHECKSUM not found in chocolateyInstall.ps1. Looking for VERIFICATION.txt"
         if ($url -eq '' -or $url -eq $null) {
             if ($file -and (Test-Path $file)) {
                 # first check whether we already have our zip file
-                Write-Log "$($packageName): The zip32 package is already present and no download is needed"
+                Write-Log "$($packageName): The zip32 package is present and no download is needed."
                 $url = $file
             }
             else {
@@ -72,7 +72,7 @@ function Install-ChocolateyZipPackage() {
         elseif ($url64bit -eq '' -or $url64bit -eq $null) {
             if ($file64 -and (Test-Path $file64)) {
                 # first check whether we already have our zip file
-                Write-Log "$($packageName): The zip64 package is already present and no download is needed"
+                Write-Log "$($packageName): The zip64 package is already present and no download is needed."
                 $url64bit = $file64
             }
             else {
@@ -95,10 +95,10 @@ function Install-ChocolateyZipPackage() {
     }
     # Check if any urls were found
     if (($url -and $checksum) -or ($url64bit -and $checksum64)) {
-        Write-Log "$($packageName): Urls and checksums found! $url $url64bit $checksum $checksum64" -Severity 1
+        Write-Log "$($packageName): Urls and checksums found!" -Severity 1
     }
     else {
-        Write-Log "$($packageName): Whether url nor checksum found! Exiting..." -Severity 3
+        Write-Log "$($packageName): Urls and checksums not found! Skip." -Severity 3
         exit 1
     }
 

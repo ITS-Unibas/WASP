@@ -40,12 +40,12 @@ function Start-PackageInstallFilesDownload {
                 $script:remoteFilePresent = $true
             } }
         if ($ForcedDownload -and (-Not $script:remoteFilePresent)) {
-            Write-Log "Forced download, start override."
+            Write-Log "Forced download, start override." -Severity 1
             Invoke-Expression -Command $packToolInstallPath
         }
         else {
             if (-Not (Test-Path $original)) {
-                Write-Log "No overriden install script found, start override."
+                Write-Log "No overriden install script found, start override." -Severity 1
                 Invoke-Expression -Command $packToolInstallPath
             }
             else {
@@ -54,16 +54,15 @@ function Start-PackageInstallFilesDownload {
                 $extendedToolsPath = Join-Path $toolPath '*'
                 Write-Log "Searching for binaries in path $extendedToolsPath"
                 if ($script:remoteFilePresent) {
-                    Write-Log "Do not override again or download any binaries."
                     return
                 }
                 elseif ((Test-Path -Path $extendedToolsPath -Filter *.exe) -or (Test-Path -Path $extendedToolsPath -Filter *.msi) -or (Test-Path -Path $extendedToolsPath -Filter *.zip) `
                             -or (Test-Path -Path $extendedToolsPath -Filter "overridden.info")) {
-                    Write-Log "Scripts were already overridden, no need to do it again."
+                    Write-Log "Scripts already overridden."
                     return
                 }
                 else {
-                    Write-Log "No binaries were found, start override."
+                    Write-Log "No binaries found, start override." -Severity 1
                     Invoke-Expression -Command $packToolInstallPath
                 }
             }
