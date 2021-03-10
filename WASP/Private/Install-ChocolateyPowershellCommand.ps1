@@ -25,6 +25,7 @@ function Install-ChocolateyPowershellCommand() {
         [parameter(Mandatory = $false)][string] $checksumType = '',
         [parameter(Mandatory = $false)][string] $checksum64 = '',
         [parameter(Mandatory = $false)][string] $checksumType64 = '',
+        [parameter(Mandatory = $false)][bool] $remoteFile = $false,
         [parameter(Mandatory = $false)][hashtable] $options = @{Headers = @{} },
         [parameter(ValueFromRemainingArguments = $true)][Object[]] $ignoredArguments
     )
@@ -48,8 +49,11 @@ function Install-ChocolateyPowershellCommand() {
             # If it is a zip package the file param should be provided but not as fullpath, just the main packages name
             $FileName = $file
         }
+        # send binaries to server
+        $url = Use-BinaryFiles -FilePath $FilePath
+
         Write-Log "Start editing chocolateyInstall at $filePath." -Severity 1
-        Edit-ChocolateyInstaller -ToolsPath (Join-Path (Get-Item -Path ".\").FullName "tools") -FileName $FileName
+        Edit-ChocolateyInstaller -ToolsPath (Join-Path (Get-Item -Path ".\").FullName "tools") -FileName $FileName -FileURl $url
         New-Item -Path (Join-Path (Join-Path (Get-Item -Path ".\").FullName "tools") "overridden.info") -Force
     }
     else {

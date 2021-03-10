@@ -27,7 +27,11 @@ function Edit-ChocolateyInstaller {
         [Parameter()]
         [ValidateNotNullOrEmpty()]
         [string]
-        $UnzipPath
+        $UnzipPath,
+
+        [Parameter(Mandatory = $false)]
+        [string]
+        $FileUrl
     )
 
     begin {

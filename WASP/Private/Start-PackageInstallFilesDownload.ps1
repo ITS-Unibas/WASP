@@ -36,7 +36,7 @@ function Start-PackageInstallFilesDownload {
         # Check if package is using remote files
         $InstallerContent = Get-Content -Path $original -ErrorAction SilentlyContinue
         $InstallerContent | ForEach-Object { if ($_ -match "remoteFile.*=.*\`$true") {
-                Write-Log "Package uses remote files."
+                Write-Log "Package uses remote files." -Severity 1
                 $script:remoteFilePresent = $true
             } }
         if ($ForcedDownload -and (-Not $script:remoteFilePresent)) {

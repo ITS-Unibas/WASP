@@ -164,7 +164,12 @@ function Install-ChocolateyInstallPackage() {
             -Options $options `
             -GetOriginalFileName
     }
+    # send binaries to server
+    $url = Use-BinaryFiles -FilePath $FilePath
+
     $FileName = Get-item $FilePath | Select-Object -ExpandProperty Name
-    Edit-ChocolateyInstaller -ToolsPath (Join-Path (Get-Item -Path ".\").FullName "tools") -FileName $FileName
+    $ToolsPath = (Join-Path (Get-Item -Path ".\").FullName "tools")
+
+    Edit-ChocolateyInstaller -ToolsPath $ToolsPath -FileName $FileName -FileURl $url
     exit 0
 }
