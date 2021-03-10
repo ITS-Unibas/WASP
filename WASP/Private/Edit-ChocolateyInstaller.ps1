@@ -77,7 +77,7 @@ function Edit-ChocolateyInstaller {
                 #Regex
                 $URLRegex = '.*url.*' #replace url
                 $ChecksumRegex = '.*checksum.*' # replace checksum
-                $RemoteFileRegex = '.*remoteFile.*' # replace remoteFile
+                $LocalFileRegex = '.*localFile.*' # regex to determine if package is local package
 
                 $InstallerContent = Get-Content -Path $NewFile -ErrorAction Stop
 
@@ -85,17 +85,24 @@ function Edit-ChocolateyInstaller {
                 $InstallerContent = $InstallerContent | Where-Object { $_ -notmatch "^\s*#" } | ForEach-Object { $_ -replace '(^.*?)\s*?[^``]#.*', '$1' } #| Set-Content -Path $NewFile
 
                 $script:FilePathPresent = $false
-                $script:RemoteFilePresent = $false
+                $script:LocalFile = $false
 
-                $InstallerContent | ForEach-Object { if ($_ -match "remoteFile.*=.*\`$true") { $script:RemoteFilePresent = $true } }
+                $InstallerContent | ForEach-Object { if ($_ -match "localFile.*=.*\`$true") { $script:LocalFile = $true } }
 
-                # Do not remove url and checksum if a remote file is available
-                if (-Not $script:RemoteFilePresent) {
+                # Remove url, checksum and localpackage parameter from script if package is a local package
+                if (-Not $script:LocalFile) {
+                    Write-Log "Package uses local files. Url and checksums are removed from package args." -Severity 1
                     $InstallerContent = $InstallerContent | Where-Object { $_ -notmatch $URLRegex -and $_ -notmatch $ChecksumRegex }  #| Set-Content -Path $NewFile
+                    $InstallerContent = $InstallerContent | Where-Object { $_ -notmatch $LocalFileRegex }
                 }
                 else {
-                    Write-Log "Package uses remote files, url and checksums are not removed." -Severity 1
-                    $InstallerContent = $InstallerContent | Where-Object { $_ -notmatch $RemoteFileRegex }
+                    # replace original url with given file url on repo server
+                    $InstallerContent = $InstallerContent | ForEach-Object { $_ -replace '\$url32bit[\s]*=[\s]*.*', "`$url32bit = $FileUrl" }
+                    $InstallerContent = $InstallerContent | ForEach-Object { $_ -replace 'url32bit[\s]*=[\s]*.*', "`$url32bit = $FileUrl" }
+                    $InstallerContent = $InstallerContent | ForEach-Object { $_ -replace '\$url64bit[\s]*=[\s]*.*', "`$url64bit = $FileUrl" }
+                    $InstallerContent = $InstallerContent | ForEach-Object { $_ -replace 'url64bit[\s]*=[\s]*.*', "`$url64bit = $FileUrl" }
+                    $InstallerContent = $InstallerContent | ForEach-Object { $_ -replace '\$url[\s]*=[\s]*.*', "`$url = $FileUrl" }
+                    $InstallerContent = $InstallerContent | ForEach-Object { $_ -replace 'url[\s]*=[\s]*.*', "`$url = $FileUrl" }
                 }
                 $InstallerContent = $InstallerContent | Where-Object { $_.trim() -ne "" }
 
@@ -119,7 +126,7 @@ function Edit-ChocolateyInstaller {
             }
 
             # if filepath is not already present and this is not a remote file package, we have to set the filepath
-            if (-Not $script:FilePathPresent -and -Not $script:RemoteFilePresent) {
+            if (-Not $script:FilePathPresent -and $script:LocalFile) {
                 Write-Log "Calling Set File Path with path $ToolsPath" -Severity 1
 
                 $InstallerContent = $InstallerContent | ForEach-Object {
@@ -138,8 +145,8 @@ function Edit-ChocolateyInstaller {
                 }
             }
 
-            # If a remote file is available, unzip location is empty
-            if ($UnzipPath -and (-Not $script:RemoteFilePresent)) {
+            # If package uses local files and package is a zip package
+            if ($UnzipPath -and $script:LocalFilePresent) {
                 Write-Log "Set unzip location to $UnzipPath" -Severity 1
                 $InstallerContent = $InstallerContent | ForEach-Object { $_ -replace '.*unzipLocation[\s]*=[\s]*Get-PackageCacheLocation', "unzipLocation = $UnzipPath" }
                 $InstallerContent = $InstallerContent | ForEach-Object { $_ -replace 'Install-ChocolateyZipPackage\s*@packageArgs', "Install-ChocolateyInstallPackage @packageArgs" }
@@ -151,13 +158,13 @@ function Edit-ChocolateyInstaller {
             $InstallerContent = $InstallerContent | ForEach-Object { $_ -replace '\$packageName[\s]*=[\s]*.*', '$packageName = $env:ChocolateyPackageName' }
             $InstallerContent = $InstallerContent | ForEach-Object { $_ -replace 'packageName[\s]*=[\s]*.*', 'packageName = $env:ChocolateyPackageName' }
 
-            if ($script:ToolsPathPresent) {
+            if ($script:ToolsPathPresent -and $script:LocalFilePresent) {
                 $InstallerContent = $InstallerContent | ForEach-Object { $_ -replace '\sfile[\s]*=[\s]*.*', " file = (Join-Path `$toolsPath '$FileName')" }
             }
-            elseif ($script:ToolsDirPresent) {
+            elseif ($script:ToolsDirPresent -and $script:LocalFilePresent) {
                 $InstallerContent = $InstallerContent | ForEach-Object { $_ -replace '\sfile[\s]*=[\s]*.*', " file = (Join-Path `$toolsDir '$FileName')" }
             }
-            else {
+            elseif ($script:LocalFilePresent) {
                 $InstallerContent = $InstallerContent | ForEach-Object { $_ -replace '\sfile[\s]*=[\s]*.*', " file = (Join-Path `$PSScriptRoot '$FileName')" }
             }
 
