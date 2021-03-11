@@ -41,6 +41,13 @@ function Edit-ChocolateyInstaller {
         $ParentSWDirectory = Split-Path (Split-Path -Path $ToolsPath)
         $PreAdditionalScripts = $Config.Application.PreAdditionalScripts
         $PostAddtionalScripts = $Config.Application.PostAdditionalScripts
+
+        Write-Log "Url on server: $FileUrl" -Severity 1
+
+        #Regex
+        $URLRegex = '.*url.*' #replace url
+        $ChecksumRegex = '.*checksum.*' # replace checksum
+        $LocalFileRegex = '.*localFile.*' # regex to determine if package is local package
     } process {
         try {
             # Check if there was already version packaged. If yes we're going to get the last version
@@ -64,20 +71,25 @@ function Edit-ChocolateyInstaller {
                     $LastVersionPath = Join-Path -Path $ParentSWDirectory -ChildPath "$LastVersion\tools"
                     $prevChocolateyInstallFile = Join-Path -Path $LastVersionPath -ChildPath "chocolateyinstall.ps1"
                 }
+                # Only copy file if it contains url or is a local file if no url exist
+                # Check if previous install file contains urls
+                $LocalFile = $false
+                $URLfound = $false
+                $InstallerContent | ForEach-Object { if ($_ -match "localFile.*=.*\`$true") { $LocalFile = $true } }
+                $InstallerContent | ForEach-Object { if ($_ -match ".*url.*=.*") { $URLfound = $true } }
+                if ($LocalFile -or $URLfound){
+                    Write-Log "Copying $prevChocolateyInstallFile to $ToolsPath"
+                    Copy-Item $prevChocolateyInstallFile -Destination $ToolsPath -Force -Recurse
 
-                Write-Log "Copying $prevChocolateyInstallFile to $ToolsPath"
-                Copy-Item $prevChocolateyInstallFile -Destination $ToolsPath -Force -Recurse
-
-                $InstallerContent = Get-Content -Path $NewFile -ErrorAction Stop
+                    $InstallerContent = Get-Content -Path $NewFile -ErrorAction Stop
+                } else {
+                    Write-Log "Previous package is not a local package and has no url defined! File is not copied to current version" -Severity 2
+                }
             }
             else {
                 Write-Log "No previous package version found. Start overriding $NewFile."
 
                 Copy-Item -Path $NewFile -Destination $OriginalFile -ErrorAction Stop
-                #Regex
-                $URLRegex = '.*url.*' #replace url
-                $ChecksumRegex = '.*checksum.*' # replace checksum
-                $LocalFileRegex = '.*localFile.*' # regex to determine if package is local package
 
                 $InstallerContent = Get-Content -Path $NewFile -ErrorAction Stop
 
@@ -90,7 +102,7 @@ function Edit-ChocolateyInstaller {
                 $InstallerContent | ForEach-Object { if ($_ -match "localFile.*=.*\`$true") { $script:LocalFile = $true } }
 
                 # Remove url, checksum and localpackage parameter from script if package is a local package
-                if (-Not $script:LocalFile) {
+                if ($script:LocalFile) {
                     Write-Log "Package uses local files. Url and checksums are removed from package args." -Severity 1
                     $InstallerContent = $InstallerContent | Where-Object { $_ -notmatch $URLRegex -and $_ -notmatch $ChecksumRegex }  #| Set-Content -Path $NewFile
                     $InstallerContent = $InstallerContent | Where-Object { $_ -notmatch $LocalFileRegex }
@@ -98,11 +110,11 @@ function Edit-ChocolateyInstaller {
                 else {
                     # replace original url with given file url on repo server
                     $InstallerContent = $InstallerContent | ForEach-Object { $_ -replace '\$url32bit[\s]*=[\s]*.*', "`$url32bit = $FileUrl" }
-                    $InstallerContent = $InstallerContent | ForEach-Object { $_ -replace 'url32bit[\s]*=[\s]*.*', "`$url32bit = $FileUrl" }
+                    $InstallerContent = $InstallerContent | ForEach-Object { $_ -replace 'url32bit[\s]*=[\s]*.*', "url32bit = $FileUrl" }
                     $InstallerContent = $InstallerContent | ForEach-Object { $_ -replace '\$url64bit[\s]*=[\s]*.*', "`$url64bit = $FileUrl" }
-                    $InstallerContent = $InstallerContent | ForEach-Object { $_ -replace 'url64bit[\s]*=[\s]*.*', "`$url64bit = $FileUrl" }
+                    $InstallerContent = $InstallerContent | ForEach-Object { $_ -replace 'url64bit[\s]*=[\s]*.*', "url64bit = $FileUrl" }
                     $InstallerContent = $InstallerContent | ForEach-Object { $_ -replace '\$url[\s]*=[\s]*.*', "`$url = $FileUrl" }
-                    $InstallerContent = $InstallerContent | ForEach-Object { $_ -replace 'url[\s]*=[\s]*.*', "`$url = $FileUrl" }
+                    $InstallerContent = $InstallerContent | ForEach-Object { $_ -replace 'url[\s]*=[\s]*.*', "url = $FileUrl" }
                 }
                 $InstallerContent = $InstallerContent | Where-Object { $_.trim() -ne "" }
 
@@ -146,7 +158,7 @@ function Edit-ChocolateyInstaller {
             }
 
             # If package uses local files and package is a zip package
-            if ($UnzipPath -and $script:LocalFilePresent) {
+            if ($UnzipPath -and $script:LocalFile) {
                 Write-Log "Set unzip location to $UnzipPath" -Severity 1
                 $InstallerContent = $InstallerContent | ForEach-Object { $_ -replace '.*unzipLocation[\s]*=[\s]*Get-PackageCacheLocation', "unzipLocation = $UnzipPath" }
                 $InstallerContent = $InstallerContent | ForEach-Object { $_ -replace 'Install-ChocolateyZipPackage\s*@packageArgs', "Install-ChocolateyInstallPackage @packageArgs" }
@@ -158,13 +170,13 @@ function Edit-ChocolateyInstaller {
             $InstallerContent = $InstallerContent | ForEach-Object { $_ -replace '\$packageName[\s]*=[\s]*.*', '$packageName = $env:ChocolateyPackageName' }
             $InstallerContent = $InstallerContent | ForEach-Object { $_ -replace 'packageName[\s]*=[\s]*.*', 'packageName = $env:ChocolateyPackageName' }
 
-            if ($script:ToolsPathPresent -and $script:LocalFilePresent) {
+            if ($script:ToolsPathPresent -and $script:LocalFile) {
                 $InstallerContent = $InstallerContent | ForEach-Object { $_ -replace '\sfile[\s]*=[\s]*.*', " file = (Join-Path `$toolsPath '$FileName')" }
             }
-            elseif ($script:ToolsDirPresent -and $script:LocalFilePresent) {
+            elseif ($script:ToolsDirPresent -and $script:LocalFile) {
                 $InstallerContent = $InstallerContent | ForEach-Object { $_ -replace '\sfile[\s]*=[\s]*.*', " file = (Join-Path `$toolsDir '$FileName')" }
             }
-            elseif ($script:LocalFilePresent) {
+            elseif ($script:LocalFile) {
                 $InstallerContent = $InstallerContent | ForEach-Object { $_ -replace '\sfile[\s]*=[\s]*.*', " file = (Join-Path `$PSScriptRoot '$FileName')" }
             }
 

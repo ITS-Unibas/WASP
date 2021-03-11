@@ -14,33 +14,46 @@ function Use-BinaryFiles {
 
     process {
         Write-Log "Move Binary for $FilePath"
-        # create packageName folder
-        $packageName = (Get-Item $FilePath).Parent.Parent.Parent.Name
-        New-Item -Path $packageName -ItemType Directory
-        # create version sub folder
-        $packageVersion = (Join-Path $packageName (Get-Item $FilePath).Parent.Parent.Name)
-        New-Item -Path $packageVersion -ItemType Directory
 
-        # copy binary to subfolder
-        $file = Copy-Item $FilePath $packageVersion -PassThru
+        $packageName = (Get-Item $FilePath).Directory.Parent.Parent.Name
 
-        # split file path into folder parts to
-        $subpath = ((Get-Item $file).FullName).Split("\")
-        # build file url on remote server
-        $url = "$remoteServerURl/" + $subpath[-3] + "/" + $subpath[-2] + "/" + $subpath[-1]
-        # Send binary file to repo server
-        scp -r -i $sshConfig ".\$packageName\" $remoteServer
+        try {
+            # create packageName folder
+            New-Item -Path $packageName -ItemType Directory
+            Write-Log "Created folder $packageName"
 
-        # Delete binary file locally
-        Write-Log "Removing $FilePath" -Severity 1
-        Remove-Item -Path $path -ErrorAction SilentlyContinue
+            # create version sub folder
+            $packageVersion = (Join-Path $packageName (Get-Item $FilePath).Directory.Parent.Name)
+            New-Item -Path $packageVersion -ItemType Directory
 
-        # Delete helper files
-        Write-Log "Removing $packageName" -Severity 1
-        Remove-Item -Path $packageName -Recurse -ErrorAction SilentlyContinue
-    }
+            Write-Log "Created folder $packageVersion"
+            # copy binary to subfolder
+            $file = Copy-Item $FilePath $packageVersion -PassThru
 
-    end {
-        return $url
+            # split file path into folder parts to
+            $subpath = ((Get-Item $file).FullName).Split("\")
+            # build file url on remote server
+            $UrlOnServer = "$remoteServerURl/" + $subpath[-3] + "/" + $subpath[-2] + "/" + $subpath[-1]
+            Write-Log "Send binary file to $UrlOnServer"
+            # Send binary file to repo server
+            scp -r -i $sshConfig ".\$packageName\" $remoteServer
+
+            # Delete binary file locally
+            Write-Log "Removing $FilePath" -Severity 1
+            Remove-Item -Path $FilePath -ErrorAction SilentlyContinue
+
+            # Delete helper files
+            Write-Log "Removing $packageName" -Severity 1
+            Remove-Item -Path $packageName -Recurse -ErrorAction SilentlyContinue
+
+            Write-Log "Returning $UrlOnServer" -Severity 1
+            return $UrlOnServer
+        }
+        catch [Exception] {
+            Write-Log ($_.Exception | Format-List -force | Out-String) -Severity 3
+            # Delete helper files
+            Write-Log "Removing $packageName" -Severity 1
+            Remove-Item -Path $packageName -Recurse -ErrorAction SilentlyContinue
+        }
     }
 }

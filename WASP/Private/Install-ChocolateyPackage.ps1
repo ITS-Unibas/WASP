@@ -58,10 +58,10 @@ function Install-ChocolateyPackage() {
             $FileName = $file
         }
         # send binaries to server
-        $url = Use-BinaryFiles -FilePath $FilePath
-
+        $UrlOnServer = Use-BinaryFiles -FilePath $FilePath
+        Write-Log "URL on server: $UrlOnServer" -Severity 1
         Write-Log "Start editing chocolateyInstall at $filePath." -Severity 1
-        Edit-ChocolateyInstaller -ToolsPath (Join-Path (Get-Item -Path ".\").FullName "tools") -FileName $FileName -FileURl $url
+        Edit-ChocolateyInstaller -ToolsPath (Join-Path (Get-Item -Path ".\").FullName "tools") -FileName $FileName -FileURl "$UrlOnServer"
     }
     else {
         Write-Log "No url in install script of $packageName found. Skip."

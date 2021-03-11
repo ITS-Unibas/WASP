@@ -32,15 +32,18 @@ function Start-PackageInstallFilesDownload {
     }
 
     process {
-        $script:remoteFilePresent = $false
-        # Check if package is using remote files
+        $script:localFilePresent = $false
+        # Check if package is using localfiles
         $InstallerContent = Get-Content -Path $original -ErrorAction SilentlyContinue
-        $InstallerContent | ForEach-Object { if ($_ -match "remoteFile.*=.*\`$true") {
-                Write-Log "Package uses remote files." -Severity 1
-                $script:remoteFilePresent = $true
+        $InstallerContent | ForEach-Object { if ($_ -match "localFile.*=.*\`$true") {
+                Write-Log "Package uses local files." -Severity 1
+                $script:localFilePresent = $true
             } }
-        if ($ForcedDownload -and (-Not $script:remoteFilePresent)) {
+
+        if ($ForcedDownload) {
             Write-Log "Forced download, start override." -Severity 1
+            Remove-Item $packToolInstallPath -ErrorAction SilentlyContinue
+            Rename-Item $original 'chocolateyInstall.ps1' -ErrorAction SilentlyContinue
             Invoke-Expression -Command $packToolInstallPath
         }
         else {
@@ -53,11 +56,8 @@ function Start-PackageInstallFilesDownload {
                 # Check if binary files exist, invoke expression to download otherwise
                 $extendedToolsPath = Join-Path $toolPath '*'
                 Write-Log "Searching for binaries in path $extendedToolsPath"
-                if ($script:remoteFilePresent) {
-                    return
-                }
-                elseif ((Test-Path -Path $extendedToolsPath -Filter *.exe) -or (Test-Path -Path $extendedToolsPath -Filter *.msi) -or (Test-Path -Path $extendedToolsPath -Filter *.zip) `
-                            -or (Test-Path -Path $extendedToolsPath -Filter "overridden.info")) {
+                if ($script:localFilePresent -and ((Test-Path -Path $extendedToolsPath -Filter *.exe) -or (Test-Path -Path $extendedToolsPath -Filter *.msi) -or (Test-Path -Path $extendedToolsPath -Filter *.zip) `
+                            -or (Test-Path -Path $extendedToolsPath -Filter "overridden.info"))) {
                     Write-Log "Scripts already overridden."
                     return
                 }
