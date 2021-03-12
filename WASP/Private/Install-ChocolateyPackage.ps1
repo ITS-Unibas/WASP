@@ -59,7 +59,7 @@ function Install-ChocolateyPackage() {
         }
         # send binaries to server
         $UrlOnServer = Use-BinaryFiles -FilePath $FilePath
-        Write-Log "URL on server: $UrlOnServer" -Severity 1
+        
         Write-Log "Start editing chocolateyInstall at $filePath." -Severity 1
         Edit-ChocolateyInstaller -ToolsPath (Join-Path (Get-Item -Path ".\").FullName "tools") -FileName $FileName -FileURl "$UrlOnServer"
     }

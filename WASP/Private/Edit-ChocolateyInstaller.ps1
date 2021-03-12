@@ -42,8 +42,6 @@ function Edit-ChocolateyInstaller {
         $PreAdditionalScripts = $Config.Application.PreAdditionalScripts
         $PostAddtionalScripts = $Config.Application.PostAdditionalScripts
 
-        Write-Log "Url on server: $FileUrl" -Severity 1
-
         #Regex
         $URLRegex = '.*url.*' #replace url
         $ChecksumRegex = '.*checksum.*' # replace checksum
@@ -77,12 +75,13 @@ function Edit-ChocolateyInstaller {
                 $URLfound = $false
                 $InstallerContent | ForEach-Object { if ($_ -match "localFile.*=.*\`$true") { $LocalFile = $true } }
                 $InstallerContent | ForEach-Object { if ($_ -match ".*url.*=.*") { $URLfound = $true } }
-                if ($LocalFile -or $URLfound){
+                if ($LocalFile -or $URLfound) {
                     Write-Log "Copying $prevChocolateyInstallFile to $ToolsPath"
                     Copy-Item $prevChocolateyInstallFile -Destination $ToolsPath -Force -Recurse
 
                     $InstallerContent = Get-Content -Path $NewFile -ErrorAction Stop
-                } else {
+                }
+                else {
                     Write-Log "Previous package is not a local package and has no url defined! File is not copied to current version" -Severity 2
                 }
             }
@@ -109,12 +108,12 @@ function Edit-ChocolateyInstaller {
                 }
                 else {
                     # replace original url with given file url on repo server
-                    $InstallerContent = $InstallerContent | ForEach-Object { $_ -replace '\$url32bit[\s]*=[\s]*.*', "`$url32bit = $FileUrl" }
-                    $InstallerContent = $InstallerContent | ForEach-Object { $_ -replace 'url32bit[\s]*=[\s]*.*', "url32bit = $FileUrl" }
-                    $InstallerContent = $InstallerContent | ForEach-Object { $_ -replace '\$url64bit[\s]*=[\s]*.*', "`$url64bit = $FileUrl" }
-                    $InstallerContent = $InstallerContent | ForEach-Object { $_ -replace 'url64bit[\s]*=[\s]*.*', "url64bit = $FileUrl" }
-                    $InstallerContent = $InstallerContent | ForEach-Object { $_ -replace '\$url[\s]*=[\s]*.*', "`$url = $FileUrl" }
-                    $InstallerContent = $InstallerContent | ForEach-Object { $_ -replace 'url[\s]*=[\s]*.*', "url = $FileUrl" }
+                    $InstallerContent = $InstallerContent | ForEach-Object { $_ -replace '\$url32bit[\s]*=[\s]*.*', "`$url32bit = `"$FileUrl`"" }
+                    $InstallerContent = $InstallerContent | ForEach-Object { $_ -replace 'url32bit[\s]*=[\s]*.*', "url32bit = `"$FileUrl`"" }
+                    $InstallerContent = $InstallerContent | ForEach-Object { $_ -replace '\$url64bit[\s]*=[\s]*.*', "`$url64bit = `"$FileUrl`"" }
+                    $InstallerContent = $InstallerContent | ForEach-Object { $_ -replace 'url64bit[\s]*=[\s]*.*', "url64bit = `"$FileUrl`"" }
+                    $InstallerContent = $InstallerContent | ForEach-Object { $_ -replace '\$url[\s]*=[\s]*.*', "`$url = `"$FileUrl`"" }
+                    $InstallerContent = $InstallerContent | ForEach-Object { $_ -replace 'url[\s]*=[\s]*.*', "url = `"$FileUrl`"" }
                 }
                 $InstallerContent = $InstallerContent | Where-Object { $_.trim() -ne "" }
 

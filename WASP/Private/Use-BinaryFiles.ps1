@@ -19,12 +19,12 @@ function Use-BinaryFiles {
 
         try {
             # create packageName folder
-            New-Item -Path $packageName -ItemType Directory
+            $tmp = New-Item -Path $packageName -ItemType Directory
             Write-Log "Created folder $packageName"
 
             # create version sub folder
             $packageVersion = (Join-Path $packageName (Get-Item $FilePath).Directory.Parent.Name)
-            New-Item -Path $packageVersion -ItemType Directory
+            $tmp = New-Item -Path $packageVersion -ItemType Directory
 
             Write-Log "Created folder $packageVersion"
             # copy binary to subfolder
