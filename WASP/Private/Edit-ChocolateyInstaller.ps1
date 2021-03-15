@@ -46,14 +46,19 @@ function Edit-ChocolateyInstaller {
         $URLRegex = '.*url.*' #replace url
         $ChecksumRegex = '.*checksum.*' # replace checksum
         $LocalFileRegex = '.*localFile.*' # regex to determine if package is local package
+
+        # get current package version
+        $currentVersion = (Get-Item $ToolsPath).Parent.Name
+        Write-Log "Current Version $currentVersion"
     } process {
         try {
             # Check if there was already version packaged. If yes we're going to get the last version
-            $VersionHistory, $StringVersionHistory = Get-LocalPackageVersionHistory $ParentSWDirectory
+            $VersionHistory, $StringVersionHistory = Get-LocalPackageVersionHistory $ParentSWDirectory $currentVersion
             Write-Log "Version History: $StringVersionHistory"
             # Test if a previous chocolateyInstall file exist.
+            $override = $false
             if ($VersionHistory) {
-                $LastVersion = $StringVersionHistory | Where-Object { [version]$_ -eq $VersionHistory[1] } # 0 is the current, 1 the
+                $LastVersion = $StringVersionHistory | Where-Object { [version]$_ -eq $VersionHistory[0] }
                 Write-Log "Copying previous package version: $LastVersion." -Severity 1
 
                 Copy-Item -Path $NewFile -Destination $OriginalFile -ErrorAction Stop
@@ -62,30 +67,41 @@ function Edit-ChocolateyInstaller {
                 $prevChocolateyInstallFile = Join-Path -Path $LastVersionPath -ChildPath "chocolateyinstall.ps1"
 
                 # search for the next preceeding version that is not in packaging to copy the install content
+                # Is versionin packaging? -> Then the installfile does not exist on current dev branch and therefore cannot be copied
                 $counter = 1
                 while (-Not (Test-Path $prevChocolateyInstallFile) -and ($counter -lt $VersionHistory.Count)) {
+                    Write-Log "$counter"
                     $counter += 1
                     $LastVersion = $StringVersionHistory | Where-Object { [version]$_ -eq $VersionHistory[$counter] }
                     $LastVersionPath = Join-Path -Path $ParentSWDirectory -ChildPath "$LastVersion\tools"
                     $prevChocolateyInstallFile = Join-Path -Path $LastVersionPath -ChildPath "chocolateyinstall.ps1"
                 }
-                # Only copy file if it contains url or is a local file if no url exist
-                # Check if previous install file contains urls
-                $LocalFile = $false
-                $URLfound = $false
-                $InstallerContent | ForEach-Object { if ($_ -match "localFile.*=.*\`$true") { $LocalFile = $true } }
-                $InstallerContent | ForEach-Object { if ($_ -match ".*url.*=.*") { $URLfound = $true } }
-                if ($LocalFile -or $URLfound) {
-                    Write-Log "Copying $prevChocolateyInstallFile to $ToolsPath"
-                    Copy-Item $prevChocolateyInstallFile -Destination $ToolsPath -Force -Recurse
-
-                    $InstallerContent = Get-Content -Path $NewFile -ErrorAction Stop
+                if (-Not (Test-Path $prevChocolateyInstallFile)) {
+                    $override = $True
                 }
                 else {
-                    Write-Log "Previous package is not a local package and has no url defined! File is not copied to current version" -Severity 2
+                    # Only copy file if it contains url or is a local file if no url exist
+                    # Check if previous install file contains urls
+                    $LocalFile = $false
+                    $URLfound = $false
+                    $InstallerContent | ForEach-Object { if ($_ -match "localFile.*=.*\`$true") { $LocalFile = $true } }
+                    $InstallerContent | ForEach-Object { if ($_ -match ".*url.*=.*") { $URLfound = $true } }
+                    if ($LocalFile -or $URLfound) {
+                        Write-Log "Copying $prevChocolateyInstallFile to $ToolsPath"
+                        Copy-Item $prevChocolateyInstallFile -Destination $ToolsPath -Force -Recurse
+
+                        $InstallerContent = Get-Content -Path $NewFile -ErrorAction Stop
+                    }
+                    else {
+                        Write-Log "Previous package is not a local package or has no url defined! File is not copied to current version" -Severity 2
+                        $override = $True
+                    }
                 }
             }
             else {
+                $override = $True
+            }
+            if ($override) {
                 Write-Log "No previous package version found. Start overriding $NewFile."
 
                 Copy-Item -Path $NewFile -Destination $OriginalFile -ErrorAction Stop

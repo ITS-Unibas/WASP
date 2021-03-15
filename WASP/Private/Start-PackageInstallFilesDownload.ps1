@@ -42,8 +42,10 @@ function Start-PackageInstallFilesDownload {
 
         if ($ForcedDownload) {
             Write-Log "Forced download, start override." -Severity 1
-            Remove-Item $packToolInstallPath -ErrorAction SilentlyContinue
-            Rename-Item $original 'chocolateyInstall.ps1' -ErrorAction SilentlyContinue
+            if (Test-Path $original) {
+                Remove-Item $packToolInstallPath -ErrorAction SilentlyContinue
+                Rename-Item $original 'chocolateyInstall.ps1' -ErrorAction SilentlyContinue
+            }
             Invoke-Expression -Command $packToolInstallPath
         }
         else {

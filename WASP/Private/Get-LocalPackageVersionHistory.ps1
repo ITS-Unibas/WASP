@@ -23,7 +23,11 @@ function Get-LocalPackageVersionHistory {
     param (
         [Parameter()]
         [string]
-        $ParentSWDirectory
+        $ParentSWDirectory,
+
+        [Parameter()]
+        [string]
+        $CurrentVersion
     )
 
     begin {
@@ -47,8 +51,10 @@ function Get-LocalPackageVersionHistory {
                 $Version = $SplitVersion -join "."
                 # need to cast it to a version or else the sorting will not
                 # work correctly, like for chrome
-                $null = $VersionList.Add([version]$Version)
-                $null = $StringVersionList.Add($Version)
+                if ([version]$Version -lt [version]$CurrentVersion) {
+                    $null = $VersionList.Add([version]$Version)
+                    $null = $StringVersionList.Add($Version)
+                }
             }
             $VersionList.Sort()
             $VersionList.Reverse()
