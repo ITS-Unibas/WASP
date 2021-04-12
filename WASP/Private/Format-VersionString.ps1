@@ -23,6 +23,7 @@ function Format-VersionString {
     }
 
     process {
+        $VersionString = $VersionString.Replace("-", ".")
         $versionSplit = $VersionString.split(".")
         $versionList = New-Object System.Collections.ArrayList
         foreach ($ver in $versionSplit) {
