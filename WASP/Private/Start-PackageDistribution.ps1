@@ -207,11 +207,11 @@ function Start-PackageDistribution() {
                             if ($Repo -eq "Prod") {
                                 $tmpChocolateyDestinationServer = $config.Application.ChocoServerDEV
                                 if (-Not (Test-ExistsOnRepo -PackageName $FullID -PackageVersion $FullVersion -Repository "Dev" -FileCreationDate $FileDate)) {
-                                    Write-Log "Pushing $FullID@$FullVersion to $chocolateyDestinationServer." -Severity 1
+                                    Write-Log "Pushing $FullID@$FullVersion to $tmpChocolateyDestinationServer." -Severity 1
                                     Send-NupkgToServer $packageRootPath $tmpchocolateyDestinationServer
                                 }
                                 else {
-                                    Write-Log "$FullID@$FullVersion exists on $chocolateyDestinationServer."
+                                    Write-Log "$FullID@$FullVersion exists on $tmpChocolateyDestinationServer."
                                 }
                             }
                             if (-Not (Test-ExistsOnRepo -PackageName $FullID -PackageVersion $FullVersion -Repository $Repo -FileCreationDate $FileDate)) {
