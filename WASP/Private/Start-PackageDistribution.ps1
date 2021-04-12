@@ -200,10 +200,9 @@ function Start-PackageDistribution() {
                                     }
                                     else {
                                         Write-Log "$package is in repackaging and its jira task is not in testing." -Severity 3
+                                        continue
                                     }
                                 }
-                                Write-Log "$package is in repackaging and its nupkg is not pushed to $Repo." -Severity 3
-                                continue
                             }
                             # if package is in PROD, check if it exists in DEV as well --> make sure that if a nupkg is faulty on dev and gets deleted on dev server, it is pushed there again
                             # goal is to be sure that the same nupkg exists on all three servers
