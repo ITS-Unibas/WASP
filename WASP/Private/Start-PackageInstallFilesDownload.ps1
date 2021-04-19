@@ -57,15 +57,19 @@ function Start-PackageInstallFilesDownload {
                 # Script has already been executed
                 # Check if binary files exist, invoke expression to download otherwise
                 $extendedToolsPath = Join-Path $toolPath '*'
-                Write-Log "Searching for binaries in path $extendedToolsPath"
-                if ($script:localFilePresent -and ((Test-Path -Path $extendedToolsPath -Filter *.exe) -or (Test-Path -Path $extendedToolsPath -Filter *.msi) -or (Test-Path -Path $extendedToolsPath -Filter *.zip) `
-                            -or (Test-Path -Path $extendedToolsPath -Filter "overridden.info"))) {
+                if ($script:localFilePresent) {
+                    Write-Log "Searching for binaries in path $extendedToolsPath"
+                    if ((Test-Path -Path $extendedToolsPath -Filter *.exe) -or (Test-Path -Path $extendedToolsPath -Filter *.msi) -or (Test-Path -Path $extendedToolsPath -Filter *.zip) `
+                    -or (Test-Path -Path $extendedToolsPath -Filter "overridden.info")){
+                        Write-Log "Scripts already overridden."
+                        return
+                    } else {
+                        Write-Log "No binaries found, start override." -Severity 1
+                        Invoke-Expression -Command $packToolInstallPath
+                    }
+                } else {
                     Write-Log "Scripts already overridden."
                     return
-                }
-                else {
-                    Write-Log "No binaries found, start override." -Severity 1
-                    Invoke-Expression -Command $packToolInstallPath
                 }
             }
         }
