@@ -12,6 +12,9 @@ Describe "Version string is in correct format" {
 
         $test = Format-VersionString "19.2.1. "
         $test | Should be "19.2.1.0"
+
+        $test = Format-VersionString "21.1-alpha"
+        $test | Should be "21.1.0"
     }
     It "does not format version in string when there are only digit characters in it" {
         $test = Format-VersionString "19.2.1"
