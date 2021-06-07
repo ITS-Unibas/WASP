@@ -176,7 +176,7 @@ function Start-PackageDistribution() {
                     $packagePath = Join-Path $PackageGalleryPath $package
                     $versionsList = Get-ChildItem $packagePath -Directory
                     #TODO: Add changes to version history here
-                    $versionsList = $versionsList | Select-Object -Last 5
+                    $versionsList | Sort-Object -Property { $_.Name -as [version] } | Select-Object -Last 5
                     foreach ($version in $versionsList) {
                         if (Test-ExistPackageVersion $GitFolderName $package $version $branch) {
                             $packageRootPath = Join-Path $packagePath $version
@@ -198,20 +198,22 @@ function Start-PackageDistribution() {
                                         }
                                         continue
                                     }
+                                    else {
+                                        Write-Log "$package is in repackaging and its jira task is not in testing." -Severity 3
+                                        continue
+                                    }
                                 }
-                                Write-Log "$package is in repackaging and its nupkg is not pushed to $Repo."
-                                continue
                             }
                             # if package is in PROD, check if it exists in DEV as well --> make sure that if a nupkg is faulty on dev and gets deleted on dev server, it is pushed there again
                             # goal is to be sure that the same nupkg exists on all three servers
                             if ($Repo -eq "Prod") {
                                 $tmpChocolateyDestinationServer = $config.Application.ChocoServerDEV
                                 if (-Not (Test-ExistsOnRepo -PackageName $FullID -PackageVersion $FullVersion -Repository "Dev" -FileCreationDate $FileDate)) {
-                                    Write-Log "Pushing $FullID@$FullVersion to $chocolateyDestinationServer." -Severity 1
+                                    Write-Log "Pushing $FullID@$FullVersion to $tmpChocolateyDestinationServer." -Severity 1
                                     Send-NupkgToServer $packageRootPath $tmpchocolateyDestinationServer
                                 }
                                 else {
-                                    Write-Log "$FullID@$FullVersion exists on $chocolateyDestinationServer."
+                                    Write-Log "$FullID@$FullVersion exists on $tmpChocolateyDestinationServer."
                                 }
                             }
                             if (-Not (Test-ExistsOnRepo -PackageName $FullID -PackageVersion $FullVersion -Repository $Repo -FileCreationDate $FileDate)) {
