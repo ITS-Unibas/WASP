@@ -23,8 +23,8 @@ function Get-NupkgHash() {
   Add-Type -AssemblyName System.IO.Compression.FileSystem
   $hashString = ""
   # Delete unzipedNupkg and package.zip
-  Remove-Item (Join-Path $packageFolder "unzipedNupkg") -Force -Recurse
-  Remove-Item (Join-Path $packageFolder "package.zip") -Force
+  Remove-Item (Join-Path $packageFolder "unzipedNupkg") -Force -Recurse -ErrorAction SilentlyContinue
+  Remove-Item (Join-Path $packageFolder "package.zip") -Force -ErrorAction SilentlyContinue
   $dir = New-Item -ItemType directory -Path (Join-Path $packageFolder "unzipedNupkg")
   try {
     $tmpZipPath = Join-Path (Split-Path $nupkgPath -Parent) "package.zip"
