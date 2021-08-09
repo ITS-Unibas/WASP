@@ -25,6 +25,7 @@ function Install-ChocolateyInstallPackage() {
         [alias("fileFullPath")][parameter(Mandatory = $false, Position = 3)][string] $file,
         [alias("fileFullPath64")][parameter(Mandatory = $false)][string] $file64,
         [parameter(Mandatory = $false)][bool] $remoteFile = $false,
+        [parameter(Mandatory = $false)][bool] $localFile = $false,
         [parameter(Mandatory = $false)] $validExitCodes = @(0),
         [parameter(Mandatory = $false)]
         [alias("useOnlyPackageSilentArgs")][switch] $useOnlyPackageSilentArguments = $false,
@@ -164,16 +165,21 @@ function Install-ChocolateyInstallPackage() {
             -ChecksumType64 $checksumType64 `
             -Options $options `
             -GetOriginalFileName
-    }
-    $FileName = Get-item $FilePath | Select-Object -ExpandProperty Name
-    # send binaries to server
-    $UrlOnServer = Use-BinaryFiles -FilePath $FilePath
+        $FileName = Get-item $FilePath | Select-Object -ExpandProperty Name
 
+        if (-Not $localFile){
+            # send binaries to server
+            $UrlOnServer = Use-BinaryFiles -FilePath $FilePath
+        }
+        
+        #$FileName = Get-item $FilePath | Select-Object -ExpandProperty Name
+        $ToolsPath = (Join-Path (Get-Item -Path ".\").FullName "tools")
     
-    #$FileName = Get-item $FilePath | Select-Object -ExpandProperty Name
-    $ToolsPath = (Join-Path (Get-Item -Path ".\").FullName "tools")
-
-    Write-Log "Start editing chocolateyInstall at $filePath." -Severity 1
-    Edit-ChocolateyInstaller -ToolsPath $ToolsPath -FileName $FileName -FileURl "$UrlOnServer"
+        Write-Log "Start editing chocolateyInstall at $filePath." -Severity 1
+        Edit-ChocolateyInstaller -ToolsPath $ToolsPath -FileName $FileName -FileURl "$UrlOnServer"
+    } 
+    else {
+        Write-Log "No url in install script of $packageName found. Skip." -Severity 3
+    }
     exit 0
 }

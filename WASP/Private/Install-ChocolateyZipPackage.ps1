@@ -31,6 +31,7 @@ function Install-ChocolateyZipPackage() {
         [parameter(Mandatory = $false)][string] $checksum64 = '',
         [parameter(Mandatory = $false)][string] $checksumType64 = '',
         [parameter(Mandatory = $false)][bool] $remoteFile = $false,
+        [parameter(Mandatory = $false)][bool] $localFile = $false,
         [parameter(Mandatory = $false)][hashtable] $options = @{Headers = @{ } },
         [alias("fileFullPath")][parameter(Mandatory = $false)][string] $file = '',
         [alias("fileFullPath64")][parameter(Mandatory = $false)][string] $file64 = '',
@@ -117,7 +118,8 @@ function Install-ChocolateyZipPackage() {
     }
 
     try {
-        if (-Not $remoteFile) {
+        # If package does not use a remote file (remoteFile=false) and uses localFile -> download file from url.
+        if (-Not $remoteFile -and $localFile) {
             $filePath = Get-ChocolateyWebFile -PackageName $packageName `
                 -FileFullPath $downloadFilePath `
                 -Url $url `
@@ -131,8 +133,26 @@ function Install-ChocolateyZipPackage() {
             $unzipLocation = (Join-Path (Get-Item -Path ".\").FullName "tools")
             #Get-ChocolateyUnzip "$filePath" $unzipLocation $specificFolder $packageName
             $FileName = Get-item $FilePath | Select-Object -ExpandProperty Name
+        } 
+        elseif (-Not $remoteFile -and -Not $localFile){
+            # If not a local file and not a remote file
+            $filePath = Get-ChocolateyWebFile -PackageName $packageName `
+                -FileFullPath $downloadFilePath `
+                -Url $url `
+                -Url64bit $url64bit `
+                -Checksum $checksum `
+                -ChecksumType $checksumType `
+                -Checksum64 $checksum64 `
+                -ChecksumType64 $checksumType64 `
+                -Options $options `
+                -GetOriginalFileName
+            $unzipLocation = (Join-Path (Get-Item -Path ".\").FullName "tools")
+            #Get-ChocolateyUnzip "$filePath" $unzipLocation $specificFolder $packageName
+            $FileName = Get-item $FilePath | Select-Object -ExpandProperty Name
+            # send binaries to server
+            $UrlOnServer = Use-BinaryFiles -FilePath $FileName
         }
-        Edit-ChocolateyInstaller -ToolsPath (Join-Path (Get-Item -Path ".\").FullName "tools") -FileName $FileName -UnzipPath $unzipLocation
+        Edit-ChocolateyInstaller -ToolsPath (Join-Path (Get-Item -Path ".\").FullName "tools") -FileName $FileName -UnzipPath $unzipLocation -FileURl "$UrlOnServer"
     }
     catch {
         Write-Log ($($packageName) + ":" + " " + $_.Exception.toString()) -Severity 3
