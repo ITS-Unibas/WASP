@@ -22,6 +22,9 @@ function Get-NupkgHash() {
   )
   Add-Type -AssemblyName System.IO.Compression.FileSystem
   $hashString = ""
+  # Delete "unzipedNupkg" and "package.zip". For some reason those items aren't always removed (see lines 63/64). To get sure no errors occure in the Workflow, we remove them as a precaution 
+  Remove-Item (Join-Path $packageFolder "unzipedNupkg") -Force -Recurse -ErrorAction SilentlyContinue
+  Remove-Item (Join-Path $packageFolder "package.zip") -Force -ErrorAction SilentlyContinue
   $dir = New-Item -ItemType directory -Path (Join-Path $packageFolder "unzipedNupkg")
   try {
     $tmpZipPath = Join-Path (Split-Path $nupkgPath -Parent) "package.zip"
