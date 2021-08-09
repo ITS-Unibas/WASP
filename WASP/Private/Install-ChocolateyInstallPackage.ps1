@@ -24,6 +24,7 @@ function Install-ChocolateyInstallPackage() {
         [parameter(Mandatory = $false, Position = 2)][string[]] $silentArgs = '',
         [alias("fileFullPath")][parameter(Mandatory = $false, Position = 3)][string] $file,
         [alias("fileFullPath64")][parameter(Mandatory = $false)][string] $file64,
+        [parameter(Mandatory = $false)][bool] $remoteFile = $false,
         [parameter(Mandatory = $false)] $validExitCodes = @(0),
         [parameter(Mandatory = $false)]
         [alias("useOnlyPackageSilentArgs")][switch] $useOnlyPackageSilentArguments = $false,

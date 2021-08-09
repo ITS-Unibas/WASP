@@ -52,7 +52,7 @@ function Edit-ChocolateyInstaller {
         Write-Log "Current Version $currentVersion"
     } process {
         try {
-            # Check if there was already version packaged. If yes we're going to get the last version
+            # Check if there was already version packaged. If yes get the last version
             $VersionHistory, $StringVersionHistory = Get-LocalPackageVersionHistory $ParentSWDirectory $currentVersion
             Write-Log "Version History: $StringVersionHistory"
             # Test if a previous chocolateyInstall file exist.

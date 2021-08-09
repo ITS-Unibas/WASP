@@ -1,4 +1,21 @@
 function Use-BinaryFiles {
+    <#
+    .SYNOPSIS
+    Function handles binary files. 
+    
+    .DESCRIPTION
+    First, create folder for package and subfolder for version, then copy file of given filepath 
+    to version subfolder. Push the folder structure containing the file to the remote server.
+    After pushing, delete local binary and folder structure.
+    The path on the remote server of the binary file from the filePath param is returned.
+    Upon failure, local folder structure is removed.
+
+    .PARAMETER FilePath
+    Path to binary file that should be pushed to remote server.
+    
+    .OUTPUTS
+    Path of binary file on remote server
+    #>
     [CmdletBinding()]
     param (
         [parameter(Mandatory = $true, Position = 0)][string] $FilePath

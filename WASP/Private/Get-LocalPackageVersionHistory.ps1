@@ -1,7 +1,7 @@
 function Get-LocalPackageVersionHistory {
     <#
     .SYNOPSIS
-        Get a history list of subfolders to a given directory that are named as versions.
+        List all subfolders that are named like versions which are of lower version than the given version for the given directory.
     .DESCRIPTION
         Get a history list of subfolders to a given directory that are named as versions. Orders the versions in descending order.
     .EXAMPLE
@@ -10,7 +10,7 @@ function Get-LocalPackageVersionHistory {
     .INPUTS
         Path to a package directory.
     .OUTPUTS
-        List containing all versions found.
+        List containing all versions found that are less than the given version.
     .NOTES
         FileName: Get-LocalPackageVersionHistory
         Author: Kevin Schaefer, Maximilian Burgert
