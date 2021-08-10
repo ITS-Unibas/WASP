@@ -16,9 +16,9 @@ on:
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
   # This workflow contains a single job called "build"
-  test:
+  Tests:
     # The type of runner that the job will run on
-    runs-on: windows-latest
+    runs-on: ubuntu-latest
 
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
@@ -27,3 +27,5 @@ jobs:
         # You may pin to the exact commit or the version.
         # uses: zyborg/pester-tests-report@bb711b31e93f78f7423086d57f81928325829765
         uses: zyborg/pester-tests-report@v1.5.0
+        with:
+          include_paths: Tests
