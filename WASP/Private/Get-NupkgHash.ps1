@@ -22,7 +22,7 @@ function Get-NupkgHash() {
   )
   Add-Type -AssemblyName System.IO.Compression.FileSystem
   $hashString = ""
-  # Delete "unzipedNupkg" and "package.zip". For some reason those items aren't always removed (see lines 63/64). To get sure no errors occure in the Workflow, we remove them as a precaution 
+  # Delete "unzipedNupkg" and "package.zip". For some reason those items aren't always removed (see lines 63/64). To get sure no errors occure in the Workflow, we remove them as a precaution
   Remove-Item (Join-Path $packageFolder "unzipedNupkg") -Force -Recurse -ErrorAction SilentlyContinue
   Remove-Item (Join-Path $packageFolder "package.zip") -Force -ErrorAction SilentlyContinue
   $dir = New-Item -ItemType directory -Path (Join-Path $packageFolder "unzipedNupkg")
@@ -37,7 +37,7 @@ function Get-NupkgHash() {
     # Get hashvalue of the tools and legal folder
     $toolsDir = ($dir.FullName + '\tools')
     if (Test-Path $toolsDir) {
-      $toolsObjects = Get-ChildItem -Path $toolsDir -Recurse |
+      $toolsObjects = Get-ChildItem -Path $toolsDir -File -Recurse |
       Foreach-Object {
         $hashString = $hashString + ([string](Get-FileHash $_.FullName).Hash)
       }
@@ -50,7 +50,7 @@ function Get-NupkgHash() {
 
     $legalDir = ($dir.FullName + '\legal')
     if (Test-Path $legalDir) {
-      $legalObjects = Get-ChildItem -Path $legalDir -Recurse |
+      $legalObjects = Get-ChildItem -Path $legalDir -File -Recurse |
       Foreach-Object {
         $hashString = $hashString + ([string](Get-FileHash $_.FullName).Hash)
       }
