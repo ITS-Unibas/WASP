@@ -1,33 +1,36 @@
-$path = (Split-Path -Parent $MyInvocation.MyCommand.Path).Replace("\Tests", "\WASP")
-$Private = @(Get-ChildItem -Path $path\Private\*.ps1 -ErrorAction SilentlyContinue)
-
-foreach ($import in $Private) {
-    . $import.fullname
+BeforeAll {
+    $path = Split-Path -Parent $PSCommandPath.Replace('.Tests.ps1', '.ps1').Replace('Tests', 'WASP\Private')
+    $Private = @(Get-ChildItem -Path $path\*.ps1 -ErrorAction SilentlyContinue)
+    foreach ($import in $Private) {
+        . $import.fullname
+    }
 }
 
 Describe "Editing package installer script from chocolatey" {
-    $config = '{
-        "Application": {
-            "GitProject": "project",
-            "GitBaseUrl": "https://base.url.com",
-            "PreAdditionalScripts": [
-                "InitialScript.ps1"
-            ],
-            "PostAdditionalScripts": [
-                "FinalScript.ps1"
-            ]
-        }
-    }'
-    Mock Read-ConfigFile { return ConvertFrom-Json $config }
-    Mock Write-Log { }
+    BeforeAll {
+        $config = '{
+            "Application": {
+                "GitProject": "project",
+                "GitBaseUrl": "https://base.url.com",
+                "PreAdditionalScripts": [
+                    "InitialScript.ps1"
+                ],
+                "PostAdditionalScripts": [
+                    "FinalScript.ps1"
+                ]
+            }
+        }'
+        Mock Read-ConfigFile { return ConvertFrom-Json $config }
+        Mock Write-Log { }
 
-    New-Item "TestDrive:\" -Name "package" -ItemType Directory
-    New-Item "TestDrive:\package\" -Name "2.0.0" -ItemType Directory
-    New-Item "TestDrive:\package\2.0.0\" -Name "tools" -ItemType Directory
+        New-Item "TestDrive:\" -Name "package" -ItemType Directory
+        New-Item "TestDrive:\package\" -Name "2.0.0" -ItemType Directory
+        New-Item "TestDrive:\package\2.0.0\" -Name "tools" -ItemType Directory
 
-    $ToolsPath = "TestDrive:\package\2.0.0\tools"
-    $FileName = 'package.exe'
-    $UnzipPath = $ToolsPath
+        $ToolsPath = "TestDrive:\package\2.0.0\tools"
+        $FileName = 'package.exe'
+        $UnzipPath = $ToolsPath
+    }
 
     It "Catches error that the installer script does not exist" {
         Edit-ChocolateyInstaller $ToolsPath $FileName

@@ -1,16 +1,19 @@
-$path = (Split-Path -Parent $MyInvocation.MyCommand.Path).Replace("\Tests", "\WASP")
-$Private = @(Get-ChildItem -Path $path\Private\*.ps1 -ErrorAction SilentlyContinue)
-
-foreach ($import in $Private) {
-  . $import.fullname
+BeforeAll {
+  $path = Split-Path -Parent $PSCommandPath.Replace('.Tests.ps1', '.ps1').Replace('Tests', 'WASP\Private')
+  $Private = @(Get-ChildItem -Path $path\*.ps1 -ErrorAction SilentlyContinue)
+  foreach ($import in $Private) {
+    . $import.fullname
+  }
 }
 
 Describe "Getting checksum type from verification file" {
-  Mock Write-Log { }
-  Mock Get-VerificationFilePath { return "TestDrive:\VERIFICATION.txt" }
-
+  BeforeAll {
+    Mock Write-Log { }
+    Mock Get-VerificationFilePath { return "TestDrive:\VERIFICATION.txt" }
+  }
   Context "returns urls for searched architectures" {
-    Set-Content "TestDrive:\verification.txt" -Value "VERIFICATION
+    BeforeEach {
+      Set-Content "TestDrive:\verification.txt" -Value "VERIFICATION
       Verification is intended to assist the Chocolatey moderators and community
       in verifying that this package's contents are trustworthy.
 
@@ -29,6 +32,7 @@ Describe "Getting checksum type from verification file" {
         checksum64: 0F5D4DBBE5E55B7AA31B91E5925ED901FDF46A367491D81381846F05AD54C45E
 
       File 'LICENSE.txt' is obtained from <http://www.7-zip.org/license.txt>"
+    }
 
     It "returns url for 32 bit" {
       Get-UrlFromVerificationFile -searchFor32Biturl $true -searchFor64BitUrl $false | Should -Be 'http://www.7-zip.org/a/7z1900.exe'
@@ -40,7 +44,8 @@ Describe "Getting checksum type from verification file" {
 
 
   Context "returns first matched urls for searched architectures" {
-    Set-Content "TestDrive:\verification.txt" -Value "VERIFICATION
+    BeforeEach {
+      Set-Content "TestDrive:\verification.txt" -Value "VERIFICATION
       Verification is intended to assist the Chocolatey moderators and community
       in verifying that this package's contents are trustworthy.
 
@@ -61,7 +66,7 @@ Describe "Getting checksum type from verification file" {
         checksum64: 0F5D4DBBE5E55B7AA31B91E5925ED901FDF46A367491D81381846F05AD54C45E
 
       File 'LICENSE.txt' is obtained from <http://www.7-zip.org/license.txt>"
-
+    }
     It "returns url for 32 bit" {
       Get-UrlFromVerificationFile -searchFor32Biturl $true -searchFor64BitUrl $false | Should -Be 'http://www.7-zip.org/a/7z1900.exe'
     }
@@ -71,7 +76,8 @@ Describe "Getting checksum type from verification file" {
   }
 
   Context "returns any found url" {
-    Set-Content "TestDrive:\verification.txt" -Value "VERIFICATION
+    BeforeEach {
+      Set-Content "TestDrive:\verification.txt" -Value "VERIFICATION
       Verification is intended to assist the Chocolatey moderators and community
       in verifying that this package's contents are trustworthy.
 
@@ -89,7 +95,7 @@ Describe "Getting checksum type from verification file" {
         checksum64: 0F5D4DBBE5E55B7AA31B91E5925ED901FDF46A367491D81381846F05AD54C45E
 
       File 'LICENSE.txt' is obtained from <http://www.7-zip.org/license.txt>"
-
+    }
     It "returns any url when specified architecture 32 bit url is not found" {
       Get-UrlFromVerificationFile -searchFor32Biturl $true -searchFor64BitUrl $false | Should -Be 'http://www.7-zip.org/a/7z1900.exe'
     }
@@ -98,7 +104,8 @@ Describe "Getting checksum type from verification file" {
     }
   }
   Context "returns none if no url with appropriate file ending is found" {
-    Set-Content "TestDrive:\verification.txt" -Value "VERIFICATION
+    BeforeEach {
+      Set-Content "TestDrive:\verification.txt" -Value "VERIFICATION
       Verification is intended to assist the Chocolatey moderators and community
       in verifying that this package's contents are trustworthy.
 
@@ -116,7 +123,7 @@ Describe "Getting checksum type from verification file" {
         checksum64: 0F5D4DBBE5E55B7AA31B91E5925ED901FDF46A367491D81381846F05AD54C45E
 
       File 'LICENSE.txt' is obtained from <http://www.7-zip.org/license.txt>"
-
+    }
     It "returns none when specified architecture 32 bit url is not found" {
       Get-UrlFromVerificationFile -searchFor32Biturl $true -searchFor64BitUrl $false | Should -Be $null
     }
@@ -125,7 +132,8 @@ Describe "Getting checksum type from verification file" {
     }
   }
   Context "returns correct url when it does include a tilde" {
-    Set-Content "TestDrive:\verification.txt" -Value "VERIFICATION
+    BeforeEach {
+      Set-Content "TestDrive:\verification.txt" -Value "VERIFICATION
     Verification is intended to assist the Chocolatey moderators and community
     in verifying that this package's contents are trustworthy.
 
@@ -145,7 +153,7 @@ Describe "Getting checksum type from verification file" {
       checksum64: 2A001DD1C5D81AE1C17DB97B0BB6C2C7CADA43888D4F30A814C18D55AA28FEB6
 
     File 'LICENSE.txt' is obtained from <http://www.chiark.greenend.org.uk/~sgtatham/putty/licence.html>"
-
+    }
     It "returns url for 32 bit" {
       Get-UrlFromVerificationFile -searchFor32Biturl $true -searchFor64BitUrl $false | Should -Be 'https://the.earth.li/~sgtatham/putty/latest/w32/putty-0.74-installer.msi'
     }

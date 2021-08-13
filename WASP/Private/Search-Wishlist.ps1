@@ -50,12 +50,12 @@ function Search-Wishlist {
 
     process {
         try {
-            $wishlist = Get-Content -Path $wishlistPath | Where-Object { $_ -notlike "#*" }
+            $wishlist = Get-Content -Path $wishlistPath | Select-String -Pattern "#" -NotMatch
             $packageName = $packagePath.Name
 
             Foreach ($line in $wishlist) {
                 if ($line -match "@") {
-                    $packageNameWhishlist, $previousVersion = $line.split($NameAndVersionSeparator)
+                    $packageNameWhishlist, $previousVersion = $line.Line.split($NameAndVersionSeparator)
                 }
                 else {
                     $previousVersion = "0.0.0.0"
@@ -94,7 +94,8 @@ function Search-Wishlist {
                         Write-Log "Copying $($packagePath.FullName) to $destPath"
                         if ($manual) {
                             $sourcePath = Join-Path $packagePath.FullName $packageVersion
-                        } else {
+                        }
+                        else {
                             $sourcePath = $packagePath.FullName
                         }
                         Copy-Item $sourcePath -Destination $destPath -Recurse -Force
