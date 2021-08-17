@@ -93,7 +93,7 @@ function Write-Log {
                 $null = New-Item $LogFilePath -type file
             }
 
-            $line | Out-File $LogFilePath -Append -Encoding ascii
+            $line | Out-File $LogFilePath -Append
 
             if (-Not ($Severity -eq 0) -and ($PSVersionTable.PSVersion -lt [version]'6.0.0')) {
                 # Need to catch this, because there is no way to silence it

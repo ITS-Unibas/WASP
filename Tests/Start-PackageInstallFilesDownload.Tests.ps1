@@ -1,19 +1,22 @@
-$path = (Split-Path -Parent $MyInvocation.MyCommand.Path).Replace("\Tests", "\WASP")
-$Private = @(Get-ChildItem -Path $path\Private\*.ps1 -ErrorAction SilentlyContinue)
-
-foreach ($import in $Private) {
-    . $import.fullname
+BeforeAll {
+    $path = Split-Path -Parent $PSCommandPath.Replace('.Tests.ps1', '.ps1').Replace('Tests', 'WASP\Private')
+    $Private = @(Get-ChildItem -Path $path\*.ps1 -ErrorAction SilentlyContinue)
+    foreach ($import in $Private) {
+        . $import.fullname
+    }
 }
 
 Describe "Overriding function for package" {
-    Mock Write-Log { }
-    Mock Invoke-Expression { }
+    BeforeAll {
+        Mock Write-Log { }
+        Mock Invoke-Expression { }
 
-    New-Item "TestDrive:\" -Name "package" -ItemType Directory
-    New-Item "TestDrive:\package" -Name "2.0.0" -ItemType Directory
-    New-Item "TestDrive:\package\2.0.0" -Name "chocolateyInstall.ps1" -ItemType File
-    #Set-Content "TestDrive:\package\2.0.0\chocolateyInstall.ps1" -Value "#Content"
-    $packToolInstallPath = "TestDrive:\package\2.0.0\chocolateyInstall.ps1"
+        New-Item "TestDrive:\" -Name "package" -ItemType Directory
+        New-Item "TestDrive:\package" -Name "2.0.0" -ItemType Directory
+        New-Item "TestDrive:\package\2.0.0" -Name "chocolateyInstall.ps1" -ItemType File
+        #Set-Content "TestDrive:\package\2.0.0\chocolateyInstall.ps1" -Value "#Content"
+        $packToolInstallPath = "TestDrive:\package\2.0.0\chocolateyInstall.ps1"
+    }
 
     Context "Script has not been executed previously" {
         It "Has forced download disabled" {
@@ -30,7 +33,9 @@ Describe "Overriding function for package" {
     }
 
     Context "Script has not been executed previously" {
-        $ForcedDownload = $false
+        BeforeAll {
+            $ForcedDownload = $false
+        }
         It "Has forced download disabled" {
             Start-PackageInstallFilesDownload $packToolInstallPath $ForcedDownload
             Assert-MockCalled Invoke-Expression -Times 1 -ParameterFilter { $command -eq $packToolInstallPath }

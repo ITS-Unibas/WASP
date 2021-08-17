@@ -1,14 +1,17 @@
-$path = (Split-Path -Parent $MyInvocation.MyCommand.Path).Replace("\Tests", "\WASP")
-$Private = @(Get-ChildItem -Path $path\Private\*.ps1 -ErrorAction SilentlyContinue)
-
-foreach ($import in $Private) {
-    . $import.fullname
+BeforeAll {
+    $path = Split-Path -Parent $PSCommandPath.Replace('.Tests.ps1', '.ps1').Replace('Tests', 'WASP\Private')
+    $Private = @(Get-ChildItem -Path $path\*.ps1 -ErrorAction SilentlyContinue)
+    foreach ($import in $Private) {
+        . $import.fullname
+    }
 }
+
 Describe "Creating new local git branch in repository" {
 
-    $RepoPath = 'an\arbitrary\path'
-    $Branch = 'branch'
-
+    BeforeEach {
+        $RepoPath = 'an\arbitrary\path'
+        $Branch = 'branch'
+    }
     It "exists a repository and no branch" {
         Mock Write-Log { }
         Mock Test-Path { return $true }

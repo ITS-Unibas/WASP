@@ -1,12 +1,15 @@
-$path = (Split-Path -Parent $MyInvocation.MyCommand.Path).Replace("\Tests", "\WASP")
-$Private = @(Get-ChildItem -Path $path\Private\*.ps1 -ErrorAction SilentlyContinue)
-
-foreach ($import in $Private) {
-    . $import.fullname
+BeforeAll {
+    $path = Split-Path -Parent $PSCommandPath.Replace('.Tests.ps1', '.ps1').Replace('Tests', 'WASP\Private')
+    $Private = @(Get-ChildItem -Path $path\*.ps1 -ErrorAction SilentlyContinue)
+    foreach ($import in $Private) {
+        . $import.fullname
+    }
 }
 
 Describe 'Search new package' {
-
+    BeforeAll {
+        Mock Write-Log { }
+    }
     Context "Check list handling" {
         BeforeAll {
             $NuspecItem = New-Item "TestDrive:\chocolatey-packages\automatic\7zip.install\19.0\7zip.install.nuspec" -Force
@@ -122,7 +125,9 @@ Describe 'Search new package' {
     }
 
     Context "Check error handling" {
-        Mock Write-Log { }
+        BeforeAll {
+            Mock Write-Log { }
+        }
         It "Should call Write-Log when nuspec is not in correct schema" {
             Mock Search-Wishlist { }
             $NuspecItem = New-Item "TestDrive:\chocolatey-packages\automatic\7zip.install\19.0\7zip.install.nuspec" -Force
@@ -213,12 +218,12 @@ Describe 'Search new package' {
 "@
                 Set-Content $NuspecItem.FullName -Value $NuspecContent
             }
-            $packagesManual = @(Get-ChildItem "TestDrive:\packages-manual\")
+            $packagesManual = @(Get-ChildItem "TestDrive:\packages-manual\" | Where-Object { $_.PSIsContainer })
         }
 
-        It "Should be able to find a manual packages with more than one version" {
-            $packagesManual.Count | Should -BeExactly 1
-            Mock Search-Wishlist {New-Object psobject @{'path' = $NuspecItem.FullName; 'name' = 'package'; 'version' = '3.0' }}
+        It "Should be able to find a manual package with more than one version" {
+            (Get-ChildItem $packagesManual).Count | Should -BeExactly 3
+            Mock Search-Wishlist { New-Object psobject @{'path' = $NuspecItem.FullName; 'name' = 'package'; 'version' = '3.0' } }
             $newPackages = New-Object System.Collections.ArrayList
             $newPackages = Search-NewPackages -Packages $packagesManual -NewPackagesList $newPackages -Manual
             Assert-MockCalled Search-Wishlist -Times 1
