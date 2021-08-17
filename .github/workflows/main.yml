@@ -1,0 +1,23 @@
+# This is a basic workflow to help you get started with Actions
+
+name: Run Tests
+
+# Controls when the workflow will run
+on: push
+
+# A workflow run is made up of one or more jobs that can run sequentially or in parallel
+jobs:
+  # This workflow contains a single job called "build"
+  pester-test:
+    name: Pester test
+    # The type of runner that the job will run on
+    runs-on: windows-latest
+
+    # Steps represent a sequence of tasks that will be executed as part of the job
+    steps:
+      - name: Check out repository code
+        uses: actions/checkout@v2
+      - name: Perform tests
+        shell: pwsh
+        run: |
+          Invoke-Pester .\Tests\

@@ -1,8 +1,9 @@
-$path = (Split-Path -Parent $MyInvocation.MyCommand.Path).Replace("\Tests", "\WASP")
-$Private = @(Get-ChildItem -Path $path\Private\*.ps1 -ErrorAction SilentlyContinue)
-
-foreach ($import in $Private) {
-  . $import.fullname
+BeforeAll {
+  $path = Split-Path -Parent $PSCommandPath.Replace('.Tests.ps1', '.ps1').Replace('Tests', 'WASP\Private')
+  $Private = @(Get-ChildItem -Path $path\*.ps1 -ErrorAction SilentlyContinue)
+  foreach ($import in $Private) {
+      . $import.fullname
+  }
 }
 
 Describe "Getting hash of nupkg" {

@@ -27,7 +27,7 @@ function Search-NewPackages {
     foreach ($package in $Packages) {
         if ($Manual) {
             $latest = Get-ChildItem -Path $package.FullName | Sort-Object CreationTime -Descending | Select-Object -First 1
-            $nuspec = Get-Item (Join-Path $latest.FullName "$package.nuspec")
+            $nuspec = Get-ChildItem -Path $latest.FullName -recurse | Where-Object { $_.Extension -like "*nuspec*" }
         }
         else {
             $nuspec = Get-ChildItem -Path $package.FullName -recurse | Where-Object { $_.Extension -like "*nuspec*" }
