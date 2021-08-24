@@ -32,13 +32,13 @@ Describe "Overriding function for package" {
         }
     }
 
-    Context "Script has not been executed previously" {
+    Context "Script has been executed previously" {
         BeforeAll {
             $ForcedDownload = $false
         }
         It "Has forced download disabled" {
             Start-PackageInstallFilesDownload $packToolInstallPath $ForcedDownload
-            Assert-MockCalled Invoke-Expression -Times 1 -ParameterFilter { $command -eq $packToolInstallPath }
+            Assert-MockCalled Invoke-Expression -Times 0 -ParameterFilter { $command -eq $packToolInstallPath }
         }
         It "Has forced download disabled and finds downloaded binary (exe)" {
             New-Item "TestDrive:\package\2.0.0" -Name "package.exe" -ItemType File
@@ -54,6 +54,27 @@ Describe "Overriding function for package" {
             New-Item "TestDrive:\package\2.0.0" -Name "package.zip" -ItemType File
             Start-PackageInstallFilesDownload $packToolInstallPath $ForcedDownload
             Assert-MockCalled Invoke-Expression -Times 0 -Scope It
+        }
+        It "Has forced download disabled, has localFiles enabled but finds no binary" {
+            $toolPath = Get-Item $packToolInstallPath | Select-Object -ExpandProperty DirectoryName
+            $original = Join-Path -Path $toolPath -ChildPath 'chocolateyInstall_old.ps1'
+            Set-Content $original 'Write-Host "http://www.cgl.ucsf.edu/chimera/license.html" -ForegroundColor Cyan
+
+            $packageArgs = @{
+               packageName   = $env:ChocolateyPackageName
+               fileType      = "EXE"
+               localFile     = $true
+               url64bit      = $BaseURL + $URLstub
+               softwareName  = "UCSF Chimera*"
+               checksum64    = "7607b11115ba8cbaa87e9f0c8362334b753b531e66dc1341a49dd24802934f80"
+               checksumType64= "sha256"
+               silentArgs   = "/VERYSILENT /SUPPRESSMSGBOXES /NORESTART /SP-""
+               validExitCodes= @(0)
+            }
+
+            Install-ChocolateyPackage @packageArgs'
+            Start-PackageInstallFilesDownload $packToolInstallPath $ForcedDownload
+            Assert-MockCalled Invoke-Expression -Times 1 -Scope It
         }
 
         BeforeEach {
