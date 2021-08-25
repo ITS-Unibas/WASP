@@ -67,10 +67,9 @@ function Edit-ChocolateyInstaller {
                 $prevChocolateyInstallFile = Join-Path -Path $LastVersionPath -ChildPath "chocolateyinstall.ps1"
 
                 # search for the next preceeding version that is not in packaging to copy the install content
-                # Is versionin packaging? -> Then the installfile does not exist on current dev branch and therefore cannot be copied
-                $counter = 1
+                # Is prev version in packaging? -> Then the installfile does not exist on current dev branch and therefore cannot be copied
+                $counter = 0
                 while (-Not (Test-Path $prevChocolateyInstallFile) -and ($counter -lt $VersionHistory.Count)) {
-                    Write-Log "$counter"
                     $counter += 1
                     $LastVersion = $StringVersionHistory | Where-Object { [version]$_ -eq $VersionHistory[$counter] }
                     $LastVersionPath = Join-Path -Path $ParentSWDirectory -ChildPath "$LastVersion\tools"
@@ -80,17 +79,19 @@ function Edit-ChocolateyInstaller {
                     $override = $True
                 }
                 else {
+                    # Get content of prev install file
+                    $InstallerContent = Get-Content -Path $prevChocolateyInstallFile -ErrorAction Stop
                     # Only copy file if it contains url or is a local file if no url exist
                     # Check if previous install file contains urls
                     $LocalFile = $false
-                    $URLfound = $false
+                    $URLfound = $false 
                     $InstallerContent | ForEach-Object { if ($_ -match "localFile.*=.*\`$true") { $LocalFile = $true } }
                     $InstallerContent | ForEach-Object { if ($_ -match ".*url.*=.*") { $URLfound = $true } }
                     if ($LocalFile -or $URLfound) {
                         Write-Log "Copying $prevChocolateyInstallFile to $ToolsPath"
                         Copy-Item $prevChocolateyInstallFile -Destination $ToolsPath -Force -Recurse
 
-                        $InstallerContent = Get-Content -Path $NewFile -ErrorAction Stop
+                        #$InstallerContent = Get-Content -Path $NewFile -ErrorAction Stop
                     }
                     else {
                         Write-Log "Previous package is not a local package or has no url defined! File is not copied to current version" -Severity 2
@@ -152,7 +153,7 @@ function Edit-ChocolateyInstaller {
                 }
             }
 
-            # if filepath is not already present and this is not a remote file package, we have to set the filepath
+            # if filepath is not already present and package uses localFile, we have to set the filepath
             if (-Not $script:FilePathPresent -and $script:LocalFile) {
                 Write-Log "Calling Set File Path with path $ToolsPath" -Severity 1
 
@@ -233,12 +234,12 @@ function Edit-ChocolateyInstaller {
             # Fetch the additional scripts and configs from the last version
             $AdditionalScripts = $PreAdditionalScripts + $PostAddtionalScripts
             if ($VersionHistory) {
-                $LastVersion = $StringVersionHistory | Where-Object { [version]$_ -eq $VersionHistory[1] }
+                $LastVersion = $StringVersionHistory | Where-Object { [version]$_ -eq $VersionHistory[0] }
                 $LastVersionPath = Join-Path -Path $ParentSWDirectory -ChildPath "$LastVersion\tools"
                 $files = Get-ChildItem $LastVersionPath -Exclude *.msi, *.exe | Select-Object -ExpandProperty FullName
 
                 # search for the next preceeding version that is not in packaging to copy the install content
-                $counter = 1
+                $counter = 0
                 while (-Not ($files) -and ($counter -lt $VersionHistory.Count)) {
                     $counter += 1
                     $LastVersion = $StringVersionHistory | Where-Object { [version]$_ -eq $VersionHistory[$counter] }
