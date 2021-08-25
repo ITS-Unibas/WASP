@@ -56,20 +56,20 @@ function Use-BinaryFiles {
             scp -r -i $sshConfig ".\$packageName\" $remoteServer
 
             # Delete binary file locally
-            Write-Log "Removing $FilePath" -Severity 1
+            Write-Log "Remove $FilePath" -Severity 1
             Remove-Item -Path $FilePath -ErrorAction SilentlyContinue
 
             # Delete helper files
-            Write-Log "Removing $packageName" -Severity 1
+            Write-Log "Remove $packageName" -Severity 1
             Remove-Item -Path $packageName -Recurse -ErrorAction SilentlyContinue
 
-            Write-Log "Returning $UrlOnServer" -Severity 1
+            Write-Log "Function returns $UrlOnServer" -Severity 1
             return $UrlOnServer
         }
         catch [Exception] {
             Write-Log ($_.Exception | Format-List -force | Out-String) -Severity 3
             # Delete helper files
-            Write-Log "Removing $packageName" -Severity 1
+            Write-Log "Remove $packageName" -Severity 1
             Remove-Item -Path $packageName -Recurse -ErrorAction SilentlyContinue
         }
     }

@@ -37,7 +37,7 @@ function New-LocalBranch {
             $localBranches = (git -C $RepositoryPath branch)
 
             if ($localBranches -match $BranchName) {
-                Write-Log "Local branch $branchName already exist. No new branch will be created."
+                Write-Log "Local branch $branchName already exists. No new branch will be created."
                 return
             }
 

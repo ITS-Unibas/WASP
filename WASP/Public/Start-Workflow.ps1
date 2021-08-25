@@ -10,7 +10,7 @@ function Start-Workflow {
     )
 
     begin {
-        Write-Log "Starting Workflow" -Severity 1
+        Write-Log "-o-o-o-o- Workflow started -o-o-o-o-" -Severity 1
         $StartTime = Get-Date
 
         $config = Read-ConfigFile
@@ -113,6 +113,6 @@ function Start-Workflow {
 
     end {
         $Duration = New-TimeSpan -Start $StartTime -End (Get-Date)
-        Write-Log "The process took $Duration. Workflow finished." -Severity 1
+        Write-Log "-o-o-o-o- The process took $Duration. Workflow finished. -o-o-o-o-" -Severity 1
     }
 }

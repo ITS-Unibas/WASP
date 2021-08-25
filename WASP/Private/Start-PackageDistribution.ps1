@@ -142,9 +142,8 @@ function Start-PackageDistribution() {
                     }
                     Send-NupkgToServer $packageRootPath $config.Application.ChocoServerDEV
                     Set-Location $OldWorkingDir
-                    Write-Log "Commit and push changed files." -Severity 1
                     Write-Log ([string] (git -C $packageRootPath add . 2>&1))
-                    Write-Log ([string] (git -C $packageRootPath commit -m "Creates override for $packageName $packageVersion" 2>&1))
+                    Write-Log ([string] (git -C $packageRootPath commit -m "Edits install script of $packageName $packageVersion" 2>&1))
                     Write-Log ([string] (git -C $packageRootPath push 2>&1))
                     # Remove all uncommited files, so no left over files will be moved to prod branch. Or else it will be pushed from choco to all instances
                     # TODO: Remove build files only when package is moved to prod branch
@@ -152,7 +151,7 @@ function Start-PackageDistribution() {
                 }
                 catch [Exception] {
                     $ChocolateyPackageName = ([xml](Get-Content -Path $nuspecFile)).Package.metadata.id
-                    Write-Log ("Package " + $ChocolateyPackageName + " override process crashed at line: $($_.InvocationInfo.ScriptLineNumber). Skip.") -Severity 3
+                    Write-Log ("Package " + $ChocolateyPackageName + " process crashed at line: $($_.InvocationInfo.ScriptLineNumber). Skip.") -Severity 3
                     Write-Log ($_.Exception | Format-List -force | Out-String) -Severity 3
                     Remove-Item -Path "$packageRootPath\unzipedNupkg" -ErrorAction SilentlyContinue
                     git -C $packageRootPath checkout -- *
@@ -192,7 +191,7 @@ function Start-PackageDistribution() {
                                 if ($chocolateyDestinationServer -eq $config.Application.ChocoServerTEST) {
                                     if (Test-IssueStatus $package $version 'Testing') {
                                         if (-Not (Test-ExistsOnRepo -PackageName $FullID -PackageVersion $FullVersion -Repository $Repo -FileCreationDate $FileDate)) {
-                                            Write-Log "Pushing $FullID@$FullVersion to $chocolateyDestinationServer." -Severity 1
+                                            Write-Log "Push $FullID@$FullVersion to $chocolateyDestinationServer." -Severity 1
                                             Send-NupkgToServer $packageRootPath $chocolateyDestinationServer
                                         }
                                         else {
@@ -201,7 +200,7 @@ function Start-PackageDistribution() {
                                         continue
                                     }
                                     else {
-                                        Write-Log "$package is being repackaged and its jira task is not in testing." -Severity 3
+                                        Write-Log "$package is being repackaged and its jira task is not in test." -Severity 3
                                         continue
                                     }
                                 }

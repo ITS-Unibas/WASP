@@ -24,7 +24,7 @@ function Update-Wishlist {
         Write-Log ([string] (git -C $RepositoryPath checkout $Branch 2>&1))
         Write-Log ([string] (git -C $RepositoryPath pull origin $Branch 2>&1))
         Write-Log ([string] (git -C $RepositoryPath add $wishlistPath 2>&1))
-        Write-Log ([string] (git -C $RepositoryPath commit -m "Automated push to commit changes to the wishlist" 2>&1))
+        Write-Log ([string] (git -C $RepositoryPath commit -m "Commits changes to wishlist" 2>&1))
         Write-Log ([string] (git -C $RepositoryPath push 2>&1))
     }
 

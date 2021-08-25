@@ -47,7 +47,7 @@ function Update-PackageInboxFiltered {
             $PackageName = $Package.name
             $PackageVersion = $Package.version
 
-            Write-Log "Starting update routine for package $PackageName"
+            Write-Log "Start update routine for $PackageName $PackageVersion"
             $DevBranch = "$($Config.Application.GitBranchDEV)$($PackageName)@$PackageVersion"
             $RemoteBranches = Get-RemoteBranches -repo $GitRepoPackageGallery
 
@@ -57,11 +57,11 @@ function Update-PackageInboxFiltered {
                 New-LocalBranch $PackagesInboxRepoPath $DevBranch
 
                 if ((Get-CurrentBranchName -Path $PackagesInboxRepoPath) -ne $DevBranch) {
-                    Write-Log -Message "The dev branch for this package could not be created" -Severity 3
+                    Write-Log -Message "Dev branch for this package could not be created" -Severity 3
                     continue
                 }
 
-                Write-Log ([string](git -C $PackagesInboxRepoPath commit -m "Automated commit: Added $DevBranch" 2>&1))
+                Write-Log ([string](git -C $PackagesInboxRepoPath commit -m "Adds $DevBranch" 2>&1))
                 Write-Log ([string](git -C $PackagesInboxRepoPath push -u origin $DevBranch 2>&1))
                 # Is this necessary?
                 Write-Log ([string](git -C $PackagesInboxRepoPath checkout master 2>&1))

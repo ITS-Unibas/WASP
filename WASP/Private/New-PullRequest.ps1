@@ -62,9 +62,9 @@ function New-PullRequest {
         $DestUrl = ("{0}/rest/api/1.0/projects/{1}/repos/{2}/pull-requests" -f $Config.Application.GitBaseUrl, $Config.Application.GitProject, $DestinationRepo)
         $SourceUrl = ("{0}/rest/api/1.0/projects/{1}/repos/{2}/commits?until=refs%2Fheads%2F$SourceBranch" -f $Config.Application.GitBaseUrl, $Config.Application.GitProject, $SourceRepo)
 
-        Write-Log "Getting last commit message for $SourceBranch from $SourceUrl"
+        Write-Log "Get last commit message for $SourceBranch from $SourceUrl"
         $GetRequest = Invoke-GetRequest $SourceUrl -ErrorAction Stop
-        $LastCommitMessage = $GetRequest.values[0].message.replace('Automated commit: Added ', '')
+        $LastCommitMessage = $GetRequest.values[0].message.replace('Adds ', '')
 
         $json = @{
             "title"               = $LastCommitMessage
