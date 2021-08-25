@@ -53,6 +53,8 @@ function Start-PackageDistribution() {
                 $packageName, $packageVersion, $re = $branch.split($nameAndVersionSeparator)
                 $packageName = $packageName -Replace $config.Application.GitBranchDEV, ''
 
+                Write-Log "--- Start $packageName $packageVersion ---" -Severity 1
+
                 $foundInWishlist = $false
                 foreach ($line in $wishlist) {
                     if ($line -match $packageName) {
@@ -92,13 +94,13 @@ function Start-PackageDistribution() {
                     # Check if a nupkg already exists
                     $nupkg = (Get-ChildItem -Path $packageRootPath -Recurse -Filter *.nupkg).FullName
                     if ($nupkg) {
-                        Write-Log "Nupkg already exists: $nupkg. Check for changes."
+                        Write-Log "$packageName@$PackageVersion nupkg exists. Check for changes."
                         # Nupkg exists already, now we have to check if anything has changed and if yes we have to add a release version into the nuspec
                         # Get hash of the newest existing nupkg and save the version of the existing nupkg
                         $hashOldNupkg = Get-NupkgHash $nupkg $packageRootPath
                         # Build the package to compare it to the previous one
                         # To not overwrite the old package, move the previous package to a tmp directory
-                        Write-Log "Moving package to $tmpdir."
+                        Write-Log "Move package to $tmpdir."
                         Move-Item -Path $nupkg -Destination "$tmpdir\$env:ChocolateyPackageName.$env:ChocolateyPackageVersion.nupkg"
                         $InvokeMessage = Invoke-Expression -Command ("choco pack $nuspecFile -s . -r")
                         $InvokeMessage | ForEach-Object {
@@ -113,22 +115,22 @@ function Start-PackageDistribution() {
                             Write-Log "Choco pack process of $packageName@$PackageVersion failed." -Severity 3
                             continue
                         }
-                        Write-Log "Calculating hash for nupkg: $nupkgNew."
+                        Write-Log "Calculate hash for nupkg: $nupkgNew."
                         $hashNewNupkg = Get-NupkgHash $nupkgNew $packageRootPath
                         if ($hashNewNupkg -eq $hashOldNupkg) {
-                            Write-Log "No changes detected for $packageName@$PackageVersion."
+                            Write-Log "No changes detected."
                             Remove-Item -Path "$packageRootPath\*.nupkg"
-                            Write-Log "Moving $packageName from $tmpdir to $packageRootPath."
+                            Write-Log "Move $packageName from $tmpdir to $packageRootPath."
                             Move-Item -Path  "$tmpdir\$env:ChocolateyPackageName.$env:ChocolateyPackageVersion.nupkg" -Destination $packageRootPath
                             continue
                         }
                         else {
-                            Write-Log "Hashes do not match, removing $packageName from $tmpdir and push new package to server." -Severity 1
+                            Write-Log "Hashes do not match, remove $packageName from $tmpdir and push new package to server." -Severity 1
                             Remove-Item "$tmpdir\$env:ChocolateyPackageName.$env:ChocolateyPackageVersion.nupkg"
                         }
                     }
                     else {
-                        Write-Log "No nupkg exists. Packing package." -Severity 1
+                        Write-Log "No nupkg exists. Pack package." -Severity 1
                         $InvokeMessage = Invoke-Expression -Command ("choco pack $nuspecFile -s . -r")
                         $InvokeMessage | ForEach-Object {
                             $Severity = 0
@@ -140,9 +142,9 @@ function Start-PackageDistribution() {
                     }
                     Send-NupkgToServer $packageRootPath $config.Application.ChocoServerDEV
                     Set-Location $OldWorkingDir
-                    Write-Log "Commiting and pushing changed files." -Severity 1
+                    Write-Log "Commit and push changed files." -Severity 1
                     Write-Log ([string] (git -C $packageRootPath add . 2>&1))
-                    Write-Log ([string] (git -C $packageRootPath commit -m "Created override for $packageName $packageVersion" 2>&1))
+                    Write-Log ([string] (git -C $packageRootPath commit -m "Creates override for $packageName $packageVersion" 2>&1))
                     Write-Log ([string] (git -C $packageRootPath push 2>&1))
                     # Remove all uncommited files, so no left over files will be moved to prod branch. Or else it will be pushed from choco to all instances
                     # TODO: Remove build files only when package is moved to prod branch
@@ -175,7 +177,7 @@ function Start-PackageDistribution() {
                 foreach ($package in $packagesList) {
                     $packagePath = Join-Path $PackageGalleryPath $package
                     $versionsList = Get-ChildItem $packagePath -Directory
-                    #TODO: Add changes to version history here
+                    # TODO: Add changes to version history here
                     $versionsList | Sort-Object -Property { $_.Name -as [version] } | Select-Object -Last 5
                     foreach ($version in $versionsList) {
                         if (Test-ExistPackageVersion $GitFolderName $package $version $branch) {
@@ -199,7 +201,7 @@ function Start-PackageDistribution() {
                                         continue
                                     }
                                     else {
-                                        Write-Log "$package is in repackaging and its jira task is not in testing." -Severity 3
+                                        Write-Log "$package is being repackaged and its jira task is not in testing." -Severity 3
                                         continue
                                     }
                                 }
@@ -217,7 +219,7 @@ function Start-PackageDistribution() {
                                 }
                             }
                             if (-Not (Test-ExistsOnRepo -PackageName $FullID -PackageVersion $FullVersion -Repository $Repo -FileCreationDate $FileDate)) {
-                                Write-Log "Pushing $FullID@$FullVersion to $chocolateyDestinationServer." -Severity 1
+                                Write-Log "Push $FullID@$FullVersion to $chocolateyDestinationServer." -Severity 1
                                 Send-NupkgToServer $packageRootPath $chocolateyDestinationServer
                             }
                             else {
