@@ -49,26 +49,26 @@ function Edit-ChocolateyInstaller {
 
         # get current package version
         $currentVersion = (Get-Item $ToolsPath).Parent.Name
-        Write-Log "Current Version $currentVersion"
+        Write-Log "Current version $currentVersion"
     } process {
         try {
             # Check if there was already version packaged. If yes get the last version
             $VersionHistory, $StringVersionHistory = Get-LocalPackageVersionHistory $ParentSWDirectory $currentVersion
-            Write-Log "Version History: $StringVersionHistory"
+            Write-Log "Version history: $StringVersionHistory"
             # Test if a previous chocolateyInstall file exist.
             $override = $false
             if ($VersionHistory) {
+                # Get the last version
                 $LastVersion = $StringVersionHistory | Where-Object { [version]$_ -eq $VersionHistory[0] }
-                Write-Log "Copying previous package version: $LastVersion." -Severity 1
+                Write-Log "Copy last package version: $LastVersion." -Severity 1
 
                 Copy-Item -Path $NewFile -Destination $OriginalFile -ErrorAction Stop
 
                 $LastVersionPath = Join-Path -Path $ParentSWDirectory -ChildPath "$LastVersion\tools"
                 $prevChocolateyInstallFile = Join-Path -Path $LastVersionPath -ChildPath "chocolateyinstall.ps1"
-
-                # search for the next preceeding version that is not in packaging to copy the install content
-                # Is prev version in packaging? -> Then the installfile does not exist on current dev branch and therefore cannot be copied
-                $counter = 0
+                # Last version might be in development -> install scripts will not be available on the current dev branch and cannot be copied
+                # Searches for the latest previous version which is not in development
+                $counter = 0 # latest version
                 while (-Not (Test-Path $prevChocolateyInstallFile) -and ($counter -lt $VersionHistory.Count)) {
                     $counter += 1
                     $LastVersion = $StringVersionHistory | Where-Object { [version]$_ -eq $VersionHistory[$counter] }
@@ -103,7 +103,7 @@ function Edit-ChocolateyInstaller {
                 $override = $True
             }
             if ($override) {
-                Write-Log "No previous package version found. Start overriding $NewFile."
+                Write-Log "No previous package version found. Start override $NewFile."
 
                 Copy-Item -Path $NewFile -Destination $OriginalFile -ErrorAction Stop
 
@@ -155,7 +155,7 @@ function Edit-ChocolateyInstaller {
 
             # if filepath is not already present and package uses localFile, we have to set the filepath
             if (-Not $script:FilePathPresent -and $script:LocalFile) {
-                Write-Log "Calling Set File Path with path $ToolsPath" -Severity 1
+                Write-Log "Set path to file in $ToolsPath" -Severity 1
 
                 $InstallerContent = $InstallerContent | ForEach-Object {
                     $_
@@ -261,7 +261,7 @@ function Edit-ChocolateyInstaller {
                 foreach ($file in $files) {
                     # Fetch all files except the install/uninstallscripts from the last version
                     if ($file -like "*.zip*") {
-                        Write-Log "Removing $file." -Severity 1
+                        Write-Log "Remove $file." -Severity 1
                         Remove-item $file -Force -Recurse
                     }
                 }
