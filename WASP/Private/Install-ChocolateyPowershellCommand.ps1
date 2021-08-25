@@ -55,9 +55,10 @@ function Install-ChocolateyPowershellCommand() {
             $UrlOnServer = Use-BinaryFiles -FilePath $filePath
         }
 
-        Write-Log "Start editing chocolateyInstall at $filePath." -Severity 1
+        Write-Log "Start edit chocolateyInstall at $filePath." -Severity 1
         Edit-ChocolateyInstaller -ToolsPath (Join-Path (Get-Item -Path ".\").FullName "tools") -FileName $FileName -FileURl "$UrlOnServer"
         New-Item -Path (Join-Path (Join-Path (Get-Item -Path ".\").FullName "tools") "overridden.info") -Force
+        Write-Log "--- Finished edit of $packageName ---" -Severity 1
     }
     else {
         Write-Log "No url in install script of $packageName found. Skip." -Severity 3

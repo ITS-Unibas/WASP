@@ -152,7 +152,9 @@ function Install-ChocolateyZipPackage() {
             # send binaries to server
             $UrlOnServer = Use-BinaryFiles -FilePath $FileName
         }
+        Write-Log "Start edit chocolateyInstall at $filePath." -Severity 1
         Edit-ChocolateyInstaller -ToolsPath (Join-Path (Get-Item -Path ".\").FullName "tools") -FileName $FileName -UnzipPath $unzipLocation -FileURl "$UrlOnServer"
+        Write-Log "--- Finished edit of $packageName ---" -Severity 1
     }
     catch {
         Write-Log ($($packageName) + ":" + " " + $_.Exception.toString()) -Severity 3

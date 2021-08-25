@@ -175,8 +175,9 @@ function Install-ChocolateyInstallPackage() {
         #$FileName = Get-item $FilePath | Select-Object -ExpandProperty Name
         $ToolsPath = (Join-Path (Get-Item -Path ".\").FullName "tools")
     
-        Write-Log "Start editing chocolateyInstall at $filePath." -Severity 1
+        Write-Log "Start edit chocolateyInstall at $filePath." -Severity 1
         Edit-ChocolateyInstaller -ToolsPath $ToolsPath -FileName $FileName -FileURl "$UrlOnServer"
+        Write-Log "--- Finished edit of $packageName ---" -Severity 1
     } 
     else {
         Write-Log "No url in install script of $packageName found. Skip." -Severity 3
