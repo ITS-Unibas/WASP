@@ -49,7 +49,7 @@ function Edit-ChocolateyInstaller {
 
                 Copy-Item -Path $NewFile -Destination $OriginalFile -ErrorAction Stop
 
-                 = Join-Path -Path $ParentSWDirectory -ChildPath "$LastVersion\tools"
+                $LastVersionPath = Join-Path -Path $ParentSWDirectory -ChildPath "$LastVersion\tools"
                 $prevChocolateyInstallFile = Join-Path -Path $LastVersionPath -ChildPath "chocolateyinstall.ps1"
 
                 # search for the next preceeding version that is not in packaging to copy the install content
