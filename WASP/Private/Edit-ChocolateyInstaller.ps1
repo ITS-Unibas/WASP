@@ -49,7 +49,7 @@ function Edit-ChocolateyInstaller {
 
                 Copy-Item -Path $NewFile -Destination $OriginalFile -ErrorAction Stop
 
-                $LastVersionPath = Join-Path -Path $ParentSWDirectory -ChildPath "$LastVersion\tools"
+                 = Join-Path -Path $ParentSWDirectory -ChildPath "$LastVersion\tools"
                 $prevChocolateyInstallFile = Join-Path -Path $LastVersionPath -ChildPath "chocolateyinstall.ps1"
 
                 # search for the next preceeding version that is not in packaging to copy the install content
@@ -214,6 +214,20 @@ function Edit-ChocolateyInstaller {
                         Copy-item $file -Destination $ToolsPath -Force -Recurse
                     }
                 }
+
+                # copy the new nuspec-File to "*.nuspec.old" for recovery and import nuspec-File from previous version
+                $nuspecPath = Split-Path $ToolsPath -Parent
+                $nuspecFilePath = (Get-ChildItem -Path $nuspecPath -Recurse -Filter *.nuspec).FullName
+                Copy-Item -Path $nuspecFilePath -Destination ($nuspecFilePath + '.old')
+
+                $previousNuspecPath = Join-Path $ParentSWDirectory $LastVersion
+                $previousNuspecFilePath = (Get-ChildItem -Path $previousNuspecPath -Recurse -Filter *.nuspec).FullName
+                Copy-Item -Path $previousNuspecFilePath -Destination $nuspecFilePath -Force
+
+                # edit the copied nuspec from a previous version: insert/replace the new version number
+                $nuspecContentRaw = Get-Content -Path $nuspecFilePath -Raw -ErrorAction Stop
+                $nuspecContentRaw = $nuspecContentRaw | ForEach-Object {$_ -replace '<version>.*</version>', '<version>$env:ChocolateyPackageVersion</version>'}
+                Set-Content -Path $nuspecFilePath -Value $nuspecContentRaw
             }
 
             # Remove zip files when remote files are present
