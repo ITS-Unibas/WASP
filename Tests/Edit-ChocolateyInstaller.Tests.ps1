@@ -164,6 +164,55 @@ Describe "Editing package installer script from chocolatey" {
             "$ToolsPath\FinalScript.ps1" | Should -FileContentMatchExactly 'This is a previous script.'
         }
 
+        It "Finds one previous nuspec-version and copies it" {
+            # Mock Get-ChildItem {return '2.0.0'} -ParameterFilter {""}
+            New-Item "TestDrive:\package\" -Name "1.0.0" -ItemType Directory
+            New-Item "TestDrive:\package\1.0.0\" -Name "tools" -ItemType Directory
+
+            $content = @'
+            <?xml version="1.0" encoding="utf-8"?>
+            <id>sourcetree</id>
+            <title>Sourcetree for Windows Enterprise</title>
+            <author>UweMax</author>
+            <version>1.0.0</version>
+'@
+           
+            $content2 = @'
+            <?xml version="1.0" encoding="utf-8"?>
+            <id>sourcetree</id>
+            <title>Sourcetree for Windows Enterprise</title>
+            <version>2.0.0</version>
+'@
+
+            Set-Content "TestDrive:\package\1.0.0\sourcetree.nuspec" -Value $content
+            Set-Content "TestDrive:\package\2.0.0\sourcetree.nuspec" -Value $content2
+            Set-Content "TestDrive:\package\1.0.0\tools\chocolateyInstall.ps1" -Value '$ErrorActionPreference = "Stop"
+
+            # Install Sourcetree Enterprise
+            $PrevVersion = $true
+            $packageArgs = @{
+              packageName   = "sourcetree"
+              softwareName  = "Sourcetree*"
+              fileType      = "msi"
+              silentArgs    = "/qn /norestart ACCEPTEULA=1 /l*v `"$env:TEMP\log.log`""
+              validExitCodes= @(0,1641,3010)
+              url           = "https://product-downloads.atlassian.com/software/sourcetree/windows/ga/SourcetreeEnterpriseSetup_3.2.6.msi"
+              checksum      = "c8b34688d7f69185b41f9419d8c65d63a2709d9ec59752ce8ea57ee6922cbba4"
+              checksumType  = "sha256"
+              url64bit      = ""
+              checksum64    = ""
+              checksumType64= "sha256"
+            }
+
+            Install-ChocolateyPackage @packageArgs'
+
+            Edit-ChocolateyInstaller $ToolsPath $FileName
+            
+            "TestDrive:\package\2.0.0\sourcetree.nuspec" | Should -FileContentMatchExactly '<author>UweMax</author>'
+            "TestDrive:\package\2.0.0\sourcetree.nuspec" | Should -FileContentMatchExactly '<version>2.0.0</version>'
+        }
+
+
         It "Finds one previous version and adds the install script as well" {
             New-Item "TestDrive:\package\" -Name "1.0.0" -ItemType Directory
             New-Item "TestDrive:\package\1.0.0\" -Name "tools" -ItemType Directory
@@ -389,6 +438,8 @@ if($NotInstalled) {
         }
 
         AfterEach {
+            Remove-Item "TestDrive:\package\1.0.0\sourcetree.nuspec" -Force -Recurse -ErrorAction SilentlyContinue
+            Remove-Item "TestDrive:\package\2.0.0\sourcetree.nuspec" -Force -Recurse -ErrorAction SilentlyContinue
             Get-ChildItem "$ToolsPath\*" -Recurse | Remove-Item
             Get-ChildItem "TestDrive:\package\1.0.0\*" -Recurse -ErrorAction SilentlyContinue | Remove-Item -Force -ErrorAction SilentlyContinue
             Get-ChildItem "TestDrive:\package\1.5.0\*" -Recurse -ErrorAction SilentlyContinue | Remove-Item -Force -ErrorAction SilentlyContinue

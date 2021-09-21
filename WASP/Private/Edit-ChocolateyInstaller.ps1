@@ -214,6 +214,22 @@ function Edit-ChocolateyInstaller {
                         Copy-item $file -Destination $ToolsPath -Force -Recurse
                     }
                 }
+
+                # path to current nuspec
+                $nuspecPath = Split-Path $ToolsPath -Parent
+                $nuspecFilePath = (Get-ChildItem -Path $nuspecPath -Recurse -Filter *.nuspec).FullName
+
+                # path to previous nuspec
+                $previousNuspecPath = Join-Path $ParentSWDirectory $LastVersion
+                $previousNuspecFilePath = (Get-ChildItem -Path $previousNuspecPath -Recurse -Filter *.nuspec).FullName
+                Copy-Item -Path $previousNuspecFilePath -Destination $nuspecFilePath -Force
+
+                # edit the copied nuspec from a previous version: insert/replace the new version number
+                $nuspecContentRaw = Get-Content -Path $nuspecFilePath -Raw -ErrorAction Stop
+                # get version by splitting the file path and use the second last element
+                $nuspecVersion = ($nuspecFilePath -split '\\')[-2]
+                $nuspecContentRaw = $nuspecContentRaw | ForEach-Object { $_ -replace '<version>.*</version>', "<version>$nuspecVersion</version>" }
+                Set-Content -Path $nuspecFilePath -Value $nuspecContentRaw
             }
 
             # Remove zip files when remote files are present
