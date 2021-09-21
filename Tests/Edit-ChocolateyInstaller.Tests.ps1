@@ -165,7 +165,7 @@ Describe "Editing package installer script from chocolatey" {
         }
 
         It "Finds one previous nuspec-version and copies it" {
-            $env:ChocolateyPackageVersion = '2.0.0'
+            Mock Get-ChildItem {return '2.0.0'} -ParameterFilter {""}
             New-Item "TestDrive:\package\" -Name "1.0.0" -ItemType Directory
             New-Item "TestDrive:\package\1.0.0\" -Name "tools" -ItemType Directory
 
@@ -208,9 +208,8 @@ Describe "Editing package installer script from chocolatey" {
 
             Edit-ChocolateyInstaller $ToolsPath $FileName
             
-            $nuspecPath = "TestDrive:\package\2.0.0"
-            "$nuspecPath\sourcetree.nuspec" | Should -FileContentMatchExactly '<author>UweMax</author>'
-            "$nuspecPath\sourcetree.nuspec" | Should -FileContentMatchExactly '<version>2.0.0</version>'
+            "TestDrive:\package\2.0.0\sourcetree.nuspec" | Should -FileContentMatchExactly '<author>UweMax</author>'
+            "TestDrive:\package\2.0.0\sourcetree.nuspec" | Should -FileContentMatchExactly '<version>2.0.0</version>'
         }
 
 
@@ -439,6 +438,8 @@ if($NotInstalled) {
         }
 
         AfterEach {
+            Remove-Item "TestDrive:\package\1.0.0\sourcetree.nuspec" -Force -Recurse -ErrorAction SilentlyContinue
+            Remove-Item "TestDrive:\package\2.0.0\sourcetree.nuspec" -Force -Recurse -ErrorAction SilentlyContinue
             Get-ChildItem "$ToolsPath\*" -Recurse | Remove-Item
             Get-ChildItem "TestDrive:\package\1.0.0\*" -Recurse -ErrorAction SilentlyContinue | Remove-Item -Force -ErrorAction SilentlyContinue
             Get-ChildItem "TestDrive:\package\1.5.0\*" -Recurse -ErrorAction SilentlyContinue | Remove-Item -Force -ErrorAction SilentlyContinue
