@@ -215,11 +215,11 @@ function Edit-ChocolateyInstaller {
                     }
                 }
 
-                # copy the new nuspec-File to "*.nuspec.old" for recovery and import nuspec-File from previous version
+                # path to current nuspec
                 $nuspecPath = Split-Path $ToolsPath -Parent
                 $nuspecFilePath = (Get-ChildItem -Path $nuspecPath -Recurse -Filter *.nuspec).FullName
-                Copy-Item -Path $nuspecFilePath -Destination ($nuspecFilePath + '.old')
 
+                # path to previous nuspec
                 $previousNuspecPath = Join-Path $ParentSWDirectory $LastVersion
                 $previousNuspecFilePath = (Get-ChildItem -Path $previousNuspecPath -Recurse -Filter *.nuspec).FullName
                 Copy-Item -Path $previousNuspecFilePath -Destination $nuspecFilePath -Force
