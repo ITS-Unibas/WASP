@@ -165,7 +165,7 @@ Describe "Editing package installer script from chocolatey" {
         }
 
         It "Finds one previous nuspec-version and copies it" {
-            Mock Get-ChildItem {return '2.0.0'} -ParameterFilter {""}
+            # Mock Get-ChildItem {return '2.0.0'} -ParameterFilter {""}
             New-Item "TestDrive:\package\" -Name "1.0.0" -ItemType Directory
             New-Item "TestDrive:\package\1.0.0\" -Name "tools" -ItemType Directory
 
