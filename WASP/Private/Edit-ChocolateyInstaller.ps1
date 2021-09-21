@@ -226,8 +226,9 @@ function Edit-ChocolateyInstaller {
 
                 # edit the copied nuspec from a previous version: insert/replace the new version number
                 $nuspecContentRaw = Get-Content -Path $nuspecFilePath -Raw -ErrorAction Stop
-                $nuspecVersion = (Get-ChildItem "Env:ChocolateyPackageVersion").Value
-                $nuspecContentRaw = $nuspecContentRaw | ForEach-Object {$_ -replace '<version>.*</version>', "<version>$nuspecVersion</version>"}
+                # get version by splitting the file path and use the second last element
+                $nuspecVersion = ($nuspecFilePath -split '\\')[-2]
+                $nuspecContentRaw = $nuspecContentRaw | ForEach-Object { $_ -replace '<version>.*</version>', "<version>$nuspecVersion</version>" }
                 Set-Content -Path $nuspecFilePath -Value $nuspecContentRaw
             }
 
