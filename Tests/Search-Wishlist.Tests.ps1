@@ -83,4 +83,24 @@ Describe "Finding package name in wishlist" {
             $packageToUpdate.version | Should -Be 2.0.0.0
         }
     }
+
+    It "Finds empty version after WhishlistSeperatorChar and interprets it as no version" {
+        Set-Content "TestDrive:\urltowishlistrepo\wishlist.txt" -Value "#packagethatshouldnotberead@1.0.0
+package@1.0.0
+package2@0.1.2.1231
+package3@"
+
+        New-Item "TestDrive:\urltoinbox\" -Name "package3" -ItemType Directory
+        $packages = @(Get-ChildItem "TestDrive:\urltoinbox\" | Where-Object { $_.PSIsContainer })
+        $packageVersion = "2.0.0"
+
+        foreach ($package in $packages) {
+            $packageToUpdate = Search-Wishlist -packagePath $package -packageVersion $packageVersion
+            $packageToUpdate | Should -Not -Be $null
+            $packageToUpdate.path | Should -Be "TestDrive:\urltofilteredinbox\package3\2.0.0"
+            $packageToUpdate.name | Should -Be "package3"
+            $packageToUpdate.version | Should -Be 2.0.0
+        }
+
+    }
 }

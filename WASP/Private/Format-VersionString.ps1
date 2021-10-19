@@ -14,6 +14,7 @@ function Format-VersionString {
     [CmdletBinding()]
     param (
         [Parameter(Mandatory = $true)]
+        [ValidateNotNullOrEmpty()]
         [string]
         $VersionString
     )
