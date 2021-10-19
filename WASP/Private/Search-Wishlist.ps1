@@ -61,6 +61,11 @@ function Search-Wishlist {
                     $previousVersion = "0.0.0.0"
                     $packageNameWhishlist = $line.Trim()
                 }
+                # Check if previousVersion is not empty
+                if(-Not $previousVersion) {
+                    Write-Log "$packageNameWhishlist has $NameAndVersionSeparator but no version is given. Handling it as if new package version" -Severity 2
+                    $previousVersion = "0.0.0.0"
+                }
 
                 if ($packageName -like $packageNameWhishlist.Trim()) {
                     try {
@@ -101,7 +106,7 @@ function Search-Wishlist {
                         Copy-Item $sourcePath -Destination $destPath -Recurse -Force
                     }
                     catch {
-                        Write-Host "$($_.Exception)"
+                        Write-Log "$($_.Exception)"
                     }
 
                     Write-Log "Found package to update: $packageName with version $packageVersion"
