@@ -176,7 +176,7 @@ function Start-PackageDistribution() {
                     $packagePath = Join-Path $PackageGalleryPath $package
                     $versionsList = Get-ChildItem $packagePath -Directory
                     #TODO: Add changes to version history here
-                    $versionsList | Sort-Object -Property { $_.Name -as [version] } | Select-Object -Last 5
+                    $versionsList = ($versionsList | Sort-Object -Property { $_.Name -as [version] } | Select-Object -Last 3)
                     foreach ($version in $versionsList) {
                         if (Test-ExistPackageVersion $GitFolderName $package $version $branch) {
                             $packageRootPath = Join-Path $packagePath $version
