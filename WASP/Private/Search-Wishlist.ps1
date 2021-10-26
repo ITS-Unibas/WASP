@@ -59,7 +59,7 @@ function Search-Wishlist {
                 }
                 else {
                     $previousVersion = "0.0.0.0"
-                    $packageNameWhishlist = $line.Trim()
+                    $packageNameWhishlist = $line.ToString().Trim()
                 }
                 # Check if previousVersion is not empty
                 if(-Not $previousVersion) {
