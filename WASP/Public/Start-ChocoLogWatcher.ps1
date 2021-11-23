@@ -33,6 +33,6 @@ function Start-ChocoLogWatcher {
         elseif ($_ -match "Information" -and $LogLevel -le 1) { Write-Host $_ -ForegroundColor Magenta }
         elseif ($_ -match "Warning" -and $LogLevel -le 2) { Write-Host $_ -ForegroundColor Yellow }
         elseif ($_ -match "Error" -and $LogLevel -le 3) { Write-Host $_ -ForegroundColor Red }
-        else { Write-Host $_ -ForegroundColor White }
+        elseif ($LogLevel -eq 0) { Write-Host $_ -ForegroundColor White }
     }
 }
