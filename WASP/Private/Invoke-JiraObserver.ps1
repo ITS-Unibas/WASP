@@ -28,8 +28,8 @@ function Invoke-JiraObserver {
         try {
             $filePath = Join-Path $JiraObserverPath "JiraObserver.py"
             $results = ([string] (python $filePath 2>&1))
-	    $results = $results -replace "DEBUG:| DEBUG:", "`nDEBUG:" -replace " ERROR:", "`nERROR:" -replace " INFO:", "`nINFO:"
-	    Write-Log ($results) -Severity 1
+            $results = $results -replace "Debug:| Debug:", "`nDebug:" -replace " Error:", "`nError:" -replace " Information:", "`nInformation:" -replace " Warning:", "`nWarning:"
+            Write-Log ($results) -Severity 1
         }
         catch {
             Write-Log "$($_.Exception)" -Severity 3
