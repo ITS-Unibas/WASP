@@ -45,7 +45,11 @@ function Start-PackageDistribution() {
         $wishlist = Get-Content -Path $wishlistPath | Where-Object { $_ -notlike "#*" }
 
         $nameAndVersionSeparator = '@'
+        $num_remoteBranches = $remoteBranches.Count
+        $num_branch = 1
         foreach ($branch in $remoteBranches) {
+            Write-Log "$num_branch/$num_remoteBranches branches - Checked out $branch" -Severity 1
+            $num_branch += 1
             if (-Not($branch -eq $config.Application.GitBranchPROD) -and -Not ($branch -eq $config.Application.GitBranchTEST)) {
                 # Check for new packages on remote branches, that contain 'dev/' in their names
                 Switch-GitBranch $PackageGalleryPath $branch
@@ -116,7 +120,7 @@ function Start-PackageDistribution() {
                         Write-Log "Calculating hash for nupkg: $nupkgNew."
                         $hashNewNupkg = Get-NupkgHash $nupkgNew $packageRootPath
                         if ($hashNewNupkg -eq $hashOldNupkg) {
-                            Write-Log "No changes detected for $packageName@$PackageVersion."
+                            Write-Log "No changes detected for $packageName@$PackageVersion." -Severity 1
                             Remove-Item -Path "$packageRootPath\*.nupkg"
                             Write-Log "Moving $packageName from $tmpdir to $packageRootPath."
                             Move-Item -Path  "$tmpdir\$env:ChocolateyPackageName.$env:ChocolateyPackageVersion.nupkg" -Destination $packageRootPath
@@ -199,7 +203,7 @@ function Start-PackageDistribution() {
                                         continue
                                     }
                                     else {
-                                        Write-Log "$package is in repackaging and its jira task is not in testing." -Severity 3
+                                        Write-Log "$package is in repackaging and its jira task is not in testing." -Severity 1
                                         continue
                                     }
                                 }
