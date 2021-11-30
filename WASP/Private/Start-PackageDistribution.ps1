@@ -46,9 +46,9 @@ function Start-PackageDistribution() {
 
         $nameAndVersionSeparator = '@'
         $num_remoteBranches = $remoteBranches.Count
-        $num_branch = 0
+        $num_branch = 1
         foreach ($branch in $remoteBranches) {
-            Write-Log "$num_branch/$num_remoteBranches - Checked out $branch" -Severity 1
+            Write-Log "$num_branch/$num_remoteBranches branches - Checked out $branch" -Severity 1
             $num_branch += 1
             if (-Not($branch -eq $config.Application.GitBranchPROD) -and -Not ($branch -eq $config.Application.GitBranchTEST)) {
                 # Check for new packages on remote branches, that contain 'dev/' in their names
