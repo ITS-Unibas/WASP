@@ -45,6 +45,17 @@ Describe "Finding package name in wishlist" {
         }
     }
 
+    It "Finds new package name without version" {
+        New-Item "TestDrive:\urltoinbox\" -Name "package3" -ItemType Directory
+        $packages = @(Get-ChildItem "TestDrive:\urltoinbox\" | Where-Object { $_.PSIsContainer })
+        $packageVersion = "1.0.0"
+
+        foreach ($package in $packages) {
+            $packageToUpdate = Search-Wishlist -packagePath $package -packageVersion $packageVersion
+            $packageToUpdate | Should -Not -Be $null
+        }
+    }
+
     It "Finds package name and has no new package version" {
         New-Item "TestDrive:\urltoinbox\" -Name "package" -ItemType Directory
         $packages = @(Get-ChildItem "TestDrive:\urltoinbox\" | Where-Object { $_.PSIsContainer })
