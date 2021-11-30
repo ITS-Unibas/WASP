@@ -90,7 +90,7 @@ function Start-Workflow {
 
         # Commit and push changes to wishlist located in the path
         if ($newPackages) {
-            Write-Log "Found new packages: $($newPackages.ForEach({$_.name}))" -Severity 1
+            Write-Log "Detected new packages: $($newPackages.ForEach({$_.name}))" -Severity 1
             # Initialize branches for each new package
             try {
                 Update-PackageInboxFiltered $newPackages
@@ -99,6 +99,8 @@ function Start-Workflow {
             catch {
                 Write-Log "Error in Update-PackageInboxFiltered workflow or while updating wishlist:`n$($_.Exception.Message)." -Severity 3
             }
+        } else {
+            Write-Log "No new packages or versions detected." -Severity 1
         }
 
         <#
