@@ -28,7 +28,7 @@ function Invoke-JiraObserver {
         try {
             $filePath = Join-Path $JiraObserverPath "JiraObserver.py"
             $results = ([string] (python $filePath 2>&1))
-            $results = $results -replace "Debug:| Debug:", "`nDebug:" -replace " Error:", "`nError:" -replace " Information:", "`nInformation:" -replace " Warning:", "`nWarning:"
+            $results = $results -replace "Debug:| Debug:", "`nDebug:" -replace " Error:", "`nError:" -replace " Information:", "`nInformation:" -replace " INFO:root", "`nINFO:root" -replace " Warning:", "`nWarning:"
             Write-Log ($results) -Severity 1
         }
         catch {
