@@ -177,6 +177,20 @@ function Start-PackageDistribution() {
                 $packagesList = Get-ChildItem $PackageGalleryPath -Directory
 
                 foreach ($package in $packagesList) {
+					
+					$foundInWishlist = $false
+					
+					foreach ($line in $wishlist) {
+						if ($line -match $package) {
+							$foundInWishlist = $true
+						}
+					}
+					
+					if (!$foundInWishlist) {
+						Write-Log "Skip $packageName : deactivated in wishlist." -Severity 1
+						continue
+					}					
+					
                     $packagePath = Join-Path $PackageGalleryPath $package
                     $versionsList = Get-ChildItem $packagePath -Directory
                     #TODO: Add changes to version history here
