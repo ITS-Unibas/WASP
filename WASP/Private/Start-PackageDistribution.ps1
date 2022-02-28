@@ -187,7 +187,7 @@ function Start-PackageDistribution() {
 					}
 					
 					if (!$foundInWishlist) {
-						Write-Log "Skip $packageName : deactivated in wishlist." -Severity 1
+						Write-Log "Skip $package : deactivated in wishlist." -Severity 1
 						continue
 					}					
 					
