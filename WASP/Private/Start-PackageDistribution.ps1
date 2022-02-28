@@ -59,12 +59,13 @@ function Start-PackageDistribution() {
 
                 $foundInWishlist = $false
                 foreach ($line in $wishlist) {
-                    if ($line -match $packageName) {
+					$line = $line -replace "@.*", ""
+                    if ($line -eq $packageName) {
                         $foundInWishlist = $true
                     }
                 }
                 if (!$foundInWishlist) {
-                    Write-Log "Skip $packageName@$PackageVersion : deactivated in wishlist." -Severity 1
+                    Write-Log "Skip $packageName : deactivated in wishlist." -Severity 1
                     continue
                 }
                 $packageRootPath = Join-Path $PackageGalleryPath (Join-Path $packageName $packageVersion)
@@ -179,18 +180,16 @@ function Start-PackageDistribution() {
                 foreach ($package in $packagesList) {
 					
 					$foundInWishlist = $false
-					
 					foreach ($line in $wishlist) {
-						if ($line -match $package) {
+						$line = $line -replace "@.*", ""
+						if ($line -eq $package) {
 							$foundInWishlist = $true
 						}
 					}
-					
 					if (!$foundInWishlist) {
 						Write-Log "Skip $package : deactivated in wishlist." -Severity 1
 						continue
-					}					
-					
+					}			
                     $packagePath = Join-Path $PackageGalleryPath $package
                     $versionsList = Get-ChildItem $packagePath -Directory
                     #TODO: Add changes to version history here
