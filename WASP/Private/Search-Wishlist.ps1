@@ -63,7 +63,7 @@ function Search-Wishlist {
                 }
                 # Check if previousVersion is not empty
                 if(-Not $previousVersion) {
-                    Write-Log "$packageNameWhishlist has $NameAndVersionSeparator but no version is given. Handling it as if new package version" -Severity 2
+                    # Write-Log "$packageNameWhishlist has $NameAndVersionSeparator but no version is given. Handling it as if new package version" -Severity 2
                     $previousVersion = "0.0.0.0"
                 }
 

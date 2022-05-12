@@ -71,7 +71,7 @@ function Update-PackageInboxFiltered {
                 $wishlist = Get-Content -Path $wishlistPath | Where-Object { $_ -notlike "#*" }
 
                 Foreach ($line in $wishlist) {
-                    $origLine = $line
+                    $origLine = $line.Trim()
                     if ($line -match "@") {
                         $packageNameWhishlist, $previousVersion = $line.split($NameAndVersionSeparator)
                     }
@@ -81,11 +81,33 @@ function Update-PackageInboxFiltered {
                     }
 
                     if ($PackageName -like $packageNameWhishlist.Trim()) {
-                        $SetContentComm = (Get-Content -Path $wishlistPath) -replace $origLine, ($PackageName + $NameAndVersionSeparator + $PackageVersion) | Set-Content $wishlistPath
+                        $null = (Get-Content -Path $wishlistPath) -replace "$origLine@.*|$origLine\n|$origLine$", ($PackageName + $NameAndVersionSeparator + $PackageVersion) | Set-Content $wishlistPath
                     }
                 }
 
+                # Sort Wishlist alphabetically (only Software that is no commented!)
+                $wishlist_content = Get-Content -Path $wishlistPath
+                $wishlist_content_length = $wishlist_content.Length
 
+                $wishlist_content_without_head = $wishlist_content[0..3]
+                $wishlist_content_software = $wishlist_content[4..($wishlist_content_length+1)]
+
+                [System.Collections.ArrayList]$wishlist_content_software_hashtag = @()
+                [System.Collections.ArrayList]$wishlist_content_software_valid = @()
+
+                foreach ($wishlist_content_line in $wishlist_content_software ){
+                    if ($wishlist_content_line -match "^#"){
+                        $null = $wishlist_content_software_hashtag.add($wishlist_content_line)
+                    } else {
+                        $null = $wishlist_content_software_valid.add($wishlist_content_line)
+                    }
+                }
+
+                $wishlist_content_software_ordered = ($wishlist_content_software_valid | Sort-Object)
+                $wishlist_orderded = $wishlist_content_without_head + $wishlist_content_software_ordered + $wishlist_content_software_hashtag
+
+                Set-Content -Path $wishlistPath -Value $wishlist_orderded
+                
             }
         }
     }
