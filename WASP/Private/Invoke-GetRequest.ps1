@@ -19,9 +19,9 @@ function Invoke-GetRequest {
         $Splat = @{
             Method      = 'GET'
             Uri         = $url
-            ContentType = "application/json"
-            Headers     = @{Authorization = "Bearer {0}"-f$config.Application.BitBucketAPIToken}
+            Headers     = @{Authorization = "Token {0}" -f $config.Application.GitHubAPITokenITSUnibasChocoUser}
         }
-        return Invoke-RestMethod @Splat -ErrorAction Stop
+        $results = Invoke-RestMethod @Splat -ErrorAction Stop
+        return $results
     }
 }

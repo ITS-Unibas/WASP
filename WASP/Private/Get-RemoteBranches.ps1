@@ -5,7 +5,9 @@ function Get-RemoteBranches {
     .DESCRIPTION
         Returns all remote branches of a given repository by using Atlassian Bitbucket REST Api
     .PARAMETER Repo
-        Name of the repository which the remote branchnames should fetched for
+        Name of the repository from which the remote branchnames should fetched for
+    .PARAMETER User
+        Name of the user of the remote repository
     #>
 
     [CmdletBinding()]
@@ -14,20 +16,25 @@ function Get-RemoteBranches {
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
         [string]
-        $repo
+        $Repo,
+
+        # Name of User
+        [Parameter(Mandatory = $true)]
+        [ValidateNotNullOrEmpty()]
+        [string]
+        $User
     )
 
     begin {
         $config = Read-ConfigFile
     }
-
+    
     process {
         $branches = New-Object System.Collections.ArrayList
-        $url = ("{0}/rest/api/1.0/projects/{1}/repos/{2}/branches" -f $config.Application.GitBaseURL, $config.Application.GitProject, $repo)
+        $url = ("{0}/repos/{1}/{2}/branches" -f $config.Application.GitHubBaseUrl,  $User, $Repo)
         try {
-            $r = Invoke-GetRequest $url
-            $JSONbranches = $r.values
-            $JSONbranches | ForEach-Object { $null = $branches.Add($_.displayID) }
+            $JSONbranches = Invoke-GetRequest $url
+            $JSONbranches | ForEach-Object { $null = $branches.Add($_.name) }
         }
         catch {
             Write-Log "Get request failed for $url" -Severity 3

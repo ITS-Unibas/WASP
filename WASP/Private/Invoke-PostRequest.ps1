@@ -9,7 +9,7 @@ function Invoke-PostRequest {
     [CmdletBinding()]
     param (
         [string]
-        $Url ,
+        $Url,
 
         [string]
         $Body
@@ -23,8 +23,7 @@ function Invoke-PostRequest {
         $Splat = @{
             Method      = 'POST'
             Uri         = $Url
-            ContentType = "application/json"
-            Headers     = @{Authorization = "Bearer {0}"-f$config.Application.BitBucketAPIToken}
+            Headers     = @{Authorization = "Token {0}" -f $config.Application.GitHubAPITokenITSUnibasChocoUser}
             Body        = $Body
         }
         return Invoke-RestMethod @Splat -ErrorAction Stop

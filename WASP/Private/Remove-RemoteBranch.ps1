@@ -14,6 +14,11 @@ function Remove-RemoteBranch {
         [ValidateNotNullOrEmpty()]
         [string]
         $Repo,
+		
+		[Parameter(Mandatory = $true)]
+        [ValidateNotNullOrEmpty()]
+        [string]
+        $User,
 
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
@@ -26,15 +31,14 @@ function Remove-RemoteBranch {
     }
 
     process {
-        $remoteBranches = Get-RemoteBranches $Repo
+        $remoteBranches = Get-RemoteBranches $Repo -User $User
         if ($remoteBranches.Contains($Branch)) {
-            Write-Log "Branch $Branch will be deleted." -Severity 1
-            $url = ("{0}/rest/branch-utils/1.0/projects/{1}/repos/{2}/branches" -f $config.Application.GitBaseURL, $config.Application.GitProject, $Repo)
-            $json = @{"name" = "refs/heads/$Branch"; "dryRun" = "false" } | ConvertTo-Json
-            Invoke-DeleteRequest $url $json
+            Write-Log "Branch $Branch will be deleted from Repo '$Repo'." -Severity 1
+            $url = ("{0}/repos/{1}/{2}/git/refs/heads/{3}" -f $config.Application.GitHubBaseUrl, $User, $Repo, $Branch)
+            $null = Invoke-DeleteRequest $url
         }
         else {
-            Write-Log "Branch $Branch to delete does not exist." -Severity 1
+            Write-Log "Branch $Branch to delete in Repo $Repo does not exist." -Severity 1
         }
     }
 

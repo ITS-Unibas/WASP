@@ -20,17 +20,19 @@ function Switch-GitBranch {
     )
 
     process {
+        $repo = $path.Split("\")[-1]
+        
         $packageName, $packageVersion, $re = $branch.split('@')
         if ($re) {
-            Write-Log ([string] (git -C $path branch -D $branch 2>&1))
+            Write-Log ($repo + ": " + [string] (git -C $path branch -D $branch 2>&1))
         }
-        Write-Log ([string] (git -C $path checkout $branch 2>&1))
+        Write-Log ($repo + ": " + [string] (git -C $path checkout $branch 2>&1))
 
         # Check if we could checkout the correct branch
         if ((Get-CurrentBranchName -Path $path) -ne $branch) {
             Write-Log "Couldn't checkout $branch in $path. Make sure the location to the repository path was set and the branch does exist" -Severity 3
         }
 
-        Write-Log ([string] (git -C $path pull 2>&1))
+        Write-Log ($repo + ": " + [string] (git -C $path pull 2>&1))
     }
 }

@@ -13,7 +13,11 @@ function Remove-LocalBranches {
     param (
         [Parameter(Mandatory = $true)]
         [string]
-        $Repository
+        $Repository,
+		
+		[Parameter(Mandatory = $true)]
+        [string]
+        $User
     )
 
     begin {
@@ -26,7 +30,7 @@ function Remove-LocalBranches {
     }
 
     process {
-        $remoteBranches = Get-RemoteBranches $GitFolderName
+        $remoteBranches = Get-RemoteBranches -Repo $GitFolderName -User $User
 
         $localBranches = git -C $RepositoryPath branch
 

@@ -85,33 +85,28 @@ function Search-Wishlist {
                         Write-Log "The version $packageVersion could not be parsed" -Severity 2
                     }
 
-                    #Create directory structure if not existing
-                    # if ($manual) {
-                    #     $destPath = Join-Path $PackagesInbxFilteredPath $packageName
-                    # }
-                    # else {
-                    #     $destPath = Join-Path $PackagesInbxFilteredPath (Join-Path $packageName $packageVersion)
-                    # }
-
                     $destPath = Join-Path $PackagesInbxFilteredPath (Join-Path $packageName $packageVersion)
-
-                    try {
-                        Write-Log "Copying $($packagePath.FullName) to $destPath"
-                        if ($manual) {
-                            $sourcePath = Join-Path $packagePath.FullName $packageVersion
+                    
+                    # Check wether or not the destPath already exists! If it exists, then the update is alreay imported from an external repo (A) and does not need to be copied once again from another reop (X)
+                    if (!(Test-Path -Path $destPath)){
+                        try {
+                            Write-Log "Copying $($packagePath.FullName) to $destPath"
+                            if ($manual) {
+                                $sourcePath = Join-Path $packagePath.FullName $packageVersion
+                            }
+                            else {
+                                $sourcePath = $packagePath.FullName
+                            }
+                            Copy-Item $sourcePath -Destination $destPath -Recurse -Force
                         }
-                        else {
-                            $sourcePath = $packagePath.FullName
+                        catch {
+                            Write-Log "$($_.Exception)"
                         }
-                        Copy-Item $sourcePath -Destination $destPath -Recurse -Force
+    
+                        Write-Log "Found package to update: $packageName with version $packageVersion"
+    
+                        return New-Object psobject @{'path' = $destPath; 'name' = $packageName; 'version' = $packageVersion }
                     }
-                    catch {
-                        Write-Log "$($_.Exception)"
-                    }
-
-                    Write-Log "Found package to update: $packageName with version $packageVersion"
-
-                    return New-Object psobject @{'path' = $destPath; 'name' = $packageName; 'version' = $packageVersion }
                 }
             }
         }
