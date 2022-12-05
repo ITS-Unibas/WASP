@@ -33,6 +33,8 @@ function Update-PackageInboxFiltered {
         $wishlistPath = Join-Path -Path  $PackagesWishlistPath -ChildPath "wishlist.txt"
 
         $NameAndVersionSeparator = $config.Application.WishlistSeperatorChar
+		$GitHubOrganisation =  $config.Application.GitHubOrganisation
+        $GitHubUser = $config.Application.GitHubUser
 
     }
     process {
@@ -47,11 +49,11 @@ function Update-PackageInboxFiltered {
             $PackageName = $Package.name
             $PackageVersion = $Package.version
 
-            Write-Log "Starting update routine for package $PackageName"
             $DevBranch = "$($Config.Application.GitBranchDEV)$($PackageName)@$PackageVersion"
-            $RemoteBranches = Get-RemoteBranches -repo $GitRepoPackageGallery
+            $RemoteBranches = Get-RemoteBranches -Repo $GitRepoPackageGallery -User $GitHubOrganisation
 
             if (-Not $RemoteBranches.Contains($DevBranch)) {
+                Write-Log "Starting update routine for package $PackageName"
                 Write-Log ([string](git -C $PackagesInboxRepoPath add $PackagePath 2>&1))
                 # Create new branch
                 New-LocalBranch $PackagesInboxRepoPath $DevBranch
@@ -64,9 +66,9 @@ function Update-PackageInboxFiltered {
                 Write-Log ([string](git -C $PackagesInboxRepoPath commit -m "Automated commit: Added $DevBranch" 2>&1))
                 Write-Log ([string](git -C $PackagesInboxRepoPath push -u origin $DevBranch 2>&1))
                 # Is this necessary?
-                Write-Log ([string](git -C $PackagesInboxRepoPath checkout master 2>&1))
+                Write-Log ([string](git -C $PackagesInboxRepoPath checkout main 2>&1))
 
-                New-PullRequest -SourceRepo $GitRepoInbox -SourceBranch $DevBranch -DestinationRepo $GitRepoPackageGallery -DestinationBranch $DevBranch -ErrorAction Stop
+                New-PullRequest -SourceRepo $GitRepoInbox -SourceUser $GitHubUser -SourceBranch $DevBranch -DestinationRepo $GitRepoPackageGallery -DestinationUser $GitHubOrganisation -DestinationBranch $DevBranch -ErrorAction Stop
 
                 $wishlist = Get-Content -Path $wishlistPath | Where-Object { $_ -notlike "#*" }
 

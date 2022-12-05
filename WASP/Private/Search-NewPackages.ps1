@@ -44,6 +44,7 @@ function Search-NewPackages {
             continue
         }
         $FoundPackages = Search-Wishlist $package $version -manual:$Manual
+        
         if ($FoundPackages) {
             $null = $NewPackagesList.Add($FoundPackages)
         }

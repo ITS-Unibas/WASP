@@ -5,7 +5,7 @@ function Test-ExistPackageVersion {
     .DESCRIPTION
         By checking the url, the existence of a folder with a given version name is checked.
         The folder is defined by $packageName/$version
-        URL will look like this:  https://git.its.unibas.ch/rest/api/1.0/projects/csswcs/repos/package-gallery/browse/sourcetree/3.1.3?at=prod
+        URL will look like this:  https://api.github.com/repos/wasp-its/zzz-test-package-gallery/contents/git.install/2.37.0?ref=dev/git.install@2.37.0
     .NOTES
         FileName: Format-VersionString.ps1
         Author: Kevin Schaefer, Maximilian Burgert
@@ -34,6 +34,7 @@ function Test-ExistPackageVersion {
         [ValidateNotNullOrEmpty()]
         [string]
         $Branch
+		
     )
 
     begin {
@@ -41,10 +42,10 @@ function Test-ExistPackageVersion {
     }
 
     process {
-        $url = ("{0}/rest/api/1.0/projects/{1}/repos/{2}/browse/{3}/{4}?at={5}" -f $config.Application.GitBaseURL, $config.Application.GitProject, $Repository, $Package, $Version, $Branch)
+        $url = ("{0}/repos/{1}/{2}/contents/{3}/{4}?ref={5}" -f $config.Application.GitHubBaseUrl, $config.Application.GitHubOrganisation, $Repository, $Package, $Version, $Branch)
         try {
             $request = Invoke-GetRequest $url
-            return $true
+            return $true         
         }
         catch {
             # Get request failed for the given url, this means that either the version or the package does not yet exist in that branch

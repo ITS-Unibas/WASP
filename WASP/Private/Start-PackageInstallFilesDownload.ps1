@@ -19,6 +19,11 @@ function Start-PackageInstallFilesDownload {
         [parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
         [string]
+        $package,
+
+        [parameter(Mandatory = $true)]
+        [ValidateNotNullOrEmpty()]
+        [string]
         $packToolInstallPath,
 
         [ValidateNotNullOrEmpty()]
@@ -39,13 +44,26 @@ function Start-PackageInstallFilesDownload {
                 Write-Log "Package uses remote files."
                 $script:remoteFilePresent = $true
             } }
+
+        # Check if a template for the 'chocolateyInstall.ps1' is available and use it later on to rewrite 'chocolateyInstall.ps1' correctly for our workflow
+        
         if ($ForcedDownload -and (-Not $script:remoteFilePresent)) {
             Write-Log "Forced download, start override." -Severity 1
+            $template = Search-TemplateFile -package $package
+            # Rewrite 'chocolateyInstall.ps1' correctly for our workflow
+            if ($template.availabe){
+                Rewrite-ChocolateyInstallScriptWithTemplate -package $package -packToolInstallPath $packToolInstallPath -templateFilePath $template.templateFilePath
+            }
             Invoke-Expression -Command $packToolInstallPath
         }
         else {
             if (-Not (Test-Path $original)) {
                 Write-Log "No overriden install script found, start override." -Severity 1
+                $template = Search-TemplateFile -package $package
+                # Rewrite 'chocolateyInstall.ps1' correctly for our workflow
+                if ($template.available){
+                    Rewrite-ChocolateyInstallScriptWithTemplate -package $package -packToolInstallPath $packToolInstallPath -templateFilePath $template.templateFilePath
+                }
                 Invoke-Expression -Command $packToolInstallPath
             }
             else {

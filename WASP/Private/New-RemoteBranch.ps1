@@ -15,6 +15,11 @@ function New-RemoteBranch {
         [ValidateNotNullOrEmpty()]
         [string]
         $Repository,
+		
+		[Parameter(Mandatory = $true)]
+        [ValidateNotNullOrEmpty()]
+        [string]
+        $User,
 
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
@@ -23,8 +28,8 @@ function New-RemoteBranch {
     )
 
     begin {
-        $RemoteBranches = Get-RemoteBranches -Repo $Repository
         $Config = Read-ConfigFile
+        $RemoteBranches = Get-RemoteBranches -Repo $Repository -User $User
     }
 
     process {
@@ -33,10 +38,22 @@ function New-RemoteBranch {
             return
         }
 
-        Write-Log "Branch $BranchName does not exist. Will create a new branch from master."
-        $url = ("{0}/rest/api/1.0/projects/{1}/repos/{2}/branches" -f $Config.Application.GitBaseUrl, $Config.Application.GitProject, $Repository)
+        Write-Log "Branch $BranchName does not exist in $Repository. Will create a new branch."
+        
+        # URL to get all branches including all infos (ref, node_id, commits/sha...)
+        $url = ("{0}/repos/{1}/{2}/git/refs/heads" -f $config.Application.GitHubBaseUrl, $User, $Repository)
+        
+        # Get the latest commit / sha-Value from prod to checkout a new branch
+        $branchValues = Invoke-GetRequest -Url $url
+        $branchValueProd = $branchValues | Where-Object {$_.ref -eq "refs/heads/prod"}
+        $lastCommitProd = $branchValueProd.object.sha
+        
         # Convert Hashtable to JSON: https://docs.microsoft.com/en-us/powershell/module/microsoft.powershell.utility/convertto-json?view=powershell-6
-        $json = @{"name" = $BranchName; "startPoint" = "refs/heads/{0}" -f $Config.Application.GitBranchPROD } | ConvertTo-Json
+        $json = @{"ref" = "refs/heads/$BranchName"; "sha" = $lastCommitProd} | ConvertTo-Json
+
+        # URL to set up new branch 
+        $url = ("{0}/repos/{1}/{2}/git/refs" -f $config.Application.GitHubBaseUrl, $User, $Repository)
+        
         $null = Invoke-PostRequest -Url $url -Body $json -ErrorAction Stop
         Write-Log "Branch $BranchName was successfully created for $Repository"
 

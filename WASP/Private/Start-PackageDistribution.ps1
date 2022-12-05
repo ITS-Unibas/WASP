@@ -21,7 +21,7 @@ function Start-PackageDistribution() {
         $GitFile = $GitRepo.Substring($GitRepo.LastIndexOf("/") + 1, $GitRepo.Length - $GitRepo.LastIndexOf("/") - 1)
         $GitFolderName = $GitFile.Replace(".git", "")
         $PackageGalleryPath = Join-Path -Path $config.Application.BaseDirectory -ChildPath $GitFolderName
-        $OldWorkingDir = $PWD.Path
+        $OldWorkingDir = $PWD.Path #?
 
         $GitRepo = $config.Application.PackagesWishlist
         $GitFile = $GitRepo.Substring($GitRepo.LastIndexOf("/") + 1, $GitRepo.Length - $GitRepo.LastIndexOf("/") - 1)
@@ -30,6 +30,7 @@ function Start-PackageDistribution() {
         $wishlistPath = Join-Path -Path  $PackagesWishlistPath -ChildPath "wishlist.txt"
 
         $tmpdir = $env:TEMP
+		$GitHubOrganisation =  $config.Application.GitHubOrganisation
     }
 
     process {
@@ -37,10 +38,10 @@ function Start-PackageDistribution() {
 
         Switch-GitBranch $PackageGalleryPath $config.Application.GitBranchPROD
 
-        $remoteBranches = Get-RemoteBranches $GitFolderName
+        $remoteBranches = Get-RemoteBranches -Repo $GitFolderName -User $GitHubOrganisation
         $repackagingBranches = $remoteBranches | Where-Object { ($_ -split '@').Length -eq 3 }
 
-        Write-Log "Remote branches found: $remoteBranches"
+        Write-Log "Remote branches: $remoteBranches"
 
         $wishlist = Get-Content -Path $wishlistPath | Where-Object { $_ -notlike "#*" }
 
@@ -48,9 +49,9 @@ function Start-PackageDistribution() {
         $num_remoteBranches = $remoteBranches.Count
         $num_branch = 1
         foreach ($branch in $remoteBranches) {
-            Write-Log "$num_branch/$num_remoteBranches branches - Checked out $branch" -Severity 1
+            Write-Log "$num_branch/$num_remoteBranches branches - Check out $branch" -Severity 1
             $num_branch += 1
-            if (-Not($branch -eq $config.Application.GitBranchPROD) -and -Not ($branch -eq $config.Application.GitBranchTEST)) {
+            if (-Not($branch -eq $config.Application.GitBranchPROD) -and -Not($branch -eq $config.Application.GitBranchTEST)) {
                 # Check for new packages on remote branches, that contain 'dev/' in their names
                 Switch-GitBranch $PackageGalleryPath $branch
 
@@ -65,17 +66,17 @@ function Start-PackageDistribution() {
                     }
                 }
                 if (!$foundInWishlist) {
-                    Write-Log "Skip $packageName : deactivated in wishlist." -Severity 1
+                    Write-Log "Skip $packageName - deactivated in wishlist." -Severity 1
                     continue
                 }
                 $packageRootPath = Join-Path $PackageGalleryPath (Join-Path $packageName $packageVersion)
                 if (-Not (Test-Path $packageRootPath)) {
-                    Write-Log "Skip $packageName@$PackageVersion : PR was not yet merged." -Severity 1
+                    Write-Log "Skip $packageName@$PackageVersion - PR was not yet merged." -Severity 1
                     continue
                 }
                 $toolsPath = Join-Path -Path $packageRootPath -ChildPath "tools"
                 if (-Not (Test-Path $toolsPath)) {
-                    Write-Log ("Skip $packageName@$PackageVersion : No tools/ folder.") -Severity 3
+                    Write-Log ("Skip $packageName@$PackageVersion - No tools/ folder.") -Severity 3
                     continue
                 }
                 # Call Override Function with the wanted package to override
@@ -83,14 +84,14 @@ function Start-PackageDistribution() {
                     Set-Location "$PackageGalleryPath\$packageName\$packageVersion"
                     $nuspecFile = (Get-ChildItem -Path $packageRootPath -Recurse -Filter *.nuspec).FullName
                     if (-Not $nuspecFile) {
-                        Write-Log "Skip $packageName@$PackageVersion : No nuspec file found." -Severity 3
+                        Write-Log "Skip $packageName@$PackageVersion - No nuspec file found." -Severity 3
                         continue
                     }
                     $env:ChocolateyPackageName = ([xml](Get-Content -Path $nuspecFile)).Package.metadata.id
                     $env:ChocolateyPackageVersion = ([xml](Get-Content -Path $nuspecFile)).Package.metadata.version
-                    Start-PackageInstallFilesDownload ( Join-Path $toolsPath "chocolateyInstall.ps1") $ForcedDownload
+                    Start-PackageInstallFilesDownload -package $packageName -packToolInstallPath ( Join-Path $toolsPath "chocolateyInstall.ps1") -ForcedDownload $ForcedDownload
                     if ($LASTEXITCODE -eq 1) {
-                        Write-Log "Skip $packageName@$PackageVersion : Override-Function terminated with an error." -Severity 3
+                        Write-Log "Skip $packageName@$PackageVersion - Override-Function terminated with an error." -Severity 3
                         continue
                     }
                     Write-Log "Check if nupkg exists."
@@ -192,10 +193,10 @@ function Start-PackageDistribution() {
 					}			
                     $packagePath = Join-Path $PackageGalleryPath $package
                     $versionsList = Get-ChildItem $packagePath -Directory
-                    #TODO: Add changes to version history here
+                    # Add changes to version history here
                     $versionsList = ($versionsList | Sort-Object -Property { $_.Name -as [version] } | Select-Object -Last 3)
                     foreach ($version in $versionsList) {
-                        if (Test-ExistPackageVersion $GitFolderName $package $version $branch) {
+                        if (Test-ExistPackageVersion -Repository $GitFolderName -Package $package -Version $version -Branch $branch) {
                             $packageRootPath = Join-Path $packagePath $version
                             $FullVersion = ([xml](Get-Content -Path (Join-Path $packageRootPath "$package.nuspec"))).Package.metadata.version
                             $FullID = ([xml](Get-Content -Path (Join-Path $packageRootPath "$package.nuspec"))).Package.metadata.id

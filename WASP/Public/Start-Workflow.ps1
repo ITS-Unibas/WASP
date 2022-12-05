@@ -30,6 +30,11 @@ function Start-Workflow {
         $GitFolderName = $GitFile.Replace(".git", "")
         $PackagesWishlistPath = Join-Path -Path $config.Application.BaseDirectory -ChildPath $GitFolderName
 
+        $GitRepo = $config.Application.ChocoTemplates
+        $GitFile = $GitRepo.Substring($GitRepo.LastIndexOf("/") + 1, $GitRepo.Length - $GitRepo.LastIndexOf("/") - 1)
+        $GitFolderName = $GitFile.Replace(".git", "")
+        $PackagesChocoTemplatesPath = Join-Path -Path $config.Application.BaseDirectory -ChildPath $GitFolderName
+
         # Load Helper Function from chocolatey in current session
         Initialize-Prerequisites
     }
@@ -37,13 +42,21 @@ function Start-Workflow {
     process {
         Remove-HandledBranches
 
+        $repo = $PackagesInboxPath.split("\")[-1]
         # Update the added submodules in the package-inbox-automatic repository
-        Write-Log ([string](git -C $PackagesInboxPath pull 2>&1))
+        Write-Log ($repo + ": " + [string](git -C $PackagesInboxPath pull 2>&1))
         Write-Log ([string](git -C $PackagesInboxPath submodule init 2>&1))
         Write-Log ([string](git -C $PackagesInboxPath submodule update --remote --recursive 2>&1))
 
+        $repoTempaltes = $PackagesChocoTemplatesPath.split("\")[-1]
+        # Update the templates-Repo to be on latest
+        Switch-GitBranch $PackagesChocoTemplatesPath 'main'
+
         # Commit and push changes to wishlist located in the path
-        Switch-GitBranch $PackagesWishlistPath 'master'
+        Switch-GitBranch $PackagesWishlistPath 'main'
+
+        # Show a searching log-entry to see, the WF is not hanging
+        Write-Log "Detecting new packages and versions..." -Severity 1
 
         # Get all the packages which are to accept and further processed
         $newPackages = New-Object System.Collections.ArrayList
@@ -55,7 +68,7 @@ function Start-Workflow {
         # Automatic updated packages
         $externalRepositories = @(Get-ChildItem $PackagesInboxPath)
         foreach ($repository in $externalRepositories) {
-            if ($repository.Name -eq '.gitmodules' -or $repository.Name -like '*manual*') {
+            if ($repository.Name -eq '.gitmodules' -or $repository.Name -eq 'README.md' -or $repository.Name -like '*manual*') {
                 continue
             }
 
@@ -90,11 +103,12 @@ function Start-Workflow {
 
         # Commit and push changes to wishlist located in the path
         if ($newPackages) {
-            Write-Log "Detected new packages: $($newPackages.ForEach({$_.name}))" -Severity 1
+            Write-Log "Detected new packages:`n $($newPackages.ForEach({$_.name + " " + $_.version + "`n"}))" -Severity 1
+            Invoke-Webhook $newPackages
             # Initialize branches for each new package
             try {
                 Update-PackageInboxFiltered $newPackages
-                Update-Wishlist $PackagesWishlistPath 'master'
+                Update-Wishlist $PackagesWishlistPath 'main'
             }
             catch {
                 Write-Log "Error in Update-PackageInboxFiltered workflow or while updating wishlist:`n$($_.Exception.Message)." -Severity 3
@@ -103,13 +117,11 @@ function Start-Workflow {
             Write-Log "No new packages or versions detected." -Severity 1
         }
 
-        <#
-        Start distributing packages to choco servers and promote packages based on package issue position
-        on assicuated atlassian jira kanban board
-        #>
+        # Start distributing packages to choco servers and promote packages based on package issue position on assicuated atlassian jira kanban board
         Start-PackageDistribution -ForcedDownload $ForcedDownload
 
-        # Project current deployment status of packages to jira board
+        # Start JIRA-Observer
+        Write-Log "Running JIRA Observer..." -Severity 1
         Invoke-JiraObserver
     }
 

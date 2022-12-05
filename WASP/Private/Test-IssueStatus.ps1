@@ -28,11 +28,12 @@ function Test-IssueStatus {
     begin {
         $Config = Read-ConfigFile
         $JiraUrl = $config.Application.JiraBaseURL
+        $ProjectKey = $config.Application.ProjectKey
     }
 
     process {
         $Base64Auth = [Convert]::ToBase64String([Text.Encoding]::ASCII.GetBytes(("{0}:{1}" -f $Config.Application.RepositoryManagerAPIUser, $Config.Application.RepostoryManagerAPIPassword)))
-        $Uri = $JiraUrl + "/rest/api/2/search?jql=project=WASP%20AND%20issuetype=%20Story%20AND%20status=%20$Status%20AND%20summary~`"$PackageName@$PackageVersion`""
+        $Uri = $JiraUrl + "/rest/api/2/search?jql=project=$ProjectKey%20AND%20issuetype=%20Story%20AND%20status=%20$Status%20AND%20summary~`"$PackageName@$PackageVersion`""
         Write-Log "Checking status for issue: $Uri"
         try {
             $Response = Invoke-RestMethod -Uri $Uri -Method Get -Headers @{Authorization = "Basic $Base64Auth" }

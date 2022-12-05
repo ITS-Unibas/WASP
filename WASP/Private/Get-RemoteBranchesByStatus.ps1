@@ -5,7 +5,9 @@ function Get-RemoteBranchesByStatus {
     .DESCRIPTION
         Status can either be OPEN, MERGED or DECLINED
     .PARAMETER Repo
-        Name of the repository which the remote branchnames should fetched for
+        Name of the repository from which the remote branchnames should fetched for
+    .PARAMETER User
+        Name of the user of the remote repository
     .PARAMETER Status
         Pull request status to filter
     #>
@@ -14,6 +16,12 @@ function Get-RemoteBranchesByStatus {
         # Name of repository
         [string]
         $Repo,
+
+        # Name of User
+        [Parameter(Mandatory = $true)]
+        [ValidateNotNullOrEmpty()]
+        [string]
+        $User,
 
         # Status of PR in branch to filter
         [string]
@@ -26,11 +34,10 @@ function Get-RemoteBranchesByStatus {
 
     process {
         $branches = New-Object System.Collections.ArrayList
-        $url = ("{0}/rest/api/1.0/projects/{1}/repos/{2}/pull-requests?state=$Status" -f $config.Application.GitBaseURL, $config.Application.GitProject, $Repo)
-        $r = Invoke-GetRequest $url
+        $url = ("{0}/repos/{1}/{2}/pulls?state=$Status" -f $config.Application.GitHubBaseUrl, $config.Application.GitHubOrganisation, $Repo)
         try {
-            $JSONbranches = $r.values
-            $JSONbranches | ForEach-Object { $null = $branches.Add($_.fromRef.displayID) }
+            $JSONbranches = Invoke-GetRequest $url
+            $JSONbranches | ForEach-Object { $null = $branches.Add($_.base.ref) }
         } catch {
             Write-Log "Get request failed for $url" -Severity 3
         }
