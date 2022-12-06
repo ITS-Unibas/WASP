@@ -10,8 +10,8 @@ Describe "Removing remote branch" {
     BeforeAll {
         $config = '{
             "Application": {
-                "GitProject": "csswcs",
-                "GitBaseUrl": "https://git.its.unibas.ch"
+                "GitHubUser": "Choco",
+                "GitHubBaseUrl": "https://api.github.com"
             }
         }'
         Mock Read-ConfigFile { return ConvertFrom-Json $config }
@@ -20,16 +20,17 @@ Describe "Removing remote branch" {
 
         $repo = 'repo'
         $branch = 'branch-1'
+        $user = $config.Application.GitHubUser
     }
 
     It "Finds branch in remote repository branches" {
         Mock Get-RemoteBranches { return @('branch-1', 'branch-2') }
-        Remove-RemoteBranch $repo $branch
+        Remove-RemoteBranch $repo $branch $user
         Assert-MockCalled Invoke-DeleteRequest -Exactly 1 -Scope It
     }
     It "Does not find branch in remote repository branches" {
         Mock Get-RemoteBranches { return @('branch-0', 'branch-2') }
-        Remove-RemoteBranch $repo $branch
+        Remove-RemoteBranch $repo $branch $user
         Assert-MockCalled Invoke-DeleteRequest -Exactly 0 -Scope It
     }
 }
