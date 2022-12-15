@@ -145,6 +145,12 @@ function Rewrite-ChocolateyInstallScriptWithTemplate {
             } catch {
                 Write-Log -Message "Rewriting of the chocolateyInstall-Script for $package failed! Error: $($Error[0])" -Severity 3
             }
-        }        
+        }
+        
+        # Add and commit changes to allow a checkout to other branches, if the rewrite did not succed or if it succeded and the newly written chocolateyInstall.ps1 is though buggy
+        Write-Log "Commiting and pushing changed chocolateyInstall.ps1 file." -Severity 1
+        Write-Log ([string] (git -C $packageRootPath add "tools/chocolateyInstall.ps1" 2>&1))
+        Write-Log ([string] (git -C $packageRootPath commit -m "Override because of choco-template for $packageName" 2>&1))
+        Write-Log ([string] (git -C $packageRootPath push 2>&1))
     }
 }
