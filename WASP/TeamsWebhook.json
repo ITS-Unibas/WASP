@@ -1,0 +1,61 @@
+{
+    "type": "message",
+    "attachments": [
+       {
+          "contentType": "application/vnd.microsoft.card.adaptive",
+          "contentUrl": null,
+          "content":
+		  {
+			"$schema": "http://adaptivecards.io/schemas/adaptive-card.json",
+			"type": "AdaptiveCard",
+			"version": "1.5",
+			"msteams": {
+				"width": "Full"
+			},
+			"body": [
+				{
+					"type": "TextBlock",
+					"text": "New Software-Package(s) available [Insert system here]",
+					"wrap": true,
+					"color": "Insert color here",
+					"size": "large",
+					"weight": "bolder"
+				},
+				{
+					"type": "ColumnSet",
+					"columns": [
+						{
+							"type": "Column",
+							"items": [
+								{
+									"style": "Person",
+									"type": "Image",
+									"url": "https://picsum.photos/100",
+									"isVisible": true,
+									"id": "image",
+									"altText": "Image",
+									"size": "Medium"
+								}
+							],
+							"width": "fit"
+						},
+						{
+							"type": "Column",
+							"items": [
+								{
+									"type": "TextBlock",
+									"text": "Insert packages here",
+									"isVisible": true,
+									"id": "packages",
+									"size": "Medium"
+								},
+							],
+							"width": "stretch"
+						}
+					]
+				}
+			]
+		  }
+       }
+	]
+}
