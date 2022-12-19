@@ -27,6 +27,7 @@
         "ChocoServerPROD": "",
         "ApiKeyRepostoryManager": "",
         "TeamsWebhook": "",
+		"WebhookTemplate": "",
 		"PreAdditionalScripts": [
             "InitialScript.ps1"
         ],
