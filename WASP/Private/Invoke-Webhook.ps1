@@ -19,9 +19,8 @@ function Invoke-Webhook {
     begin {
         $Config = Read-ConfigFile
         $WebhookURL = $config.Application.TeamsWebhook
-        $PackagesInbox = $config.Application.PackagesInbox
         $system = $config.Application.System
-        $date = Get-Date -Format "yyyy-MM-dd HH:mm"
+        $WebHookTemplate = $config.Application.WebhookTemplate
     }
 
     process {        
@@ -34,23 +33,31 @@ function Invoke-Webhook {
         }
 
         # Formatting for a nicer look in MS Teams
-        $messageText = foreach ($Package in $NewPackages){$Package.Insert($Package.Length, "`n`n")}
+        $pacakgesEdited = foreach ($Package in $NewPackages){$Package.Insert($Package.Length, "`n`n")}
 
-        $JSONBody = @{
-            "@type" = "MessageCard"
-            "@context" = "<http://schema.org/extensions>"
-            "summary" = "New Software-Packages available"
-            "themeColor" = 'FFCC00'
-            "title" = "[$date] New Software-Package(s) [$system]"
-            "text" = "The following new packages are now available and can be merged into the package gallery:`n`n`n`n$messageText"
+        # Get the Webhook-Template and add the necessary fields: system, color and packages
+        $systemRegEx = 'Insert system here'
+        $colorRegEx = 'Insert color here'
+        $packagesRegEx = 'Insert packages here'
+        $color = ''
+
+        switch ($system) {
+            "Test-System" {
+                $color = "attention" # red
+            }
+            "Prod-System" {
+                $color = "good" # green
+            }
         }
 
-        $TeamMessageBody = ConvertTo-Json $JSONBody
+        $JSONBody = Get-Content $WebHookTemplate
+        $JSONBodyNew = $JSONBody
+        $JSONBodyNew = $JSONBodyNew -replace $systemRegEx, $system -replace $packagesRegEx, $pacakgesEdited -replace $colorRegEx, $color
 
         $parameters = @{
             "URI" = $WebhookURL
             "Method" = 'POST'
-            "Body" = $TeamMessageBody
+            "Body" = $JSONBodyNew
             "ContentType" = 'application/json'
         }
         
