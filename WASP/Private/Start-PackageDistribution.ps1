@@ -16,6 +16,7 @@ function Start-PackageDistribution() {
 
     begin {
         $config = Read-ConfigFile
+		$configVersionHistoy = $config.Application.CheckVersionHistory
 
         $GitRepo = $config.Application.PackageGallery
         $GitFile = $GitRepo.Substring($GitRepo.LastIndexOf("/") + 1, $GitRepo.Length - $GitRepo.LastIndexOf("/") - 1)
@@ -194,7 +195,7 @@ function Start-PackageDistribution() {
                     $packagePath = Join-Path $PackageGalleryPath $package
                     $versionsList = Get-ChildItem $packagePath -Directory
                     # Add changes to version history here
-                    $versionsList = ($versionsList | Sort-Object -Property { $_.Name -as [version] } | Select-Object -Last 3)
+                    $versionsList = ($versionsList | Sort-Object -Property { $_.Name -as [version] } | Select-Object -Last $configVersionHistoy)
                     foreach ($version in $versionsList) {
                         if (Test-ExistPackageVersion -Repository $GitFolderName -Package $package -Version $version -Branch $branch) {
                             $packageRootPath = Join-Path $packagePath $version

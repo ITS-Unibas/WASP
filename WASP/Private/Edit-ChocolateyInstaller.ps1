@@ -134,12 +134,12 @@ function Edit-ChocolateyInstaller {
                 }
             }
 
-            # If a remote file is available, unzip location is empty
-            if ($UnzipPath -and (-Not $script:RemoteFilePresent)) {
-                Write-Log "Set unzip location to $UnzipPath" -Severity 1
-                $InstallerContent = $InstallerContent | ForEach-Object { $_ -replace '.*unzipLocation[\s]*=[\s]*Get-PackageCacheLocation', "unzipLocation = $UnzipPath" }
-                $InstallerContent = $InstallerContent | ForEach-Object { $_ -replace 'Install-ChocolateyZipPackage\s*@packageArgs', "Install-ChocolateyInstallPackage @packageArgs" }
-            }
+            # If a remote file is available, unzip location is empty - REMOVED because of use-case: zip in package and zip has no installer inside 
+            #if ($UnzipPath -and (-Not $script:RemoteFilePresent)) {
+            #    Write-Log "Set unzip location to $UnzipPath" -Severity 1
+            #    $InstallerContent = $InstallerContent | ForEach-Object { $_ -replace '.*unzipLocation[\s]*=[\s]*Get-PackageCacheLocation', "unzipLocation = $UnzipPath" }
+            #    $InstallerContent = $InstallerContent | ForEach-Object { $_ -replace 'Install-ChocolateyZipPackage\s*@packageArgs', "Install-ChocolateyInstallPackage @packageArgs" }
+            #}
 
             # Replace fixed version and name with generic expression
             $InstallerContent = $InstallerContent | ForEach-Object { $_ -replace '\$version[\s]*=[\s]*.*', '$version = $env:ChocolateyPackageVersion' }
