@@ -42,7 +42,11 @@ function Start-PackageDistribution() {
         $remoteBranches = Get-RemoteBranches -Repo $GitFolderName -User $GitHubOrganisation
         $repackagingBranches = $remoteBranches | Where-Object { ($_ -split '@').Length -eq 3 }
 
-        Write-Log "Remote branches: $remoteBranches"
+        Write-Log "Remote branches:" 
+        foreach ($remoteBranch in $remoteBranches) {
+            Write-Log $remoteBranch
+        } 
+
 
         $wishlist = Get-Content -Path $wishlistPath | Where-Object { $_ -notlike "#*" }
 
@@ -78,6 +82,12 @@ function Start-PackageDistribution() {
                 $toolsPath = Join-Path -Path $packageRootPath -ChildPath "tools"
                 if (-Not (Test-Path $toolsPath)) {
                     Write-Log ("Skip $packageName@$PackageVersion - No tools/ folder.") -Severity 3
+                    continue
+                }
+                # Check if the package, that has a dev branch is still in Development in JIRA or if it has been approved for Testing. 
+                # Only run the package distribution for packages that are in Development.
+                $process = Test-JiraIssue -packageName $packageName -packageVersion $packageVersion
+                if(-Not $process){
                     continue
                 }
                 # Call Override Function with the wanted package to override

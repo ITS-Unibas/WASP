@@ -20,7 +20,7 @@ function Test-IssueStatus {
         $PackageVersion,
 
         [Parameter(Mandatory = $true)]
-        [ValidateSet("Devevlopment", "Testing", "Production")]
+        [ValidateSet("Development", "Testing", "Production")]
         [String]
         $Status
     )
