@@ -1,9 +1,9 @@
 function Test-ExistPackageVersion {
     <#
     .SYNOPSIS
-        Tests if package exists on a given branch with a given version.
+        Tests if a package exists on a given branch with a given version
     .DESCRIPTION
-        By checking the url, the existence of a folder with a given version name is checked.
+        By checking the url, the existence of a folder with a given version name is checked
         The folder is defined by $packageName/$version
         URL will look like this:  https://api.github.com/repos/wasp-its/zzz-test-package-gallery/contents/git.install/2.37.0?ref=dev/git.install@2.37.0
     .NOTES
@@ -49,7 +49,7 @@ function Test-ExistPackageVersion {
         }
         catch {
             # Get request failed for the given url, this means that either the version or the package does not yet exist in that branch
-            Write-Log "Get request for $url failed. Package $Package with version $Version does not exist in branch $Branch."
+            Write-Log "Package $Package with version $Version does not exist in branch $Branch." -Severity 1
             return $false
         }
     }

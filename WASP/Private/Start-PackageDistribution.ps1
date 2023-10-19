@@ -187,7 +187,7 @@ function Start-PackageDistribution() {
 
                 Switch-GitBranch $PackageGalleryPath $branch
 
-                $packagesList = Get-ChildItem $PackageGalleryPath -Directory
+                $packagesList = (Get-ChildItem $PackageGalleryPath -Directory).Name
 
                 foreach ($package in $packagesList) {
 					
@@ -199,13 +199,13 @@ function Start-PackageDistribution() {
 						}
 					}
 					if (!$foundInWishlist) {
-						Write-Log "Skip $package : deactivated in wishlist." -Severity 1
+						Write-Log "Skip Package $package`: deactivated in wishlist." -Severity 1
 						continue
 					}			
                     $packagePath = Join-Path $PackageGalleryPath $package
                     $versionsList = Get-ChildItem $packagePath -Directory
                     # Add changes to version history here
-                    $versionsList = ($versionsList | Sort-Object -Property { $_.Name -as [version] } | Select-Object -Last $configVersionHistoy)
+                    $versionsList = ($versionsList | Sort-Object -Property { $_.Name -as [version] } | Select-Object -Last $configVersionHistoy).Name
                     foreach ($version in $versionsList) {
                         if (Test-ExistPackageVersion -Repository $GitFolderName -Package $package -Version $version -Branch $branch) {
                             $packageRootPath = Join-Path $packagePath $version
@@ -219,16 +219,13 @@ function Start-PackageDistribution() {
                                 if ($chocolateyDestinationServer -eq $config.Application.ChocoServerTEST) {
                                     if (Test-IssueStatus $package $version 'Testing') {
                                         if (-Not (Test-ExistsOnRepo -PackageName $FullID -PackageVersion $FullVersion -Repository $Repo -FileCreationDate $FileDate)) {
-                                            Write-Log "Pushing $FullID@$FullVersion to $chocolateyDestinationServer." -Severity 1
+                                            Write-Log "Pushing Package $FullID with version $FullVersion to $chocolateyDestinationServer." -Severity 1
                                             Send-NupkgToServer $packageRootPath $chocolateyDestinationServer
-                                        }
-                                        else {
-                                            Write-Log "$FullID@$FullVersion exists on $chocolateyDestinationServer."
                                         }
                                         continue
                                     }
                                     else {
-                                        Write-Log "$package is in repackaging and its jira task is not in testing." -Severity 1
+                                        Write-Log "Package $package with version $version is in repackaging and its jira task is not in testing." -Severity 1
                                         continue
                                     }
                                 }
@@ -238,19 +235,13 @@ function Start-PackageDistribution() {
                             if ($Repo -eq "Prod") {
                                 $tmpChocolateyDestinationServer = $config.Application.ChocoServerDEV
                                 if (-Not (Test-ExistsOnRepo -PackageName $FullID -PackageVersion $FullVersion -Repository "Dev" -FileCreationDate $FileDate)) {
-                                    Write-Log "Pushing $FullID@$FullVersion to $tmpChocolateyDestinationServer." -Severity 1
+                                    Write-Log "Pushing Package $FullID with version $FullVersion to $tmpChocolateyDestinationServer." -Severity 1
                                     Send-NupkgToServer $packageRootPath $tmpchocolateyDestinationServer
-                                }
-                                else {
-                                    Write-Log "$FullID@$FullVersion exists on $tmpChocolateyDestinationServer."
                                 }
                             }
                             if (-Not (Test-ExistsOnRepo -PackageName $FullID -PackageVersion $FullVersion -Repository $Repo -FileCreationDate $FileDate)) {
-                                Write-Log "Pushing $FullID@$FullVersion to $chocolateyDestinationServer." -Severity 1
+                                Write-Log "Pushing Package $FullID with version $FullVersion to $chocolateyDestinationServer." -Severity 1
                                 Send-NupkgToServer $packageRootPath $chocolateyDestinationServer
-                            }
-                            else {
-                                Write-Log "$FullID@$FullVersion exists on $chocolateyDestinationServer."
                             }
                         }
                     }

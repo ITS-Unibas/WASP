@@ -48,7 +48,6 @@ function Start-Workflow {
         Write-Log ([string](git -C $PackagesInboxPath submodule init 2>&1))
         Write-Log ([string](git -C $PackagesInboxPath submodule update --remote --recursive 2>&1))
 
-        $repoTempaltes = $PackagesChocoTemplatesPath.split("\")[-1]
         # Update the templates-Repo to be on latest
         Switch-GitBranch $PackagesChocoTemplatesPath 'main'
 
