@@ -88,7 +88,7 @@ function Test-JiraIssue {
                 Write-Log "Skip $packageName@$PackageVersion - JIRA-Ticket is in Testing and no changes detected." -Severity 1
                 return $false
             } else {
-                Write-Log "JIRA-Ticket for $packageName@$PackageVersion is in Testing and there are new changes detected. Continue processing..." -Severity 1
+                Write-Log "JIRA-Ticket for $packageName@$PackageVersion is in Testing and new changes were detected. Continue processing..." -Severity 1
                 return $true
             }
         } else  {
