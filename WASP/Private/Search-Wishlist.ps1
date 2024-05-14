@@ -71,7 +71,8 @@ function Search-Wishlist {
                     try {
                         # Make Version parsable so we can compare with '-le'
                         if (-Not ($packageVersion -match "^(\d+\.)?(\d+\.)?(\d+\.)?(\*|\d+)$")) {
-                            Write-Log "The version $packageVersion / $previousVersion for package $packageName cannot be parsed. Going to format it"
+                            Write-Log -Message "Please CHECK VERSION in nuspec manually - might not be stable!!" -Severity 2                            
+							Write-Log "The version $packageVersion / $previousVersion for package $packageName cannot be parsed. Going to format it"
                             $packageVersion = Format-VersionString -VersionString $packageVersion
                             $previousVersion = Format-VersionString -VersionString $previousVersion
                             Write-Log "Formatted versions now $packageVersion / $previousVersion for package $packageName"
