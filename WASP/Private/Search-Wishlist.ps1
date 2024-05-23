@@ -73,9 +73,12 @@ function Search-Wishlist {
                         if (-Not ($packageVersion -match "^(\d+\.)?(\d+\.)?(\d+\.)?(\*|\d+)$")) {
                             Write-Log -Message "Please CHECK VERSION in nuspec manually - might not be stable!!" -Severity 2                            
 							Write-Log "The version $packageVersion / $previousVersion for package $packageName cannot be parsed. Going to format it"
+
+                            $unstablePackages[$packageName] = $packageVersion
+
                             $packageVersion = Format-VersionString -VersionString $packageVersion
                             $previousVersion = Format-VersionString -VersionString $previousVersion
-                            Write-Log "Formatted versions now $packageVersion / $previousVersion for package $packageName"
+                            Write-Log "Formatted versions now $packageVersion / $previousVersion for package $packageName"    
                         }
 
                         if (([version]$packageVersion) -le ([version]$previousVersion)) {
@@ -105,7 +108,7 @@ function Search-Wishlist {
                         }
     
                         Write-Log "Found package to update: $packageName with version $packageVersion"
-    
+
                         return New-Object psobject @{'path' = $destPath; 'name' = $packageName; 'version' = $packageVersion }
                     }
                 }

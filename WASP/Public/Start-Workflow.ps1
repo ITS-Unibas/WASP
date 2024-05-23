@@ -59,6 +59,8 @@ function Start-Workflow {
 
         # Get all the packages which are to accept and further processed
         $newPackages = New-Object System.Collections.ArrayList
+        $script:unstablePackages = @{}
+        Export-ModuleMember -Variable unstablePackages # needed to export the variable to the global scope
 
         # Manual updated packages
         $packagesManual = @(Get-ChildItem $PackagesManualPath)

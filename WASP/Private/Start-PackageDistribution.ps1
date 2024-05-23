@@ -63,6 +63,13 @@ function Start-PackageDistribution() {
                 $packageName, $packageVersion, $re = $branch.split($nameAndVersionSeparator)
                 $packageName = $packageName -Replace $config.Application.GitBranchDEV, ''
 
+                foreach ($unstablePackage in ($unstablePackages.Keys)){
+                    if ($unstablePackage -eq $packageName){
+                        $unstablePackageVersion = $unstablePackages[$unstablePackage]
+                        Write-Log "Please CHECK VERSION for $packageName in nuspec manually - found version $unstablePackageVersion might not be stable!!" -Severity 2
+                    }
+                }
+
                 $foundInWishlist = $false
                 foreach ($line in $wishlist) {
 					$line = $line -replace "@.*", ""
