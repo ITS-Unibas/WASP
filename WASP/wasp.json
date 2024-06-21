@@ -19,7 +19,9 @@
 		"CheckVersionHistory": 3,
 		"JiraBaseUrl": "",
 		"ProjectKey": "WASPT",
-        "JiraObserver": "",
+		"IssueType": "",
+		"JiraUser": "",
+		"JiraPassword": "",
         "RepositoryManagerAPIBaseUrl": "",
         "RepositoryManagerAPIUser": "",
         "RepostoryManagerAPIPassword": "",
@@ -34,8 +36,7 @@
         ],
         "PostAdditionalScripts": [
             "FinalScript.ps1"
-        ],
-		"ChocoRepo": "github.com/chocolatey/choco.git"
+        ]
     },
     "Logger": {
         "EventLogName": "WASP-Testsystem",
