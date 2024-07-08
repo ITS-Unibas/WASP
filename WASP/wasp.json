@@ -43,6 +43,8 @@
         "EventID": 9999,
         "LogSubFilePath": "logs",
         "LogFileNamePrefix": "choco_log",
+		"LogSubFilePathJiraStates": "jira-states",
+		"LogFileNamePrefixJiraStates": "jira_state",
         "MaxLogFiles": 10,
         "LogLevel": 0,
         "LogToHost": true
