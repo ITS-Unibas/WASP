@@ -6,11 +6,11 @@ function Register-ChocolateyPackagingClient {
     Setup a new Chocolatey Packaging Client with all the stuff you need for doing sick packaging
    .NOTES
     FileName: Register-ChocolateyPackagingClient.ps1
-    Author: Kevin Schaefer
+    Author: Kevin Schaefer, Uwe Molnar
     Contact: its-wcs-ma@unibas.ch
     Created: 2019-07-31
-    Updated: 2020-05-15
-    Version: 1.1.0
+    Updated: 2024-06-21
+    Version: 1.1.1
    .EXAMPLE
     PS>
    .LINK
@@ -33,7 +33,7 @@ function Register-ChocolateyPackagingClient {
         # Install chocolatey
         # TODO: Check if chocolatey already installed before
         Invoke-Expression ((New-Object System.Net.WebClient).DownloadString('https://chocolatey.org/install.ps1')) | ForEach-Object { Write-Log $_ }
-        # TODO: Check if chocolatey was installed
+        # TODO: Check if chocolatey was installed successfully
 
         # Download Nuget
         $NugetUrl = "https://dist.nuget.org/win-x86-commandline/latest/nuget.exe"
@@ -49,9 +49,6 @@ function Register-ChocolateyPackagingClient {
         Request-GitRepo -User $Config.Application.GitHubOrganisation -GitRepo $Config.Application.PackagesInbox -CloneDirectory $Config.Application.BaseDirectory -WithSubmodules
         Request-GitRepo -User $Config.Application.GitHubOrganisation -GitRepo $Config.Application.PackageGallery -CloneDirectory $Config.Application.BaseDirectory
         Request-GitRepo -User $Config.Application.GitHubOrganisation -GitRepo $Config.Application.PackagesInboxFiltered -CloneDirectory $Config.Application.BaseDirectory
-        # TODO: Why ist this repo cloned? When you install chocolatey you get all the helpers for free, will have further checks while going on with the refactoring
-        # Request-GitRepo -User $Config.Application.GitHubOrganisation -GitRepo $Config.Application.ChocoRepo -CloneDirectory $Config.Application.BaseDirectory
-        Request-GitRepo -User $Config.Application.GitHubOrganisation -GitRepo $Config.Application.JiraObserver -CloneDirectory $Config.Application.BaseDirectory
         Request-GitRepo -User $Config.Application.GitHubOrganisation -GitRepo $Config.Application.PackagesWishlist -CloneDirectory $Config.Application.BaseDirectory
 
         # TODO: ErrorHandling
