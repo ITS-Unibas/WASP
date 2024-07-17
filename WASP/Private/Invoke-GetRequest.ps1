@@ -20,6 +20,7 @@ function Invoke-GetRequest {
             Method      = 'GET'
             Uri         = $url
             Headers     = @{Authorization = "Token {0}" -f $config.Application.GitHubAPITokenITSUnibasChocoUser}
+            Body        = @{per_page = 100}
         }
         $results = Invoke-RestMethod @Splat -ErrorAction Stop
         return $results
