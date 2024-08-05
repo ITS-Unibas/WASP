@@ -22,9 +22,8 @@ function New-JiraTicket {
         $jiraBaseUrl = $config.Application.JiraBaseUrl
         $jiraUser = $config.Application.JiraUser
         $jiraPassword = $config.Application.JiraPassword
-        $jiraAPIToken = $config.Application.JiraToken
         $projectKey = $config.Application.JiraProjectKey
-        $issueType = $config.Application.IssueType
+        $issueType = $config.Application.IssueType # Story
     }
 
     process { 
@@ -40,16 +39,16 @@ function New-JiraTicket {
             summary = $summary
             description = $description
             issuetype = @{
-                name = $IissueType
+                name = $issueType
             }
         }
     } | ConvertTo-Json -Depth 3
 
     # Encode credentials to Base64
-    $base64AuthInfo = [Convert]::ToBase64String([Text.Encoding]::ASCII.GetBytes(("${JiraUsername}:${JiraAPIToken}")))
+    $base64AuthInfo = [Convert]::ToBase64String([Text.Encoding]::ASCII.GetBytes(("${jiraUser}:${jiraPassword}")))
 
     # Create the new issue
-    $response = Invoke-RestMethod -Uri "$JiraBaseUrl/rest/api/2/issue" `
+    $response = Invoke-RestMethod -Uri "$($jiraBaseUrl)/rest/api/2/issue" `
         -Method Post `
         -Headers @{
             "Authorization" = "Basic $base64AuthInfo"
