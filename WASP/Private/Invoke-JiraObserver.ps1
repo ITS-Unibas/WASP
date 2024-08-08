@@ -17,26 +17,45 @@ function Invoke-JiraObserver {
 
     begin {
         $Config = Read-ConfigFile
-        $GitRepo = $config.Application.JiraObserver
-        $GitFile = $GitRepo.Substring($GitRepo.LastIndexOf("/") + 1, $GitRepo.Length - $GitRepo.LastIndexOf("/") - 1)
-        $GitFolderName = $GitFile.Replace(".git", "")
-        $JiraObserverPath = Join-Path -Path $config.Application.BaseDirectory -ChildPath $GitFolderName
+        $packageGallery = $Config.Application.PackageGallery
+        $repoUser = $Config.Application.GitHubUser
     }
 
     process {
-        # Check if path exists and that pyhton is in path variables
-        try {
-            $filePath = Join-Path $JiraObserverPath "JiraObserver.py"
-            $results = ([string] (python $filePath 2>&1))
-            $results = $results -replace "Debug:| Debug:", "`nDebug:" -replace " Error:", "`nError:" -replace " Information:", "`nInformation:" -replace " INFO:root", "`nINFO:root" -replace " Warning:", "`nWarning:"
-            # Next two lines remove the CYGWIN-Error, because it is no error but occuring in the Log --> Python-Module "git" needs update?!
-			$results = $results -replace "DEBUG:git.util:Failed checking if running in CYGWIN due to:.*", ""
-			$results = $results.Trim()
-			Write-Log ($results) -Severity 1
-        }
-        catch {
-            Write-Log "$($_.Exception)" -Severity 3
-        }
+        # Latest Jira State File einlesen. Returns a hashtable with the Jira state	
+        $jiraStateFile = Read-JiraStateFile
+
+        # PHS: Branch in der Package Gallery auf prod setzen (checkout prod) + Git pull + Get-RemoteBranches 
+
+        # Vergleich Latest Jira State-File mit Branches (PR muss angenommen sein) → Liste Branches ohne Ticket 
+        $branches = Get-RemoteBranches -Repo $packageGallery -User $repoUser
+        $jiraStateFile
+
+        $results
+
+        # Erstelle Tickets für neue Branches, wenn der Pull Request angenommen wurde	
+        New-JiraTicket -summary "7zip.install@7.0"
+
+        # aktueller Stand Tickets von Jira holen (Get Request)
+        $currentJiraStates	
+        
+        <# Vergleich Status Tickets mit Stand im neusten Jira-State File:
+
+            Unterschied in neuer Liste abspeichern
+            Unterscheidung
+            dev → test: PR nach test, wenn nicht schon exisitiert
+            test → prod: PR nach prod, wenn nicht schon exisitiert
+            prod → dev: kein PR, neuer branch mit @ + random hash 
+            test → dev: keine Action
+            Wenn ein PR erstellt wird immer 4 Sekunden Timeout. 
+
+        #>
+        # $jiraStateFile <> $currentJiraStates
+
+        # PHS: Branch in der Package Gallery auf prod setzen (checkout prod)
+
+        # Aktueller Stand Jira Tickets als neues Jira state file schreiben (Stand wurde schon aktualisiert, kein neuer Request)
+
     }
 
     end {
