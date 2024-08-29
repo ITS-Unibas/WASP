@@ -3,11 +3,10 @@ function Remove-LocalBranches {
     .SYNOPSIS
         Delete local branches of a given repository as path
     .DESCRIPTION
-        Deletes a local branch only of it is not contained in remote branches of the repository
+        Deletes local branches only of they are no longer in the remote repository
     .INPUTS
-        URL of Repository
-    .NOTES
-        General notes
+        $Repository: The repository to delete the local branches from
+        $User: The user of the repository
     #>
     [CmdletBinding()]
     param (

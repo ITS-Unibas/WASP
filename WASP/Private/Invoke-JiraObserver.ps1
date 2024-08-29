@@ -18,7 +18,8 @@ function Invoke-JiraObserver {
     begin {
         $Config = Read-ConfigFile
         $packageGallery = $Config.Application.PackageGallery
-        $repoUser = $Config.Application.GitHubUser
+        $packageGalleryRepo = ($packageGallery.Split("/")[-1]).Replace(".git", "")
+        $gitHubOrganization = $Config.Application.GitHubOrganisation
     }
 
     process {
@@ -28,13 +29,39 @@ function Invoke-JiraObserver {
         # PHS: Branch in der Package Gallery auf prod setzen (checkout prod) + Git pull + Get-RemoteBranches 
 
         # Vergleich Latest Jira State-File mit Branches (PR muss angenommen sein) → Liste Branches ohne Ticket 
-        $branches = Get-RemoteBranches -Repo $packageGallery -User $repoUser
-        $jiraStateFile
+        $branches = Get-RemoteBranches -Repo $packageGalleryRepo -User $gitHubOrganization
 
-        $results
+        # Go through all branches and check if there is a ticket for it (jiraStateFile)
+        $newTickets = New-Object System.Collections.ArrayList
+
+        foreach ($branch in $branches) { 
+            # Check if a branch is a repackaging branch or the test-/prod-branch: If so, skip it
+            if ((($branch -split "@").Count -ne 2) -or ($branch -eq "test") -or ($branch -eq "prod")) {
+                continue
+            }
+            
+            $cleanBranch = $branch -replace "dev/", ""
+        
+            # Check if branch is in the Jira state file
+            if (!($jiraStateFile.ContainsKey($cleanBranch))) {
+                # Check if PR was accepted for branch
+                $latestPullRequest = Test-PullRequest -Branch $branch
+
+                $state  = $latestPullRequest.Details.state # open, closed
+                $merged = $latestPullRequest.Details.merged_at # null, timestamp
+
+                if (($state -ne "open") -and ($null -ne $merged)) {
+                    $null = $newTickets.Add($cleanBranch)
+                } else {
+                    continue
+                }
+            }
+        }
 
         # Erstelle Tickets für neue Branches, wenn der Pull Request angenommen wurde	
-        New-JiraTicket -summary "7zip.install@7.0"
+        foreach ($ticket in $newTickets) {
+            $null = New-JiraTicket -summary $ticket
+        }
 
         # aktueller Stand Tickets von Jira holen (Get Request)
         $currentJiraStates	

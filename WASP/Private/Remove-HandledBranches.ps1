@@ -33,10 +33,10 @@ function Remove-HandledBranches {
         # Get all branches which have open pull requests in package gallery
         $pullrequestsOpen = Get-RemoteBranchesByStatus -Repo $PackageGalleryRepositoryName -User $GitHubOrganisation -Status 'Open'
 
-        # Get all branches in packages incoming filtered repository
+        # Get all branches in packages-inbox-filtered repository
         $PackagesInboxFilteredRemoteBranches = Get-RemoteBranches -Repo $PackagesInboxFilteredRepoName -User $GitHubUser
         
-        # Checkout master branch on packages-inbox-filtered to avoid beeing on a branch to delete
+        # Checkout main branch on packages-inbox-filtered to avoid beeing on a branch to delete
         Switch-GitBranch $PackagesInboxFilteredPath 'main'
         ForEach ($remoteBranch in $PackagesInboxFilteredRemoteBranches) {
             if ((-Not ($remoteBranch -eq 'main')) -and (($pullrequestsOpen.Count -eq 0 -or -Not $pullrequestsOpen.contains($remoteBranch)))) {
@@ -56,44 +56,41 @@ function Remove-HandledBranches {
         
         # Checkout prod branch on package gallery to avoid beeing on a branch to delete
         Switch-GitBranch $PackagesGalleryPath 'prod'
+
+        # Remove all dev-branches that are declined or merged into prod
         ForEach ($remoteBranch in $PackagesGalleryRemoteBranches) {
-            # Remove all dev-branches where:
-            # + the initial PR to the package-gallery was declined or [= state is "closed" no "merge-at"-Flag]
-            # + the repackaging-branch is finished processing [= PR "merged to prod"-state is "closed" and "merge-at"-Flag is set]
             
             $packageInfos   = $remoteBranch.split("@")
             $packageName    = $packageInfos[0].replace("dev/", "")
             $packageVersion = $packageInfos[1]
+            
+            $latestPullRequest = Test-PullRequest -Branch $remoteBranch        
 
-            if (($packageInfos.Length) -eq 3){
-                $testPullRequest = Test-PullRequest -Repository $PackageGalleryRepositoryName -User $GitHubOrganisation -Branch $remoteBranch -Repackaging
-            } else {
-                $testPullRequest = Test-PullRequest -Repository $PackageGalleryRepositoryName -User $GitHubOrganisation -Branch $remoteBranch
-            }         
+            $scope  = $latestPullRequest.Branch
+            $state  = $latestPullRequest.Details.state
+            $merged = $latestPullRequest.Details.merged_at
 
-            if ((-Not (($remoteBranch -eq 'prod') -or ($remoteBranch -eq 'test'))) -and ($testPullRequest -eq $true)) {
-                if (($packageInfos.Length) -eq 3){
-                    Write-Log "'$remoteBranch' merged into prod and will be deleted from '$PackageGalleryRepositoryName'."
-                } else {    
-                    Write-Log "Pull request for $remoteBranch was declined and will be deleted from '$PackageGalleryRepositoryName'."
+
+            if (-Not (($remoteBranch -eq 'prod') -or ($remoteBranch -eq 'test'))) {
+                $remove = $false
+                # Check if merged into prod
+                if ($scope -eq "prod" -and (($null -ne $merged) -or ($merged -ne ""))) { 
+                    # Double check if the nuspec-File exists in prod branch
+                    $devBranchMergedIntoProd = Test-Path -Path ("$PackagesGalleryPath" + "\" + $packageName + "\" + $packageVersion + "\" + "$packageName.nuspec")
+                    if ($devBranchMergedIntoProd) {
+                        Write-Log "'$remoteBranch' merged into prod and will be deleted from remote '$PackageGalleryRepositoryName'."
+                        $remove = $true
+                    }
+                # Check if PR is declined    
+                } elseif (($scope -eq "dev") -and ($state -eq "closed") -and (($null -eq $merged) -or ($merged -eq ""))) {    
+                    Write-Log "Pull request for $remoteBranch was declined and will be deleted from remote '$PackageGalleryRepositoryName'."
+                    $remove = $true
                 }
-                # Remove remote branch in pacakge gallery
-                Remove-RemoteBranch -Repo $PackageGalleryRepositoryName -Branch $remoteBranch -User $GitHubOrganisation
-            }
 
-            # Stop here for repackaging-Branches because the next step would otherwise remove the repackaging-Branches
-            if (($packageInfos.Length) -eq 3){
-                continue
-            }
-
-            # Remove all dev-branches that are merged into prod            
-            # Check if merged into prod by looking at the existence of a nuspec-File in prod branch
-            $devBranchMergedIntoProd = Test-Path -Path ("$PackagesGalleryPath" + "\" + $packageName + "\" + $packageVersion + "\" + "$packageName.nuspec")
-
-            if ((-Not (($remoteBranch -eq 'prod') -or ($remoteBranch -eq 'test'))) -and ($devBranchMergedIntoProd -eq $true)) {
-                Write-Log "'$remoteBranch' merged into prod and will be deleted from '$PackageGalleryRepositoryName'."
-                # Remove remote branch in pacakge gallery
-                Remove-RemoteBranch -Repo $PackageGalleryRepositoryName -Branch $remoteBranch -User $GitHubOrganisation
+                # Remove remote branch in pacakge gallery if the conditions are met 
+                if ($remove) {
+                    Remove-RemoteBranch -Repo $PackageGalleryRepositoryName -Branch $remoteBranch -User $GitHubOrganisation
+                }
             }
         }
         # Remove local branches from package-gallery where the corresponding remote branch does not exist anymore
