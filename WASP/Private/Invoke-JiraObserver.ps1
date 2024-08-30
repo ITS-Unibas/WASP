@@ -24,15 +24,33 @@ function Invoke-JiraObserver {
 
     process {
         # Latest Jira State File einlesen. Returns a hashtable with the Jira state	
-        $jiraStateFile = Read-JiraStateFile
+        Write-Log -Message "Reading latest Jira state file" -Severity 0
+        $jiraStateFileContent, $JiraStateFile = Read-JiraStateFile
+
+        if ($jiraStateFileContent){
+            Write-Log -Message "Jira state file '$JiraStateFile' read successfully" -Severity 0
+        } else {
+            Write-Log -Message "Jira state file '$JiraStateFile' could not be read. Exit now!" -Severity 3
+            return
+        }
 
         # PHS: Branch in der Package Gallery auf prod setzen (checkout prod) + Git pull + Get-RemoteBranches 
+        Write-Log -Message "Checkout prod branch in Package Gallery" -Severity 0
+
 
         # Vergleich Latest Jira State-File mit Branches (PR muss angenommen sein) → Liste Branches ohne Ticket 
+        Write-Log -Message "Get all remote branches" -Severity 0
         $branches = Get-RemoteBranches -Repo $packageGalleryRepo -User $gitHubOrganization
 
-        # Go through all branches and check if there is a ticket for it (jiraStateFile)
+        Write-Log -Message "Found the following branches:" -Severity 0
+
+        foreach ($branch in $branches) {
+            Write-Log -Message $branch -Severity 0
+        } 
+        # Go through all branches and check if there is a ticket for it (jiraStateFileContent)
         $newTickets = New-Object System.Collections.ArrayList
+
+        Write-Log -Message "Check all branches and if new tickets for JIRA need to be created" -Severity 0
 
         foreach ($branch in $branches) { 
             # Check if a branch is a repackaging branch or the test-/prod-branch: If so, skip it
@@ -43,14 +61,14 @@ function Invoke-JiraObserver {
             $cleanBranch = $branch -replace "dev/", ""
         
             # Check if branch is in the Jira state file
-            if (!($jiraStateFile.ContainsKey($cleanBranch))) {
+            if (!($jiraStateFileContent.ContainsKey($cleanBranch))) {
                 # Check if PR was accepted for branch
                 $latestPullRequest = Test-PullRequest -Branch $branch
 
                 $state  = $latestPullRequest.Details.state # open, closed
                 $merged = $latestPullRequest.Details.merged_at # null, timestamp
 
-                if (($state -ne "open") -and ($null -ne $merged)) {
+                if (($state -ne "open") -and ($null -ne $merged)) { # Maybe check if the ticket is not already in the Jira available? Is double check but maybe okay
                     $null = $newTickets.Add($cleanBranch)
                 } else {
                     continue
@@ -58,7 +76,18 @@ function Invoke-JiraObserver {
             }
         }
 
-        # Erstelle Tickets für neue Branches, wenn der Pull Request angenommen wurde	
+        if ($newTickets.Count -ne 0){
+            Write-Log -Message "These new ticket(s) need to be created:" -Severity 0
+
+            foreach ($ticket in $newTickets) {
+                Write-Log -Message "$ticket" -Severity 0
+            }
+    
+        } else {
+            Write-Log -Message "No new tickets need to be created" -Severity 0
+        }
+        
+        # Create new JIRA tickets for all new branches with a merged PR
         foreach ($ticket in $newTickets) {
             $null = New-JiraTicket -summary $ticket
         }
@@ -77,7 +106,7 @@ function Invoke-JiraObserver {
             Wenn ein PR erstellt wird immer 4 Sekunden Timeout. 
 
         #>
-        # $jiraStateFile <> $currentJiraStates
+        # $jiraStateFileContent <> $currentJiraStates
 
         # PHS: Branch in der Package Gallery auf prod setzen (checkout prod)
 

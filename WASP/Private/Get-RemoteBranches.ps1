@@ -37,7 +37,7 @@ function Get-RemoteBranches {
             $JSONbranches | ForEach-Object { $null = $branches.Add($_.name) }
         }
         catch {
-            Write-Log "Get request failed for $url" -Severity 3
+            Write-Log "Get request failed for '$url' with message $_.Exception.Message" -Severity 3
         }
         return $branches
     }

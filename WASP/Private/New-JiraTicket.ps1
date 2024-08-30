@@ -22,43 +22,48 @@ function New-JiraTicket {
         $jiraBaseUrl = $config.Application.JiraBaseUrl
         $jiraUser = $config.Application.JiraUser
         $jiraPassword = $config.Application.JiraPassword
-        $projectKey = $config.Application.JiraProjectKey
+        $projectKey = $config.Application.ProjectKey
         $issueType = $config.Application.IssueType # Story
     }
 
     process { 
-    $description = "Automatically created ticket by WASP"
+        $url = "$($jiraBaseUrl)/rest/api/2/issue"
 
-    # Create the JSON payload for the new issue
-    $issuePayload = @{
-        fields = @{
-            # assignee = $jiraUser
-            project = @{
-                key = $projectKey
-            }
-            summary = $summary
-            description = $description
-            issuetype = @{
-                name = $issueType
-            }
-        }
-    } | ConvertTo-Json -Depth 3
+        $base64AuthInfo = [Convert]::ToBase64String([Text.Encoding]::ASCII.GetBytes(("${jiraUser}:${jiraPassword}")))
 
-    # Encode credentials to Base64
-    $base64AuthInfo = [Convert]::ToBase64String([Text.Encoding]::ASCII.GetBytes(("${jiraUser}:${jiraPassword}")))
-
-    # Create the new issue
-    $response = Invoke-RestMethod -Uri "$($jiraBaseUrl)/rest/api/2/issue" `
-        -Method Post `
-        -Headers @{
+        $header = @{
             "Authorization" = "Basic $base64AuthInfo"
             "Content-Type" = "application/json"
-        } `
-        -Body $IssuePayload
+        } 
 
-    # Output the response
-    $response
+        $description = "Automatically created ticket by WASP"
 
+        # Create the JSON payload for the new issue
+        $body = @{
+            fields = @{
+                # assignee = $jiraUser
+                project = @{
+                    key = $projectKey
+                }
+                summary = $summary
+                description = $description
+                issuetype = @{
+                    name = $issueType
+                }
+            }
+        } | ConvertTo-Json -Depth 3
+
+        # Create the new issue
+        Write-Log -Message "Creating new JIRA ticket for '$summary'" -Severity 1
+        
+        $response = Invoke-WebRequest -Uri $url -Method Post -Headers $header -Body $body  
+
+        if ($response.StatusCode -eq 201) {
+            Write-Log -Message "StausCode: $($response.StatusCode)" -Severity 0
+            Write-Log -Message "New Jira ticket successfully created: $($response.Content)" -Severity 0
+        } else {
+            Write-Log -Message "Failed to create new Jira ticket! StatusCode: $($response.StatusCode):  $($response.StatusDescription)" -Severity 3
+        }
     }
 
     end {
