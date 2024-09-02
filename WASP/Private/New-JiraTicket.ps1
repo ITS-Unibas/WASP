@@ -59,7 +59,7 @@ function New-JiraTicket {
         $response = Invoke-WebRequest -Uri $url -Method Post -Headers $header -Body $body  
 
         if ($response.StatusCode -eq 201) {
-            Write-Log -Message "StausCode: $($response.StatusCode)" -Severity 0
+            Write-Log -Message "StatusCode: $($response.StatusCode)" -Severity 0
             Write-Log -Message "New Jira ticket successfully created: $($response.Content)" -Severity 0
         } else {
             Write-Log -Message "Failed to create new Jira ticket! StatusCode: $($response.StatusCode):  $($response.StatusDescription)" -Severity 3
