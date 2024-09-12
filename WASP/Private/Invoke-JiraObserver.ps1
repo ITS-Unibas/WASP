@@ -93,7 +93,16 @@ function Invoke-JiraObserver {
         }
 
         # aktueller Stand Tickets von Jira holen (Get Request)
-        $currentJiraStates	
+        $IssueResults = Get-JiraIssues
+
+        # Filter the information to be able to compare the current jira state to the state read from the file
+        $IssuesCurrentState = @{}
+        $IssueResults | ForEach-Object {
+            $IssuesCurrentState[$_.fields.summary] = [PSCustomObject]@{
+                Assignee = $_.fields.assignee.name
+                Status = $_.fields.status.name
+            }
+        }
         
         <# Vergleich Status Tickets mit Stand im neusten Jira-State File:
 
