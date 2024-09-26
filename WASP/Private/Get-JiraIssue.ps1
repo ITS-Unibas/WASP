@@ -1,7 +1,7 @@
 function Get-JiraIssue {
     <#
     .SYNOPSIS
-        
+        Invokes a REST API call to check the existing of a specific issue
     .DESCRIPTION
         Invokes a REST API call to check the existing of a specific issue
     #>
