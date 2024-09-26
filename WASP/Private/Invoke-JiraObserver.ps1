@@ -45,7 +45,7 @@ function Invoke-JiraObserver {
         Write-Log -Message "Found the following branches:" -Severity 0
 
         foreach ($branch in $branches) {
-            Write-Log -Message $branch -Severity 0
+            Write-Log -Message "  $branch" -Severity 0
         } 
         # Go through all branches and check if there is a ticket for it (jiraStateFileContent)
         $newTickets = New-Object System.Collections.ArrayList
@@ -80,7 +80,7 @@ function Invoke-JiraObserver {
             Write-Log -Message "These new ticket(s) need to be created:" -Severity 0
 
             foreach ($ticket in $newTickets) {
-                Write-Log -Message "$ticket" -Severity 0
+                Write-Log -Message "$ticket" -Severity 1
             }
     
         } else {

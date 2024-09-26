@@ -27,6 +27,16 @@ function New-JiraTicket {
     }
 
     process { 
+        # Check if the Jira ticket already exists
+        $package, $version = $summary -split "@"
+        $issue = Get-JiraIssue -PackageName $package -PackageVersion $version
+
+        if ($issue.total -ne 0) {
+            Write-Log -Message "Skip creating new jira ticket for $package with version $version!" -Severity 0
+            return
+        }
+
+        # Create the new Jira ticket
         $url = "$($jiraBaseUrl)/rest/api/2/issue"
 
         $base64AuthInfo = [Convert]::ToBase64String([Text.Encoding]::ASCII.GetBytes(("${jiraUser}:${jiraPassword}")))
@@ -54,15 +64,15 @@ function New-JiraTicket {
         } | ConvertTo-Json -Depth 3
 
         # Create the new issue
-        Write-Log -Message "Creating new JIRA ticket for '$summary'" -Severity 1
+        Write-Log -Message "Creating new jira ticket for pacakge $package with version $version" -Severity 1
         
         $response = Invoke-WebRequest -Uri $url -Method Post -Headers $header -Body $body  
 
         if ($response.StatusCode -eq 201) {
             Write-Log -Message "StatusCode: $($response.StatusCode)" -Severity 0
-            Write-Log -Message "New Jira ticket successfully created: $($response.Content)" -Severity 0
+            Write-Log -Message "New jira ticket successfully created: $($response.Content)" -Severity 0
         } else {
-            Write-Log -Message "Failed to create new Jira ticket! StatusCode: $($response.StatusCode):  $($response.StatusDescription)" -Severity 3
+            Write-Log -Message "Failed to create new jira ticket! StatusCode: $($response.StatusCode):  $($response.StatusDescription)" -Severity 3
         }
     }
 

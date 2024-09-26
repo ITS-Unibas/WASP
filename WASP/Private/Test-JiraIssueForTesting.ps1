@@ -1,4 +1,4 @@
-function Test-JiraIssue {
+function Test-JiraIssueForTesting {
     <#
     .SYNOPSIS
         Tests if a jira issue is in 'Testing' and if no new updates were made on the corresponding git-branch
