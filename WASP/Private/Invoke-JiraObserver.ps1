@@ -34,9 +34,9 @@ function Invoke-JiraObserver {
             return
         }
 
-        # PHS: Branch in der Package Gallery auf prod setzen (checkout prod) + Git pull + Get-RemoteBranches 
+        # Branch in der Package Gallery auf prod setzen (checkout prod) + Git pull + Get-RemoteBranches 
         Write-Log -Message "Checkout prod branch in Package Gallery" -Severity 0
-
+        Switch-GitBranch -path $packageGallery -branch 'prod'
 
         # Vergleich Latest Jira State-File mit Branches (PR muss angenommen sein) → Liste Branches ohne Ticket 
         Write-Log -Message "Get all remote branches" -Severity 0
