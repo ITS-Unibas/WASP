@@ -118,7 +118,9 @@ function Invoke-JiraObserver {
         # $jiraStateFileContent <> $currentJiraStates
 
         # PHS: Branch in der Package Gallery auf prod setzen (checkout prod)
-
+        Write-Log -Message "Checkout prod branch in Package Gallery" -Severity 0
+        Switch-GitBranch -path $packageGallery -branch 'prod'
+        
         # Aktueller Stand Jira Tickets als neues Jira state file schreiben (Stand wurde schon aktualisiert, kein neuer Request)
 
     }
