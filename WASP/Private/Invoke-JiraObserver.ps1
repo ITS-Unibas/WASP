@@ -122,6 +122,7 @@ function Invoke-JiraObserver {
         Switch-GitBranch -path $packageGallery -branch 'prod'
         
         # Aktueller Stand Jira Tickets als neues Jira state file schreiben (Stand wurde schon aktualisiert, kein neuer Request)
+        Write-JiraStateFile $IssuesCurrentState
 
     }
 
