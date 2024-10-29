@@ -122,12 +122,8 @@ function Invoke-JiraObserver {
         Switch-GitBranch -path $packageGallery -branch 'prod'
         
         # Aktueller Stand Jira Tickets als neues Jira state file schreiben (Stand wurde schon aktualisiert, kein neuer Request)
-        $NewJiraState = @{}
-        $NewJiraState["Issues"] = $IssuesCurrentState
-        $CurrentDate = Get-Date -Format "yyyy-MM-dd_HH-mm-ss"
-        $NewJiraState["Date"] = $CurrentDate
-        $OutFile = Join-Path -Path $JiraStateFolder -ChildPath "jira_state$CurrentDate.json"
-        $NewJiraState | ConvertTo-Json | Out-File $OutFile
+        Write-JiraStateFile $IssuesCurrentState
+
     }
 
     end {
