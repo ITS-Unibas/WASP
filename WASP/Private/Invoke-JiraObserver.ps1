@@ -17,9 +17,14 @@ function Invoke-JiraObserver {
 
     begin {
         $Config = Read-ConfigFile
-        $packageGallery = $Config.Application.PackageGallery
+        $packageGallery = $config.Application.PackageGallery
         $packageGalleryRepo = ($packageGallery.Split("/")[-1]).Replace(".git", "")
         $gitHubOrganization = $Config.Application.GitHubOrganisation
+        
+        $GitRepo = $config.Application.PackageGallery
+        $GitFile = $GitRepo.Substring($GitRepo.LastIndexOf("/") + 1, $GitRepo.Length - $GitRepo.LastIndexOf("/") - 1)
+        $PackageGalleryRepositoryName = $GitFile.Replace(".git", "")
+        $PackagesGalleryPath = Join-Path -Path $config.Application.BaseDirectory -ChildPath $PackageGalleryRepositoryName
     }
 
     process {
@@ -36,7 +41,7 @@ function Invoke-JiraObserver {
 
         # Branch in der Package Gallery auf prod setzen (checkout prod) + Git pull + Get-RemoteBranches 
         Write-Log -Message "Checkout prod branch in Package Gallery" -Severity 0
-        Switch-GitBranch -path $packageGallery -branch 'prod'
+        Switch-GitBranch -path $PackagesGalleryPath -branch 'prod'
 
         # Vergleich Latest Jira State-File mit Branches (PR muss angenommen sein) → Liste Branches ohne Ticket 
         Write-Log -Message "Get all remote branches" -Severity 0
@@ -119,7 +124,7 @@ function Invoke-JiraObserver {
 
         # PHS: Branch in der Package Gallery auf prod setzen (checkout prod)
         Write-Log -Message "Checkout prod branch in Package Gallery" -Severity 0
-        Switch-GitBranch -path $packageGallery -branch 'prod'
+        Switch-GitBranch -path $PackagesGalleryPath -branch 'prod'
         
         # Aktueller Stand Jira Tickets als neues Jira state file schreiben (Stand wurde schon aktualisiert, kein neuer Request)
         Write-JiraStateFile $IssuesCurrentState
