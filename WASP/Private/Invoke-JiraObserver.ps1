@@ -28,7 +28,7 @@ function Invoke-JiraObserver {
     }
 
     process {
-        # Latest Jira State File einlesen. Returns a hashtable with the Jira state	
+        # Die neueste Jira State file wird eingelesen als Hashtable
         Write-Log -Message "Reading latest Jira state file" -Severity 0
         $jiraStateFileContent, $JiraStateFile = Read-JiraStateFile
 
@@ -43,7 +43,7 @@ function Invoke-JiraObserver {
         Write-Log -Message "Checkout prod branch in Package Gallery" -Severity 0
         Switch-GitBranch -path $PackagesGalleryPath -branch 'prod'
 
-        # Vergleich Latest Jira State-File mit Branches (PR muss angenommen sein) → Liste Branches ohne Ticket 
+        # Vergleich der neusten Jira State-File mit Branches (PR muss angenommen sein) → Liste Branches ohne Ticket 
         Write-Log -Message "Get all remote branches" -Severity 0
         $branches = Get-RemoteBranches -Repo $packageGalleryRepo -User $gitHubOrganization
 
@@ -52,28 +52,29 @@ function Invoke-JiraObserver {
         foreach ($branch in $branches) {
             Write-Log -Message "  $branch" -Severity 0
         } 
-        # Go through all branches and check if there is a ticket for it (jiraStateFileContent)
+        # Alle Branches durchgehen und prüfen, ob es ein Ticket dafür gibt (jiraStateFileContent)
         $newTickets = New-Object System.Collections.ArrayList
 
         Write-Log -Message "Check all branches and if new tickets for JIRA need to be created" -Severity 0
 
         foreach ($branch in $branches) { 
-            # Check if a branch is a repackaging branch or the test-/prod-branch: If so, skip it
+            # Überprüfen, ob ein Branch ein Repackaging-Branch oder der Test-/Prod-Branch ist: Wenn ja, überspringen
             if ((($branch -split "@").Count -ne 2) -or ($branch -eq "test") -or ($branch -eq "prod")) {
                 continue
             }
             
             $cleanBranch = $branch -replace "dev/", ""
         
-            # Check if branch is in the Jira state file
+            # Check, ob der Branch im Jira State File vorhanden ist
             if (!($jiraStateFileContent.ContainsKey($cleanBranch))) {
-                # Check if PR was accepted for branch
+                # Wenn der Branch nicht im Jira State File ist, wird gecheckt ob der Pull Request angenommen wurde
                 $latestPullRequest = Test-PullRequest -Branch $branch
 
                 $state  = $latestPullRequest.Details.state # open, closed
                 $merged = $latestPullRequest.Details.merged_at # null, timestamp
 
-                if (($state -ne "open") -and ($null -ne $merged)) { # Maybe check if the ticket is not already in the Jira available? Is double check but maybe okay
+                # Wenn der Pull Request angenommen wurde, dann soll ein neues Ticket auf dem WASP Jira Board erstellt werden
+                if (($state -ne "open") -and ($null -ne $merged)) { 
                     $null = $newTickets.Add($cleanBranch)
                 } else {
                     continue
@@ -81,6 +82,7 @@ function Invoke-JiraObserver {
             }
         }
 
+        # Falls notwendig werden neue Jira Tickets erstellt
         if ($newTickets.Count -ne 0){
             Write-Log -Message "These new ticket(s) need to be created:" -Severity 0
 
@@ -92,7 +94,7 @@ function Invoke-JiraObserver {
             Write-Log -Message "No new tickets need to be created" -Severity 0
         }
         
-        # Create new JIRA tickets for all new branches with a merged PR
+        # Erstelle neue JIRA-Tickets für alle neuen Branches mit einem gemergten PR
         foreach ($ticket in $newTickets) {
             $null = New-JiraTicket -summary $ticket
         }
@@ -100,7 +102,7 @@ function Invoke-JiraObserver {
         # aktueller Stand Tickets von Jira holen (Get Request)
         $IssueResults = Get-JiraIssues
 
-        # Filter the information to be able to compare the current jira state to the state read from the file
+        # Filtere die Informationen, um den aktuellen Jira-Status mit dem aus der Datei gelesenen Status vergleichen zu können
         $IssuesCurrentState = @{}
         $IssueResults | ForEach-Object {
             $IssuesCurrentState[$_.fields.summary] = [PSCustomObject]@{
@@ -120,7 +122,80 @@ function Invoke-JiraObserver {
             Wenn ein PR erstellt wird immer 4 Sekunden Timeout. 
 
         #>
-        # $jiraStateFileContent <> $currentJiraStates
+        # $jiraStateFileContent <> $currentJiraStates: Vergleiche den aktuellen Stand der Tickets mit dem Jira State File und speichere die Unterschiede in einer Liste
+        $IssuesCompareState = Compare-JiraState $IssuesCurrentState $jiraStateFileContent
+
+         # Funktion um einen neuen PullRequest von einem Branch zum anderen zu erstellen 
+         function Update-PullRequest {
+            param (
+                $SourceBranch,
+                $DestinationBranch,
+                $Software,
+                $DestinationName
+            )
+            $PullRequestTitle = "$Software to $DestinationName" 
+            New-PullRequest -SourceRepo $packageGalleryRepo -SourceUser $gitHubOrganization -SourceBranch $SourceBranch -DestinationRepo $packageGalleryRepo -DestinationUser $gitHubOrganization -DestinationBranch $DestinationBranch -PullRequestTitle $PullRequestTitle -ErrorAction Stop
+            Start-Sleep -Seconds 4
+            Write-Log -Message "New Pull Request $PullRequestTitle created" -Severity 0  
+        }
+
+        # Funktion um den passenden Branch für jede Software auszuwählen
+        function Get-DevBranch {
+            param (
+                $RemoteBranches,
+                $DevBranchPrefix
+            )
+            $RemoteBranches.GetEnumerator() | foreach { 
+                if ($_.startswith($DevBranchPrefix)) {
+                    return $_
+                }
+            }
+        }
+
+        # Die verfügbaren Branches werden aus der Package Gallery abgerufen
+        $RemoteBranches = Get-RemoteBranches -Repo $packageGalleryRepo -User $gitHubOrganization
+        
+        # jedes Issue, welches vom Stand im neusten JiraState-File abweicht wird einzeln durchgegangen
+        foreach($key in $IssuesCompareState.keys) { 
+            # Ermittlung des Dev-Branches anhand des Software Namens (mit Eventualität des Repackaging branches)
+            $DevBranchPrefix = "dev/$key"
+            $DevBranch = Get-DevBranch -RemoteBranches $RemoteBranches -DevBranchPrefix $DevBranchPrefix
+            # der neuste Pull Request für den jeweiligen Branch wird ermittelt.
+            $latestPullRequest = Test-PullRequest -Branch $DevBranch
+            $state  = $latestPullRequest.Details.state # open, closed
+            $merged = $latestPullRequest.Details.merged_at # null, timestamp
+            $toBranch = $latestPullRequest.Details.base.ref
+            # dev → test: PR nach test, wenn nicht schon exisitiert
+            if ($IssuesCompareState[$key].StatusOld -eq "Development" -and $IssuesCompareState[$key].Status -eq "Testing") {
+                # Es wird gecheckt ob ein offener oder gemergter Pull Request nach test existiert, falls nicht wird ein neuer PR erstellt
+                if (($toBranch -ne "test") -or (($state -ne "open") -and ($null -eq  $merged))) { 
+                    Update-PullRequest -SourceBranch $DevBranch -DestinationBranch "test" -Software $key -DestinationName "Testing"              
+                } else {
+                    continue
+                } 
+            # test → prod: PR nach prod, wenn nicht schon exisitiert
+            } elseif ($IssuesCompareState[$key].StatusOld -eq "Testing" -and $IssuesCompareState[$key].Status -eq "Production") {
+                # Es wird gecheckt ob ein offener oder gemergter Pull Request nach prod existiert, falls nicht wird ein neuer PR erstellt
+                if (($toBranch -ne "prod") -or (($state -ne "open") -and ($null -eq  $merged))) { 
+                    Update-PullRequest -SourceBranch $DevBranch -DestinationBranch "test" -Software $key -DestinationName "Testing"                              
+                } else {
+                    continue
+                } 
+            # prod → dev: kein PR, neuer branch mit @ + random hash 
+            } elseif ($IssuesCompareState[$key].StatusOld -eq "Production" -and $IssuesCompareState[$key].Status -eq "Development") {
+                # Falls kein DevBranch für die Software existiert (weil die Software schon nach Prod gemerged wurde), wird ein repackaging branch mit einer uuid erstellt
+                if ($DevBranch -notin $RemoteBranches) {
+                    $guid = New-Guid
+                    $RepackagingString = [convert]::ToString($guid).Replace("-","")
+                    $RepackagingBranch = "$DevBranch@$RepackagingString"
+                    Write-Host $RepackagingBranch
+                    New-RemoteBranch -Repository $packageGalleryRepo -User $gitHubOrganization -BranchName $RepackagingBranch
+                    Write-Log -Message "New Repackaging Branch $RepackagingBranch created" -Severity 0  
+                }
+            } else {
+                continue
+            }
+        }
 
         # PHS: Branch in der Package Gallery auf prod setzen (checkout prod)
         Write-Log -Message "Checkout prod branch in Package Gallery" -Severity 0

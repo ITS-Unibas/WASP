@@ -45,8 +45,13 @@ function New-PullRequest {
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
         [string]
-        $DestinationBranch
+        $DestinationBranch,
 
+        [Parameter(Mandatory = $false)]
+        [ValidateNotNullOrEmpty()]
+        [string]
+        $PullRequestTitle = "* New * $SourceBranch"
+    
     )
 
     begin {
@@ -58,7 +63,7 @@ function New-PullRequest {
         $Url = ("{0}/repos/{1}/{2}/pulls" -f $Config.Application.GitHubBaseUrl, $DestinationUser, $DestinationRepo)
 
         $json = @{
-            "title"               = "* New * $SourceBranch"
+            "title"               = $PullRequestTitle
             "body"                = "Accept this PR to merge into $DestinationRepo"
             "head"                = "{0}:{1}" -f $SourceUser, $SourceBranch
             "base"                = "$DestinationBranch"
