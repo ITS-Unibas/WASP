@@ -133,10 +133,20 @@ function Invoke-JiraObserver {
                 $Software,
                 $DestinationName
             )
-            $PullRequestTitle = "$Software to $DestinationName" 
-            New-PullRequest -SourceRepo $packageGalleryRepo -SourceUser $gitHubOrganization -SourceBranch $SourceBranch -DestinationRepo $packageGalleryRepo -DestinationUser $gitHubOrganization -DestinationBranch $DestinationBranch -PullRequestTitle $PullRequestTitle -ErrorAction Stop
-            Start-Sleep -Seconds 4
-            Write-Log -Message "New Pull Request $PullRequestTitle created" -Severity 0  
+            # der neuste Pull Request für den jeweiligen Branch wird ermittelt.
+            $latestPullRequest = Test-PullRequest -Branch $SourceBranch
+            $state  = $latestPullRequest.Details.state # open, closed
+            $merged = $latestPullRequest.Details.merged_at # null, timestamp
+            $toBranch = $latestPullRequest.Details.base.ref
+
+            if (($toBranch -ne "test") -or (($state -ne "open") -and ($null -eq  $merged))) { 
+                $PullRequestTitle = "$Software to $DestinationName" 
+                New-PullRequest -SourceRepo $packageGalleryRepo -SourceUser $gitHubOrganization -SourceBranch $SourceBranch -DestinationRepo $packageGalleryRepo -DestinationUser $gitHubOrganization -DestinationBranch $DestinationBranch -PullRequestTitle $PullRequestTitle -ErrorAction Stop
+                Start-Sleep -Seconds 4
+                Write-Log -Message "New Pull Request $PullRequestTitle created" -Severity 0  
+            } else {
+                continue
+            } 
         }
 
         # Funktion um den passenden Branch für jede Software auszuwählen
@@ -149,6 +159,9 @@ function Invoke-JiraObserver {
                 if ($_.startswith($DevBranchPrefix)) {
                     return $_
                 }
+                else {
+                    return $null
+                }
             }
         }
 
@@ -160,35 +173,23 @@ function Invoke-JiraObserver {
             # Ermittlung des Dev-Branches anhand des Software Namens (mit Eventualität des Repackaging branches)
             $DevBranchPrefix = "dev/$key"
             $DevBranch = Get-DevBranch -RemoteBranches $RemoteBranches -DevBranchPrefix $DevBranchPrefix
-            # der neuste Pull Request für den jeweiligen Branch wird ermittelt.
-            $latestPullRequest = Test-PullRequest -Branch $DevBranch
-            $state  = $latestPullRequest.Details.state # open, closed
-            $merged = $latestPullRequest.Details.merged_at # null, timestamp
-            $toBranch = $latestPullRequest.Details.base.ref
             # dev → test: PR nach test, wenn nicht schon exisitiert
             if ($IssuesCompareState[$key].StatusOld -eq "Development" -and $IssuesCompareState[$key].Status -eq "Testing") {
-                # Es wird gecheckt ob ein offener oder gemergter Pull Request nach test existiert, falls nicht wird ein neuer PR erstellt
-                if (($toBranch -ne "test") -or (($state -ne "open") -and ($null -eq  $merged))) { 
-                    Update-PullRequest -SourceBranch $DevBranch -DestinationBranch "test" -Software $key -DestinationName "Testing"              
-                } else {
-                    continue
-                } 
+                # Es wird gecheckt ob ein offener oder gemergedter Pull Request nach test existiert, falls nicht wird ein neuer PR erstellt
+                Update-PullRequest -SourceBranch $DevBranch -DestinationBranch "test" -Software $key -DestinationName "Testing"              
+
             # test → prod: PR nach prod, wenn nicht schon exisitiert
             } elseif ($IssuesCompareState[$key].StatusOld -eq "Testing" -and $IssuesCompareState[$key].Status -eq "Production") {
-                # Es wird gecheckt ob ein offener oder gemergter Pull Request nach prod existiert, falls nicht wird ein neuer PR erstellt
-                if (($toBranch -ne "prod") -or (($state -ne "open") -and ($null -eq  $merged))) { 
-                    Update-PullRequest -SourceBranch $DevBranch -DestinationBranch "test" -Software $key -DestinationName "Testing"                              
-                } else {
-                    continue
-                } 
+                # Es wird gecheckt ob ein offener oder gemergedter Pull Request nach prod existiert, falls nicht wird ein neuer PR erstellt
+                Update-PullRequest -SourceBranch $DevBranch -DestinationBranch "test" -Software $key -DestinationName "Testing"                              
+
             # prod → dev: kein PR, neuer branch mit @ + random hash 
             } elseif ($IssuesCompareState[$key].StatusOld -eq "Production" -and $IssuesCompareState[$key].Status -eq "Development") {
                 # Falls kein DevBranch für die Software existiert (weil die Software schon nach Prod gemerged wurde), wird ein repackaging branch mit einer uuid erstellt
                 if ($DevBranch -notin $RemoteBranches) {
                     $guid = New-Guid
                     $RepackagingString = [convert]::ToString($guid).Replace("-","")
-                    $RepackagingBranch = "$DevBranch@$RepackagingString"
-                    Write-Host $RepackagingBranch
+                    $RepackagingBranch = "$DevBranchPrefix@$RepackagingString"
                     New-RemoteBranch -Repository $packageGalleryRepo -User $gitHubOrganization -BranchName $RepackagingBranch
                     Write-Log -Message "New Repackaging Branch $RepackagingBranch created" -Severity 0  
                 }
