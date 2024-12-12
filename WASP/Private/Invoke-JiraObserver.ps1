@@ -139,7 +139,7 @@ function Invoke-JiraObserver {
             $merged = $latestPullRequest.Details.merged_at # null, timestamp
             $toBranch = $latestPullRequest.Details.base.ref
 
-            if (($toBranch -ne "test") -or (($state -ne "open") -and ($null -eq  $merged))) { 
+            if (($toBranch -ne $SourceBranch) -or (($state -ne "open") -and ($null -eq  $merged))) { 
                 $PullRequestTitle = "$Software to $DestinationName" 
                 New-PullRequest -SourceRepo $packageGalleryRepo -SourceUser $gitHubOrganization -SourceBranch $SourceBranch -DestinationRepo $packageGalleryRepo -DestinationUser $gitHubOrganization -DestinationBranch $DestinationBranch -PullRequestTitle $PullRequestTitle -ErrorAction Stop
                 Start-Sleep -Seconds 4
@@ -155,14 +155,12 @@ function Invoke-JiraObserver {
                 $RemoteBranches,
                 $DevBranchPrefix
             )
-            $RemoteBranches.GetEnumerator() | foreach { 
-                if ($_.startswith($DevBranchPrefix)) {
-                    return $_
-                }
-                else {
-                    return $null
+            foreach ($branch in $RemoteBranches) {
+                if ($branch.StartsWith($DevBranchPrefix)) {
+                    return $branch
                 }
             }
+            return $null
         }
 
         # Die verfügbaren Branches werden aus der Package Gallery abgerufen

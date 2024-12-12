@@ -3,7 +3,7 @@ function Compare-JiraState () {
     .Synopsis 
     Compare the newest jira state to the jira state log file 
     .Description 
-    Compare the newest jira state to the jira state log file and create a new list with the differences
+    Compare the newest jira state to the jira state log file and create a new list with the differences. New issues are not added to the list to compare.
     .Notes 
     FileName: Compare-JiraState.ps1
     Author: Tim Keller 
