@@ -25,6 +25,10 @@ function Invoke-JiraObserver {
         $GitFile = $GitRepo.Substring($GitRepo.LastIndexOf("/") + 1, $GitRepo.Length - $GitRepo.LastIndexOf("/") - 1)
         $PackageGalleryRepositoryName = $GitFile.Replace(".git", "")
         $PackagesGalleryPath = Join-Path -Path $config.Application.BaseDirectory -ChildPath $PackageGalleryRepositoryName
+
+        $GitBranchDEV = $Config.GitBranchDEV
+        $GitBranchTEST = $Config.GitBranchTEST
+        $GitBranchPROD = $Config.GitBranchPROD
     }
 
     process {
@@ -63,7 +67,7 @@ function Invoke-JiraObserver {
                 continue
             }
             
-            $cleanBranch = $branch -replace "dev/", ""
+            $cleanBranch = $branch -replace "$GitBranchDEV", ""
         
             # Check, ob der Branch im Jira State File vorhanden ist
             if (!($jiraStateFileContent.ContainsKey($cleanBranch))) {
@@ -125,17 +129,17 @@ function Invoke-JiraObserver {
         # jedes Issue, welches vom Stand im neusten JiraState-File abweicht wird einzeln durchgegangen
         foreach($key in $IssuesCompareState.keys) { 
             # Ermittlung des Dev-Branches anhand des Software Namens (mit Eventualität des Repackaging branches)
-            $DevBranchPrefix = "dev/$key"
+            $DevBranchPrefix = "$GitBranchDEV$key"
             $DevBranch = Get-DevBranch -RemoteBranches $RemoteBranches -DevBranchPrefix $DevBranchPrefix
             # dev → test: PR nach test, wenn nicht offen. Falls der PR schon gemerged wurde, wird der Jira State aktualisiert
             if ($IssuesCompareState[$key].StatusOld -eq "Development" -and $IssuesCompareState[$key].Status -eq "Testing") {
                 # Es wird gecheckt ob ein offener oder gemergedter Pull Request nach test existiert, falls nicht wird ein neuer PR erstellt
-                $UpdateJiraStateFile = Update-PullRequest -SourceBranch $DevBranch -DestinationBranch "test" -Software $key -DestinationName "Testing"              
+                $UpdateJiraStateFile = Update-PullRequest -SourceBranch $DevBranch -DestinationBranch $GitBranchTEST -Software $key -DestinationName "Testing"              
 
             # test → prod: PR nach prod, wenn nicht offen.Falls der PR schon gemerged wurde, wird der Jira State aktualisiert.
             } elseif ($IssuesCompareState[$key].StatusOld -eq "Testing" -and $IssuesCompareState[$key].Status -eq "Production") {
                 # Es wird gecheckt ob ein offener oder gemergedter Pull Request nach prod existiert, falls nicht wird ein neuer PR erstellt
-                $UpdateJiraStateFile = Update-PullRequest -SourceBranch $DevBranch -DestinationBranch "prod" -Software $key -DestinationName "Production"                              
+                $UpdateJiraStateFile = Update-PullRequest -SourceBranch $DevBranch -DestinationBranch $GitBranchPROD -Software $key -DestinationName "Production"                              
 
             # prod → dev: kein PR, neuer branch mit @ + random hash 
             } elseif ($IssuesCompareState[$key].StatusOld -eq "Production" -and $IssuesCompareState[$key].Status -eq "Development") {
