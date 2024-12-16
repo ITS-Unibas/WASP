@@ -43,21 +43,20 @@ function Update-PullRequest {
         $toBranch = $latestPullRequest.Details.base.ref
 
         if (($fromBranch -eq $SourceBranch) -and ($toBranch -eq $DestinationBranch) -and ($state -eq "open")) { 
-            Write-Log "No action needed" -Severity 0
+            Write-Log "No action needed. Pull Request from $SourceBranch to $DestinationBranch already exists" -Severity 1
             return $false
         } else {
             $PullRequestTitle = "$Software to $DestinationName"
             $response = New-PullRequest -SourceRepo $packageGalleryRepo -SourceUser $gitHubOrganization -SourceBranch $SourceBranch -DestinationRepo $packageGalleryRepo -DestinationUser $gitHubOrganization -DestinationBranch $DestinationBranch -PullRequestTitle $PullRequestTitle -ErrorAction Stop
-            Start-Sleep -Seconds 6
+            Start-Sleep -Seconds 4
             if ($response.GetType().Name -ne "ErrorRecord") {
-                Write-Log -Message "New Pull Request $PullRequestTitle created" -Severity 0  
+                Write-Log -Message "New Pull Request $PullRequestTitle from $SourceBranch to $DestinationBranch created" -Severity 1 
                 return $false
             } else {
                 $ErrorDetails = ConvertFrom-Json $response.ErrorDetails
                 $ErrorDetailsMessage = $ErrorDetails.Message
                 $ErrorMessage = $ErrorDetails.errors.message
                 if ($ErrorMessage -like "No commits between*") {
-                    Write-Log -Message "No commits between $SourceBranch and $DestinationBranch" -Severity 0
                     return $true
                 } else {
                     Write-Log -Message "Error creating Pull Request: $ErrorDetailsMessage" -Severity 3

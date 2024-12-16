@@ -135,7 +135,7 @@ function Invoke-JiraObserver {
             # test → prod: PR nach prod, wenn nicht offen.Falls der PR schon gemerged wurde, wird der Jira State aktualisiert.
             } elseif ($IssuesCompareState[$key].StatusOld -eq "Testing" -and $IssuesCompareState[$key].Status -eq "Production") {
                 # Es wird gecheckt ob ein offener oder gemergedter Pull Request nach prod existiert, falls nicht wird ein neuer PR erstellt
-                $UpdateJiraStateFile = Update-PullRequest -SourceBranch $DevBranch -DestinationBranch "test" -Software $key -DestinationName "Testing"                              
+                $UpdateJiraStateFile = Update-PullRequest -SourceBranch $DevBranch -DestinationBranch "prod" -Software $key -DestinationName "Production"                              
 
             # prod → dev: kein PR, neuer branch mit @ + random hash 
             } elseif ($IssuesCompareState[$key].StatusOld -eq "Production" -and $IssuesCompareState[$key].Status -eq "Development") {
@@ -148,13 +148,16 @@ function Invoke-JiraObserver {
                     Write-Log -Message "New Repackaging Branch $RepackagingBranch created" -Severity 0  
                 }
                 $UpdateJiraStateFile = $true
+            # test -> dev: änderung wird im Jira State File geschrieben
+            } elseif ($IssuesCompareState[$key].StatusOld -eq "Testing" -and $IssuesCompareState[$key].Status -eq "Development") {
+                $UpdateJiraStateFile = $true
             # dev → prod: Error Message, da Testing übersprungen wurde
             } elseif (($IssuesCompareState[$key].StatusOld -eq "Development"  -and $IssuesCompareState[$key].Status -eq "Production")) {
                 Write-Log -Message "The status of the issue $key has changed from Development to Production without going through Testing. This Action is not allowed." -Severity 3
-                continue
+                $UpdateJiraStateFile = $false
             }
             else {
-                continue
+                $UpdateJiraStateFile = $false
             }
             if ($UpdateJiraStateFile -eq $true) {
                 # Der Jira State File wird aktualisiert für den entsprechenden Branch
