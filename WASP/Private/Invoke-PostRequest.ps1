@@ -20,12 +20,18 @@ function Invoke-PostRequest {
     }
 
     process {
-        $Splat = @{
-            Method      = 'POST'
-            Uri         = $Url
-            Headers     = @{Authorization = "Token {0}" -f $config.Application.GitHubAPITokenITSUnibasChocoUser}
-            Body        = $Body
+        try {
+            $Splat = @{
+                Method      = 'POST'
+                Uri         = $Url
+                Headers     = @{Authorization = "Token {0}" -f $config.Application.GitHubAPITokenITSUnibasChocoUser}
+                Body        = $Body
+            }
+            return Invoke-RestMethod @Splat -ErrorAction Stop
         }
-        return Invoke-RestMethod @Splat -ErrorAction Stop
+        catch {
+            return $_
+        }
+
     }
 }

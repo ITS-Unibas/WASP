@@ -46,12 +46,11 @@ function New-PullRequest {
         [ValidateNotNullOrEmpty()]
         [string]
         $DestinationBranch,
-
+      
         [Parameter(Mandatory = $false)]
         [ValidateNotNullOrEmpty()]
         [string]
         $PullRequestTitle = "* New * $SourceBranch"
-    
     )
 
     begin {
@@ -69,9 +68,10 @@ function New-PullRequest {
             "base"                = "$DestinationBranch"
         } | ConvertTo-Json
 
-        $null = Invoke-PostRequest -Url $Url -Body $json -ErrorAction Stop
+        $response = Invoke-PostRequest -Url $Url -Body $json -ErrorAction Stop
     }
 
     end {
+        return $response
     }
 }
