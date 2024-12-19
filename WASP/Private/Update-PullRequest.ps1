@@ -39,13 +39,17 @@ function Update-PullRequest {
         # der neuste Pull Request für den jeweiligen Branch wird ermittelt.
         $latestPullRequest = Test-PullRequest -Branch $SourceBranch
         $state  = $latestPullRequest.Details.state # open, closed
+        $merged = $latestPullRequest.Details.merged_at # null, timestamp
         $fromBranch = $latestPullRequest.Details.head.ref
         $toBranch = $latestPullRequest.Details.base.ref
+        $lastCommitPR = $latestPullRequest.Details.head.sha
 
         if (($fromBranch -eq $SourceBranch) -and ($toBranch -eq $DestinationBranch) -and ($state -eq "open")) { 
             Write-Log "No action needed. Pull Request from $SourceBranch to $DestinationBranch already exists" -Severity 1
             return $false
         } else {
+            #TODO: Check existiert der Source Branch überhaupt?
+            
             $PullRequestTitle = "$Software to $DestinationName"
             $response = New-PullRequest -SourceRepo $packageGalleryRepo -SourceUser $gitHubOrganization -SourceBranch $SourceBranch -DestinationRepo $packageGalleryRepo -DestinationUser $gitHubOrganization -DestinationBranch $DestinationBranch -PullRequestTitle $PullRequestTitle -ErrorAction Stop
             Start-Sleep -Seconds 4

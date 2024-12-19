@@ -26,9 +26,9 @@ function Invoke-JiraObserver {
         $PackageGalleryRepositoryName = $GitFile.Replace(".git", "")
         $PackagesGalleryPath = Join-Path -Path $config.Application.BaseDirectory -ChildPath $PackageGalleryRepositoryName
 
-        $GitBranchDEV = $Config.GitBranchDEV
-        $GitBranchTEST = $Config.GitBranchTEST
-        $GitBranchPROD = $Config.GitBranchPROD
+        $GitBranchDEV = $Config.Application.GitBranchDEV
+        $GitBranchTEST = $Config.Application.GitBranchTEST
+        $GitBranchPROD = $Config.Application.GitBranchPROD
     }
 
     process {
@@ -122,6 +122,7 @@ function Invoke-JiraObserver {
         # Der alte Stand des Jira State Files wird geupdated, zuallererst wird der alte Stand kopiert und die neuen Tickets werden angehängt
         $UpdatedJiraState = $jiraStateFileContent.Clone()
         $UpdatedJiraState += $NewIssues
+
 
         # Die verfügbaren Branches werden aus der Package Gallery abgerufen
         $RemoteBranches = Get-RemoteBranches -Repo $packageGalleryRepo -User $gitHubOrganization
