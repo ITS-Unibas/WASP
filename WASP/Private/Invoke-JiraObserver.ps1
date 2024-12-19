@@ -119,10 +119,6 @@ function Invoke-JiraObserver {
         # $jiraStateFileContent <> $currentJiraStates: Vergleiche den aktuellen Stand der Tickets mit dem Jira State File und speichere die Unterschiede in einer Liste
         $IssuesCompareState, $NewIssues = Compare-JiraState $IssuesCurrentState $jiraStateFileContent
 
-        # Der alte Stand des Jira State Files wird geupdated, zuallererst wird der alte Stand kopiert und die neuen Tickets werden angehängt
-        $UpdatedJiraState = $jiraStateFileContent.Clone()
-        $UpdatedJiraState += $NewIssues
-
 
         # Die verfügbaren Branches werden aus der Package Gallery abgerufen
         $RemoteBranches = Get-RemoteBranches -Repo $packageGalleryRepo -User $gitHubOrganization
@@ -132,14 +128,12 @@ function Invoke-JiraObserver {
             # Ermittlung des Dev-Branches anhand des Software Namens (mit Eventualität des Repackaging branches)
             $DevBranchPrefix = "$GitBranchDEV$key"
             $DevBranch = Get-DevBranch -RemoteBranches $RemoteBranches -DevBranchPrefix $DevBranchPrefix
-            # dev → test: PR nach test, wenn nicht offen. Falls der PR schon gemerged wurde, wird der Jira State aktualisiert
+            # dev → test: PR nach test
             if ($IssuesCompareState[$key].StatusOld -eq "Development" -and $IssuesCompareState[$key].Status -eq "Testing") {
-                # Es wird gecheckt ob ein offener oder gemergedter Pull Request nach test existiert, falls nicht wird ein neuer PR erstellt
                 $UpdateJiraStateFile = Update-PullRequest -SourceBranch $DevBranch -DestinationBranch $GitBranchTEST -Software $key -DestinationName "Testing"              
 
-            # test → prod: PR nach prod, wenn nicht offen.Falls der PR schon gemerged wurde, wird der Jira State aktualisiert.
+            # test → prod: PR nach prod
             } elseif ($IssuesCompareState[$key].StatusOld -eq "Testing" -and $IssuesCompareState[$key].Status -eq "Production") {
-                # Es wird gecheckt ob ein offener oder gemergedter Pull Request nach prod existiert, falls nicht wird ein neuer PR erstellt
                 $UpdateJiraStateFile = Update-PullRequest -SourceBranch $DevBranch -DestinationBranch $GitBranchPROD -Software $key -DestinationName "Production"                              
 
             # prod → dev: kein PR, neuer branch mit @ + random hash 
@@ -153,25 +147,10 @@ function Invoke-JiraObserver {
                     Write-Log -Message "New Repackaging Branch $RepackagingBranch created" -Severity 0  
                 }
                 $UpdateJiraStateFile = $true
-            # test -> dev: änderung wird im Jira State File geschrieben
-            } elseif ($IssuesCompareState[$key].StatusOld -eq "Testing" -and $IssuesCompareState[$key].Status -eq "Development") {
+            } else {
+                Write-Log -Message "No action needed for $key" -Severity 0
                 $UpdateJiraStateFile = $true
-            # dev → prod: Error Message, da Testing übersprungen wurde
-            } elseif (($IssuesCompareState[$key].StatusOld -eq "Development"  -and $IssuesCompareState[$key].Status -eq "Production")) {
-                Write-Log -Message "The status of the issue $key has changed from Development to Production without going through Testing. This Action is not allowed." -Severity 3
-                $UpdateJiraStateFile = $false
             }
-            else {
-                $UpdateJiraStateFile = $false
-            }
-            if ($UpdateJiraStateFile -eq $true) {
-                # Der Jira State File wird aktualisiert für den entsprechenden Branch
-                $UpdatedJiraState[$key] = [PSCustomObject]@{
-                    Assignee = $IssuesCompareState[$key].Assignee
-                    Status = $IssuesCompareState[$key].Status
-                }
-            }
-        }
 
         # PHS: Branch in der Package Gallery auf prod setzen (checkout prod)
         Write-Log -Message "Checkout prod branch in Package Gallery" -Severity 0
@@ -180,7 +159,9 @@ function Invoke-JiraObserver {
 
     end {
         # Aktueller Stand Jira Tickets als neues Jira state file schreiben (Stand wurde schon aktualisiert, kein neuer Request)
-        Write-JiraStateFile $UpdatedJiraState
+        if ($UpdateJiraStateFile) {
+            Write-JiraStateFile $IssuesCurrentState
+        }
     }
 }
  
