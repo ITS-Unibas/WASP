@@ -176,7 +176,7 @@ function Install-ChocolateyInstallPackage() {
             -Checksum64 $checksum64 `
             -ChecksumType64 $checksumType64 `
             -Options $options `
-            -GetOriginalFileName
+            -GetOriginalFileName `
             -ForceDownload
     } 
     exit 0
