@@ -130,11 +130,11 @@ function Invoke-JiraObserver {
             $DevBranch = Get-DevBranch -RemoteBranches $RemoteBranches -DevBranchPrefix $DevBranchPrefix
             # dev → test: PR nach test
             if ($IssuesCompareState[$key].StatusOld -eq "Development" -and $IssuesCompareState[$key].Status -eq "Testing") {
-                $UpdateJiraStateFile = Update-PullRequest -SourceBranch $DevBranch -DestinationBranch $GitBranchTEST -Software $key -DestinationName "Testing"              
+                $UpdateJiraStateFile = Create-PullRequest -SourceBranch $DevBranch -DestinationBranch $GitBranchTEST -Software $key -DestinationName "Testing"              
 
             # test → prod: PR nach prod
             } elseif ($IssuesCompareState[$key].StatusOld -eq "Testing" -and $IssuesCompareState[$key].Status -eq "Production") {
-                $UpdateJiraStateFile = Update-PullRequest -SourceBranch $DevBranch -DestinationBranch $GitBranchPROD -Software $key -DestinationName "Production"                              
+                $UpdateJiraStateFile = Create-PullRequest -SourceBranch $DevBranch -DestinationBranch $GitBranchPROD -Software $key -DestinationName "Production"                              
 
             # prod → dev: kein PR, neuer branch mit @ + random hash 
             } elseif ($IssuesCompareState[$key].StatusOld -eq "Production" -and $IssuesCompareState[$key].Status -eq "Development") {
@@ -151,6 +151,7 @@ function Invoke-JiraObserver {
                 Write-Log -Message "No action needed for $key" -Severity 0
                 $UpdateJiraStateFile = $true
             }
+        }
 
         # PHS: Branch in der Package Gallery auf prod setzen (checkout prod)
         Write-Log -Message "Checkout prod branch in Package Gallery" -Severity 0
