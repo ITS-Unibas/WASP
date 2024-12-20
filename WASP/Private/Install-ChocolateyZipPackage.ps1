@@ -142,7 +142,7 @@ function Install-ChocolateyZipPackage() {
                 -Checksum64 $checksum64 `
                 -ChecksumType64 $checksumType64 `
                 -Options $options `
-                -GetOriginalFileName
+                -GetOriginalFileName `
                 -ForceDownload
         }
     }
