@@ -31,8 +31,28 @@ function Install-ChocolateyPowershellCommand() {
 
     $downloadFilePath = Join-Path (Join-Path (Get-Item -Path ".\").FullName "tools") "$($packageName)Install.ps1"
 
+    # Check the url found above ($url or $url64bit) and download the file
+    if ($null -ne $url) {
+        $urlFound = $url64bit
+    } elseif ($null -ne $url64bit) {
+        $urlFound = $url
+    }    
+
+    Write-Log "Start editing chocolateyInstall..." -Severity 1
+    
+    $defaultFileName = $urlFound.Split("/")[-1]
+    $fileName = Get-WebFileName -url $urlFound -defaultName $defaultFileName
+
+    if ($FileItem.Extension -eq '.zip') {
+        # If it is a zip package the file param should be provided but not as fullpath, just the main packages name
+        $FileName = $file
+    }
+
+    Edit-ChocolateyInstaller -ToolsPath (Join-Path (Get-Item -Path ".\").FullName "tools") -FileName $fileName
+    New-Item -Path (Join-Path (Join-Path (Get-Item -Path ".\").FullName "tools") "overridden.info") -Force
+
     if ($url -or $url64bit) {
-        $filePath = Get-ChocolateyWebFile -PackageName $packageName `
+        $null = Get-ChocolateyWebFile -PackageName $packageName `
             -FileFullPath $downloadFilePath `
             -Url $url `
             -Url64bit $url64bit `
@@ -42,17 +62,8 @@ function Install-ChocolateyPowershellCommand() {
             -ChecksumType64 $checksumType64 `
             -Options $options `
             -GetOriginalFileName
-        $FileItem = Get-item $filePath
-        $FileName = $FileItem.Name
-        if ($FileItem.Extension -eq '.zip') {
-            # If it is a zip package the file param should be provided but not as fullpath, just the main packages name
-            $FileName = $file
-        }
-        Write-Log "Start editing chocolateyInstall at $filePath." -Severity 1
-        Edit-ChocolateyInstaller -ToolsPath (Join-Path (Get-Item -Path ".\").FullName "tools") -FileName $FileName
-        New-Item -Path (Join-Path (Join-Path (Get-Item -Path ".\").FullName "tools") "overridden.info") -Force
-    }
-    else {
+            -ForceDownload
+    } else {
         Write-Log "No url in install script of $packageName found. Skip."
     }
     exit 0

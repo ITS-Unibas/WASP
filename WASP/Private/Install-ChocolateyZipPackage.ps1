@@ -116,9 +116,24 @@ function Install-ChocolateyZipPackage() {
         $checksumType64 = $checksumType
     }
 
+    # Check the url found above ($url or $url64bit) and download the file
+    if ($null -ne $url) {
+        $urlFound = $url64bit
+    } elseif ($null -ne $url64bit) {
+        $urlFound = $url
+    }    
+
+    Write-Log "Start editing chocolateyInstall..." -Severity 1
+    
+    $defaultFileName = $urlFound.Split("/")[-1]
+    $fileName = Get-WebFileName -url $urlFound -defaultName $defaultFileName
+
+    $unzipLocation = (Join-Path (Get-Item -Path ".\").FullName "tools")
+    Edit-ChocolateyInstaller -ToolsPath (Join-Path (Get-Item -Path ".\").FullName "tools") -FileName $fileName -UnzipPath $unzipLocation
+
     try {
         if (-Not $remoteFile) {
-            $filePath = Get-ChocolateyWebFile -PackageName $packageName `
+            $null = Get-ChocolateyWebFile -PackageName $packageName `
                 -FileFullPath $downloadFilePath `
                 -Url $url `
                 -Url64bit $url64bit `
@@ -128,11 +143,8 @@ function Install-ChocolateyZipPackage() {
                 -ChecksumType64 $checksumType64 `
                 -Options $options `
                 -GetOriginalFileName
-            $unzipLocation = (Join-Path (Get-Item -Path ".\").FullName "tools")
-            #Get-ChocolateyUnzip "$filePath" $unzipLocation $specificFolder $packageName
-            $FileName = Get-item $FilePath | Select-Object -ExpandProperty Name
+                -ForceDownload
         }
-        Edit-ChocolateyInstaller -ToolsPath (Join-Path (Get-Item -Path ".\").FullName "tools") -FileName $FileName -UnzipPath $unzipLocation
     }
     catch {
         Write-Log ($($packageName) + ":" + " " + $_.Exception.toString()) -Severity 3
