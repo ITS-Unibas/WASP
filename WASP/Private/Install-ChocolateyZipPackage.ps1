@@ -117,10 +117,10 @@ function Install-ChocolateyZipPackage() {
     }
 
     # Check the url found above ($url or $url64bit) and download the file
-    if ($null -eq $url) {
-        $urlFound = $url64bit
-    } elseif ($null -eq $url64bit) {
+    if ($null -ne $url) {
         $urlFound = $url
+    } elseif ($null -ne $url64bit) {
+        $urlFound = $url64bit
     }    
 
     Write-Log "Start editing chocolateyInstall..." -Severity 1
