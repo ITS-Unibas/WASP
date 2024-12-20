@@ -61,7 +61,7 @@ function Install-ChocolateyPowershellCommand() {
             -Checksum64 $checksum64 `
             -ChecksumType64 $checksumType64 `
             -Options $options `
-            -GetOriginalFileName
+            -GetOriginalFileName `
             -ForceDownload
     } else {
         Write-Log "No url in install script of $packageName found. Skip."
