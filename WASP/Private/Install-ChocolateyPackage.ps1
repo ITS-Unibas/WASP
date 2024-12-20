@@ -38,9 +38,9 @@ function Install-ChocolateyPackage() {
     )
 
     # Check the url found above ($url or $url64bit) and download the file
-    if ($null -ne $url) {
+    if ($null -eq $url) {
         $urlFound = $url64bit
-    } elseif ($null -ne $url64bit) {
+    } elseif ($null -eq $url64bit) {
         $urlFound = $url
     }    
 
