@@ -123,6 +123,7 @@ function Invoke-JiraObserver {
         # Die verfügbaren Branches werden aus der Package Gallery abgerufen
         $RemoteBranches = Get-RemoteBranches -Repo $packageGalleryRepo -User $gitHubOrganization
         
+        $UpdateJiraStateFile = $true
         # jedes Issue, welches vom Stand im neusten JiraState-File abweicht wird einzeln durchgegangen
         foreach($key in $IssuesCompareState.keys) { 
             # Ermittlung des Dev-Branches anhand des Software Namens (mit Eventualität des Repackaging branches)
@@ -130,12 +131,16 @@ function Invoke-JiraObserver {
             $DevBranch = Get-DevBranch -RemoteBranches $RemoteBranches -DevBranchPrefix $DevBranchPrefix
             # dev → test: PR nach test
             if ($IssuesCompareState[$key].StatusOld -eq "Development" -and $IssuesCompareState[$key].Status -eq "Testing") {
-                $UpdateJiraStateFile = Create-PullRequest -SourceBranch $DevBranch -DestinationBranch $GitBranchTEST -Software $key -DestinationName "Testing"              
-
+                $result = Create-PullRequest -SourceBranch $DevBranch -DestinationBranch $GitBranchTEST -Software $key -DestinationName "Testing"              
+                if ($result -eq $false) {
+                    $UpdateJiraStateFile = $false
+                }
             # test → prod: PR nach prod
             } elseif ($IssuesCompareState[$key].StatusOld -eq "Testing" -and $IssuesCompareState[$key].Status -eq "Production") {
-                $UpdateJiraStateFile = Create-PullRequest -SourceBranch $DevBranch -DestinationBranch $GitBranchPROD -Software $key -DestinationName "Production"                              
-
+                $result = Create-PullRequest -SourceBranch $DevBranch -DestinationBranch $GitBranchPROD -Software $key -DestinationName "Production"                              
+                if ($result -eq $false) {
+                    $UpdateJiraStateFile = $false
+                }
             # prod → dev: kein PR, neuer branch mit @ + random hash 
             } elseif ($IssuesCompareState[$key].StatusOld -eq "Production" -and $IssuesCompareState[$key].Status -eq "Development") {
                 # Falls kein DevBranch für die Software existiert (weil die Software schon nach Prod gemerged wurde), wird ein repackaging branch mit einer uuid erstellt
@@ -146,10 +151,8 @@ function Invoke-JiraObserver {
                     New-RemoteBranch -Repository $packageGalleryRepo -User $gitHubOrganization -BranchName $RepackagingBranch
                     Write-Log -Message "New Repackaging Branch $RepackagingBranch created" -Severity 0  
                 }
-                $UpdateJiraStateFile = $true
             } else {
                 Write-Log -Message "No action needed for $key" -Severity 0
-                $UpdateJiraStateFile = $true
             }
         }
 
