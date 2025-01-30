@@ -83,9 +83,10 @@ function Write-Log {
                 $null = New-Item -ItemType directory -Path $LogPath
             }
             if (-Not (Test-Path $LogFilePath -ErrorAction SilentlyContinue)) {
-                $numLogFiles = (Get-ChildItem -Path $LogPath -Filter '*.log' | Measure-Object).Count
+                $LogFiles = Get-ChildItem -Path $LogPath -Filter '*.log'
+                $numLogFiles = ($LogFiles | Measure-Object).Count
                 if ($numLogFiles -eq $MaxLogFiles) {
-                    Get-ChildItem $LogPath | Sort-Object CreationTime | Select-Object -First 1 | Remove-Item
+                    $LogFiles | Sort-Object CreationTime | Select-Object -First 1 | Remove-Item
                 }
                 elseif ($numLogFiles -gt $MaxLogFiles) {
                     Get-ChildItem $LogPath | Sort-Object CreationTime | Select-Object -First ($numLogFiles - $MaxLogFiles + 1) | Remove-Item

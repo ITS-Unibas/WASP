@@ -27,10 +27,14 @@ function Invoke-PostRequest {
                 Headers     = @{Authorization = "Token {0}" -f $config.Application.GitHubAPITokenITSUnibasChocoUser}
                 Body        = $Body
             }
-            return Invoke-RestMethod @Splat -ErrorAction Stop
+            # Github Success Response ist unterschiedlich zur Error Response
+            $res = Invoke-WebRequest @Splat
+            $response = [PSCustomObject]@{ Status = $res.StatusCode }
+            return $response
         }
         catch {
-            return $_
+            $response = $_.ErrorDetails.message | ConvertFrom-Json
+            return $response
         }
 
     }
