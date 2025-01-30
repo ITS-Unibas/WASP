@@ -46,6 +46,9 @@ function Compare-JiraState () {
                     }
                 }
             }
+                #TODO: Tickets die in $jiraStateFileContent, aber nicht in $IssuesCurrentState sind, müssen gelöscht werden. Anschliessend extra return für diese Tickets
+
+
         }
         catch {
             <#Do this if a terminating exception happens#>

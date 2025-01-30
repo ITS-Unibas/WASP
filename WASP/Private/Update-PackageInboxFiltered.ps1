@@ -68,7 +68,13 @@ function Update-PackageInboxFiltered {
                 # Is this necessary?
                 Write-Log ([string](git -C $PackagesInboxRepoPath checkout main 2>&1))
 
-                New-PullRequest -SourceRepo $GitRepoInbox -SourceUser $GitHubUser -SourceBranch $DevBranch -DestinationRepo $GitRepoPackageGallery -DestinationUser $GitHubOrganisation -DestinationBranch $DevBranch -ErrorAction Stop
+                $response = New-PullRequest -SourceRepo $GitRepoInbox -SourceUser $GitHubUser -SourceBranch $DevBranch -DestinationRepo $GitRepoPackageGallery -DestinationUser $GitHubOrganisation -DestinationBranch $DevBranch -ErrorAction Stop
+                if ($response.Status -ne 201) {
+                    Write-Log -Message "Error creating Pull Request: $($response.Status) - $($response.Message) - $($response.errors.message)" -Severity 3
+                    continue
+                } else {
+                    Write-Log -Message "New Pull Request created: $DevBranch" -Severity 1
+                }
 
                 $wishlist = Get-Content -Path $wishlistPath | Where-Object { $_ -notlike "#*" }
 

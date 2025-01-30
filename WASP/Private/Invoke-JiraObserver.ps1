@@ -26,9 +26,9 @@ function Invoke-JiraObserver {
         $PackageGalleryRepositoryName = $GitFile.Replace(".git", "")
         $PackagesGalleryPath = Join-Path -Path $config.Application.BaseDirectory -ChildPath $PackageGalleryRepositoryName
 
-        $GitBranchDEV = $Config.GitBranchDEV
-        $GitBranchTEST = $Config.GitBranchTEST
-        $GitBranchPROD = $Config.GitBranchPROD
+        $GitBranchDEV = $Config.Application.GitBranchDEV
+        $GitBranchTEST = $Config.Application.GitBranchTEST
+        $GitBranchPROD = $Config.Application.GitBranchPROD
     }
 
     process {
@@ -119,31 +119,41 @@ function Invoke-JiraObserver {
         # $jiraStateFileContent <> $currentJiraStates: Vergleiche den aktuellen Stand der Tickets mit dem Jira State File und speichere die Unterschiede in einer Liste
         $IssuesCompareState, $NewIssues = Compare-JiraState $IssuesCurrentState $jiraStateFileContent
 
-        # Der alte Stand des Jira State Files wird geupdated, zuallererst wird der alte Stand kopiert und die neuen Tickets werden angehängt
-        $UpdatedJiraState = $jiraStateFileContent.Clone()
-        $UpdatedJiraState += $NewIssues
 
         # Die verfügbaren Branches werden aus der Package Gallery abgerufen
         $RemoteBranches = Get-RemoteBranches -Repo $packageGalleryRepo -User $gitHubOrganization
         
+        $UpdateJiraStateFile = $true
         # jedes Issue, welches vom Stand im neusten JiraState-File abweicht wird einzeln durchgegangen
         foreach($key in $IssuesCompareState.keys) { 
-            # Ermittlung des Dev-Branches anhand des Software Namens (mit Eventualität des Repackaging branches)
+            # Ermittlung des Dev-Branches anhand des Paket Namens (mit Eventualität des Repackaging branches)
             $DevBranchPrefix = "$GitBranchDEV$key"
             $DevBranch = Get-DevBranch -RemoteBranches $RemoteBranches -DevBranchPrefix $DevBranchPrefix
-            # dev → test: PR nach test, wenn nicht offen. Falls der PR schon gemerged wurde, wird der Jira State aktualisiert
+            # dev → test: PR nach test
             if ($IssuesCompareState[$key].StatusOld -eq "Development" -and $IssuesCompareState[$key].Status -eq "Testing") {
-                # Es wird gecheckt ob ein offener oder gemergedter Pull Request nach test existiert, falls nicht wird ein neuer PR erstellt
-                $UpdateJiraStateFile = Update-PullRequest -SourceBranch $DevBranch -DestinationBranch $GitBranchTEST -Software $key -DestinationName "Testing"              
-
-            # test → prod: PR nach prod, wenn nicht offen.Falls der PR schon gemerged wurde, wird der Jira State aktualisiert.
+                $PullRequestTitle = "$key to $GitBranchTEST"
+                $response = New-PullRequest -SourceRepo $packageGalleryRepo -SourceUser $gitHubOrganization -SourceBranch $DevBranch -DestinationRepo $packageGalleryRepo -DestinationUser $gitHubOrganization -DestinationBranch $GitBranchTEST -PullRequestTitle $PullRequestTitle -ErrorAction Stop
+                Start-Sleep -Seconds 4     
+                if ($response.Status -ne 201) {
+                    Write-Log -Message "Error creating Pull Request for Package $($key): $($response.Status) - $($response.Message) - $($response.errors.message)" -Severity 3
+                    $UpdateJiraStateFile = $false
+                } else {
+                    Write-Log -Message "Successfully created new Pull Request from $PullRequestTitle." -Severity 1
+                }       
+            # test → prod: PR nach prod
             } elseif ($IssuesCompareState[$key].StatusOld -eq "Testing" -and $IssuesCompareState[$key].Status -eq "Production") {
-                # Es wird gecheckt ob ein offener oder gemergedter Pull Request nach prod existiert, falls nicht wird ein neuer PR erstellt
-                $UpdateJiraStateFile = Update-PullRequest -SourceBranch $DevBranch -DestinationBranch $GitBranchPROD -Software $key -DestinationName "Production"                              
-
+                $PullRequestTitle = "$key to $GitBranchPROD"
+                $response = New-PullRequest -SourceRepo $packageGalleryRepo -SourceUser $gitHubOrganization -SourceBranch $DevBranch -DestinationRepo $packageGalleryRepo -DestinationUser $gitHubOrganization -DestinationBranch $GitBranchPROD -PullRequestTitle $PullRequestTitle -ErrorAction Stop
+                Start-Sleep -Seconds 4     
+                if ($response.Status -ne 201) {
+                    Write-Log -Message "Error creating Pull Request for Package $($key): $($response.Status) - $($response.Message) - $($response.errors.message)" -Severity 3
+                    $UpdateJiraStateFile = $false
+                } else {
+                    Write-Log -Message "Successfully created new Pull Request from $PullRequestTitle." -Severity 1
+                } 
             # prod → dev: kein PR, neuer branch mit @ + random hash 
             } elseif ($IssuesCompareState[$key].StatusOld -eq "Production" -and $IssuesCompareState[$key].Status -eq "Development") {
-                # Falls kein DevBranch für die Software existiert (weil die Software schon nach Prod gemerged wurde), wird ein repackaging branch mit einer uuid erstellt
+                # Falls kein DevBranch für das Paket existiert (schon nach Prod gemerged), wird ein repackaging branch mit einer uuid erstellt
                 if ($DevBranch -notin $RemoteBranches) {
                     $guid = New-Guid
                     $RepackagingString = [convert]::ToString($guid).Replace("-","")
@@ -151,26 +161,23 @@ function Invoke-JiraObserver {
                     New-RemoteBranch -Repository $packageGalleryRepo -User $gitHubOrganization -BranchName $RepackagingBranch
                     Write-Log -Message "New Repackaging Branch $RepackagingBranch created" -Severity 0  
                 }
-                $UpdateJiraStateFile = $true
-            # test -> dev: änderung wird im Jira State File geschrieben
+            # Doppelhopping: dev → prod, Use Case nicht erlaubt. Muss Testing durchlaufen.
+            }  elseif ($IssuesCompareState[$key].StatusOld -eq "Development" -and $IssuesCompareState[$key].Status -eq "Production") {
+                Write-Log -Message "Package $key moved from $($IssuesCompareState[$key].StatusOld) to $($IssuesCompareState[$key].Status): Not allowed! Move ticket to the correct lane." -Severity 2
+                $UpdateJiraStateFile = $false
+            # test -> dev
             } elseif ($IssuesCompareState[$key].StatusOld -eq "Testing" -and $IssuesCompareState[$key].Status -eq "Development") {
-                $UpdateJiraStateFile = $true
-            # dev → prod: Error Message, da Testing übersprungen wurde
-            } elseif (($IssuesCompareState[$key].StatusOld -eq "Development"  -and $IssuesCompareState[$key].Status -eq "Production")) {
-                Write-Log -Message "The status of the issue $key has changed from Development to Production without going through Testing. This Action is not allowed." -Severity 3
+                Write-Log -Message "Package $key moved from $($IssuesCompareState[$key].StatusOld) to $($IssuesCompareState[$key].Status): No action needed." -Severity 1
+            # Doppelhopping: prod -> test, Use Case nicht erlaubt. Muss Development durchlaufen.
+            } elseif ($IssuesCompareState[$key].StatusOld -eq "Production" -and $IssuesCompareState[$key].Status -eq "Testing") {
+                Write-Log -Message "Package $key moved from $($IssuesCompareState[$key].StatusOld) to $($IssuesCompareState[$key].Status): Not allowed! Move ticket to the correct lane." -Severity 2
                 $UpdateJiraStateFile = $false
             }
-            else {
-                $UpdateJiraStateFile = $false
+
+            if ($UpdateJiraStateFile -eq $false) {
+                break
             }
-            if ($UpdateJiraStateFile -eq $true) {
-                # Der Jira State File wird aktualisiert für den entsprechenden Branch
-                $UpdatedJiraState[$key] = [PSCustomObject]@{
-                    Assignee = $IssuesCompareState[$key].Assignee
-                    Status = $IssuesCompareState[$key].Status
-                }
-            }
-        }
+         }
 
         # PHS: Branch in der Package Gallery auf prod setzen (checkout prod)
         Write-Log -Message "Checkout prod branch in Package Gallery" -Severity 0
@@ -179,7 +186,9 @@ function Invoke-JiraObserver {
 
     end {
         # Aktueller Stand Jira Tickets als neues Jira state file schreiben (Stand wurde schon aktualisiert, kein neuer Request)
-        Write-JiraStateFile $UpdatedJiraState
+        if ($UpdateJiraStateFile) {
+            Write-JiraStateFile $IssuesCurrentState
+        }
     }
 }
  

@@ -64,7 +64,7 @@ function New-JiraTicket {
         } | ConvertTo-Json -Depth 3
 
         # Create the new issue
-        Write-Log -Message "Creating new jira ticket for pacakge $package with version $version" -Severity 1
+        Write-Log -Message "Creating new jira ticket for package $package with version $version" -Severity 1
         
         $response = Invoke-WebRequest -Uri $url -Method Post -Headers $header -Body $body  
 
