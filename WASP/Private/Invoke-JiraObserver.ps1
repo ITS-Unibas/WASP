@@ -107,8 +107,9 @@ function Invoke-JiraObserver {
         # aktueller Stand Tickets von Jira holen (Get Request)
         $IssueResults = Get-JiraIssues
 
-        # Filtere die Informationen, um den aktuellen Jira-Status mit dem aus der Datei gelesenen Status vergleichen zu können
-        $IssuesCurrentState = @{}
+        # Filtere die Informationen, um den aktuellen Jira-Status mit dem aus der Datei gelesenen Status vergleichen zu können. 
+        # Die Issues werden in eine sortierte Liste geschrieben, für verbesserte Lesbarkeit im Jira State File.
+        $IssuesCurrentState = [System.Collections.SortedList]::new()
         $IssueResults | ForEach-Object {
             $IssuesCurrentState[$_.fields.summary] = [PSCustomObject]@{
                 Assignee = $_.fields.assignee.name

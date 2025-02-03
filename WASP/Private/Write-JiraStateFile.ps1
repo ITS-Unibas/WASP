@@ -14,7 +14,7 @@ function Write-JiraStateFile () {
     #>
     param(
         [Parameter(Mandatory = $true)]
-        [hashtable]$IssuesCurrentState
+        [System.Collections.SortedList]$IssuesCurrentState
     )
 
     begin {
