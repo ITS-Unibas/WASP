@@ -35,7 +35,7 @@ function Read-JiraStateFile () {
                 $JiraStateFiles | Sort-Object CreationTime | Select-Object -First ($numJiraStateFiles - $MaxLogFiles + 1) | Remove-Item
             }
             <#Select the last created file as the newest jira state file.#>
-            $JiraFile = = $($JiraStateFiles | Sort-Object CreationTime | Select-Object -Last 1).FullName
+            $JiraFile = $($JiraStateFiles | Sort-Object CreationTime | Select-Object -Last 1).FullName
             $JiraState = Get-Content -Path $JiraFile -Raw | ConvertFrom-Json -ErrorAction Stop
             <#Put the the information of the jira state log into the format that the name@version is the key of the hashtable and the status and assignee are the values#>
             $IssuesState = @{}
