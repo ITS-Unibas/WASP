@@ -19,18 +19,24 @@ function Read-JiraStateFile () {
         $Config = Read-ConfigFile
         $LogPath = Join-Path -Path $Config.Application.BaseDirectory -ChildPath $Config.Logger.LogSubFilePath
         $JiraStateFolder = Join-Path -Path $LogPath -ChildPath $Config.Logger.LogSubFilePathJiraStates
+        $MaxLogFiles = $Config.Logger.MaxLogFiles
     } process {
         try {
             <#Create a hashtable to find the newest jira state file in the jira state folder#>
-            $AvailableFiles = @{}
             $Prefix = $Config.Logger.LogFileNamePrefixJiraStates
             $Suffix = ".json"
-            <#Extract the date from the jira state logs and add them to the AvailabeFiles hashtable#>
-            Get-ChildItem -Path $JiraStateFolder | ForEach-Object {$AvailableFiles[$_.Name] = $([datetime]::parseexact($($_.Name -replace  "$Prefix(.+)$Suffix", '$1'), 'yyyy-MM-dd_HH-mm-ss', $null))} 
-            <#Get the full file path of the newest jira state file and convert it from json. The newest file is selected by ordering the available jira state files by date and selecting the last one in the list.#>
-            $FilePath = Join-Path -Path (Get-Item -Path $JiraStateFolder).FullName -ChildPath $($AvailableFiles.GetEnumerator() | Sort-Object {$_.Value} | Select-Object -Last 1).Key
-            $JiraFile = $FilePath | Split-Path -Leaf
-            $JiraState = Get-Content -Path $FilePath -Raw | ConvertFrom-Json -ErrorAction Stop
+            $JiraStateFiles = Get-ChildItem -Path $JiraStateFolder -Filter "$Prefix*$Suffix"
+            <#Check if the number of maximum log files is surpass and delete the oldest log files when necessary#>
+            $numJiraStateFiles = ($JiraStateFiles | Measure-Object).Count
+            if ($numJiraStateFiles -eq $MaxLogFiles) {
+                $JiraStateFiles | Sort-Object CreationTime | Select-Object -First 1 | Remove-Item
+            }
+            elseif ($numJiraStateFiles -gt $MaxLogFiles) {
+                $JiraStateFiles | Sort-Object CreationTime | Select-Object -First ($numJiraStateFiles - $MaxLogFiles + 1) | Remove-Item
+            }
+            <#Select the last created file as the newest jira state file.#>
+            $JiraFile = = $($JiraStateFiles | Sort-Object CreationTime | Select-Object -Last 1).FullName
+            $JiraState = Get-Content -Path $JiraFile -Raw | ConvertFrom-Json -ErrorAction Stop
             <#Put the the information of the jira state log into the format that the name@version is the key of the hashtable and the status and assignee are the values#>
             $IssuesState = @{}
             $JiraState.Issues.psobject.properties | ForEach-Object { 
