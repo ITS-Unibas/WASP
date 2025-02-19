@@ -25,7 +25,7 @@ function Test-JiraIssueForTesting {
     begin {
         $Config = Read-ConfigFile
         $JiraUrl = $config.Application.JiraBaseURL
-        $Base64Auth = [Convert]::ToBase64String([Text.Encoding]::ASCII.GetBytes(("{0}:{1}" -f $Config.Application.RepositoryManagerAPIUser, $Config.Application.RepostoryManagerAPIPassword)))
+        $Base64Auth = [Convert]::ToBase64String([Text.Encoding]::ASCII.GetBytes(("{0}:{1}" -f $Config.Application.JiraUser, $Config.Application.JiraPassword)))
         $GitRepo = $config.Application.PackageGallery
         $GitFile = $GitRepo.Substring($GitRepo.LastIndexOf("/") + 1, $GitRepo.Length - $GitRepo.LastIndexOf("/") - 1)
         $GitFolderName = $GitFile.Replace(".git", "")

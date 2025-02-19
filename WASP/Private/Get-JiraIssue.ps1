@@ -24,8 +24,8 @@ function Get-JiraIssue {
         $Config = Read-ConfigFile
         $JiraUrl = $config.Application.JiraBaseURL
         $ProjectKey = $config.Application.ProjectKey
-        $User = $Config.Application.RepositoryManagerAPIUser
-        $Pass = $Config.Application.RepostoryManagerAPIPassword
+        $User = $Config.Application.JiraUser
+        $Pass = $Config.Application.JiraPassword
     }
 
     process {

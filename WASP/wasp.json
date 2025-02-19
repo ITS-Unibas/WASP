@@ -24,11 +24,11 @@
 		"JiraPassword": "",
         "RepositoryManagerAPIBaseUrl": "",
         "RepositoryManagerAPIUser": "",
-        "RepostoryManagerAPIPassword": "",
+        "RepositoryManagerAPIPassword": "",
+        "RepositoryManagerAPIKey": "",
         "ChocoServerDEV": "",
         "ChocoServerTEST": "",
         "ChocoServerPROD": "",
-        "ApiKeyRepostoryManager": "",
         "TeamsWebhook": "",
 		"WebhookTemplate": "",
 		"PreAdditionalScripts": [

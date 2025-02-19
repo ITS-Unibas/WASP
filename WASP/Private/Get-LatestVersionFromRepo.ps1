@@ -40,7 +40,7 @@ function Get-LatestVersionFromRepo() {
             }
         }
     } process {
-        $Base64Auth = [Convert]::ToBase64String([Text.Encoding]::ASCII.GetBytes(("{0}:{1}" -f $Config.Application.RepositoryManagerAPIUser, $Config.Application.RepostoryManagerAPIPassword)))
+        $Base64Auth = [Convert]::ToBase64String([Text.Encoding]::ASCII.GetBytes(("{0}:{1}" -f $Config.Application.RepositoryManagerAPIUser, $Config.Application.RepositoryManagerAPIPassword)))
         $Uri = $Config.Application.RepositoryManagerAPIBaseUrl + "v1/search?repository=$RepositoryName&name=$PackageName&sort=version&direction=desc"
         try {
             $Response = Invoke-RestMethod -Method Get -Uri $Uri -ContentType "application/json" -Headers @{Authorization="Basic $Base64Auth"}

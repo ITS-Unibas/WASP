@@ -22,7 +22,7 @@ function Get-JiraIssues () {
 
     } process {
         <#Create the URL for the Jira Issues API Endpoint#>
-        $Base64Auth = [Convert]::ToBase64String([Text.Encoding]::ASCII.GetBytes(("{0}:{1}" -f $Config.Application.RepositoryManagerAPIUser, $Config.Application.RepostoryManagerAPIPassword)))
+        $Base64Auth = [Convert]::ToBase64String([Text.Encoding]::ASCII.GetBytes(("{0}:{1}" -f $Config.Application.JiraUser, $Config.Application.JiraPassword)))
         $Url = $JiraUrl + "/rest/api/latest/search?jql=project=$ProjectKey&maxResults=500"
         Write-Log "Retrieving Jira Issues for Project $ProjectKey"
         try {

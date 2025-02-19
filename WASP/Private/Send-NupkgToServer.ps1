@@ -38,7 +38,7 @@ function Send-NupkgToServer {
         try {
             # Try to push the package to the dev choco server
             $NuGetExecutable = Join-Path $Config.Application.BaseDirectory "NuGet\nuget.exe"
-            $InvokeMessage = Invoke-Expression -Command ("$NugetExecutable push " + $nupkg + " -Source " + $url + " -ApiKey $($Config.Application.ApiKeyRepostoryManager) -Timeout 10800")
+            $InvokeMessage = Invoke-Expression -Command ("$NugetExecutable push " + $nupkg + " -Source " + $url + " -ApiKey $($Config.Application.RepositoryManagerAPIKey) -Timeout 10800")
             $InvokeMessage | ForEach-Object { Write-Log $_ }
             Write-Log ("Pushed package " + $nupkg + " successfully to server.") -Severity 1
         }
