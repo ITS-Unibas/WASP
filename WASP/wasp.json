@@ -19,14 +19,16 @@
 		"CheckVersionHistory": 3,
 		"JiraBaseUrl": "",
 		"ProjectKey": "WASPT",
-        "JiraObserver": "",
+		"IssueType": "",
+		"JiraUser": "",
+		"JiraPassword": "",
         "RepositoryManagerAPIBaseUrl": "",
         "RepositoryManagerAPIUser": "",
-        "RepostoryManagerAPIPassword": "",
+        "RepositoryManagerAPIPassword": "",
+        "RepositoryManagerAPIKey": "",
         "ChocoServerDEV": "",
         "ChocoServerTEST": "",
         "ChocoServerPROD": "",
-        "ApiKeyRepostoryManager": "",
         "TeamsWebhook": "",
 		"WebhookTemplate": "",
 		"PreAdditionalScripts": [
@@ -34,14 +36,15 @@
         ],
         "PostAdditionalScripts": [
             "FinalScript.ps1"
-        ],
-		"ChocoRepo": "github.com/chocolatey/choco.git"
+        ]
     },
     "Logger": {
         "EventLogName": "WASP-Testsystem",
         "EventID": 9999,
         "LogSubFilePath": "logs",
         "LogFileNamePrefix": "choco_log",
+		"LogSubFilePathJiraStates": "jira-states",
+		"LogFileNamePrefixJiraStates": "jira_state",
         "MaxLogFiles": 10,
         "LogLevel": 0,
         "LogToHost": true

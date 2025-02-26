@@ -93,7 +93,7 @@ function Start-PackageDistribution() {
                 }
                 # Check if the package, that has a dev branch is still in Development in JIRA or if it has been approved for Testing. 
                 # Only run the package distribution for packages that are in Development.
-                $process = Test-JiraIssue -packageName $packageName -packageVersion $packageVersion
+                $process = Test-JiraIssueForTesting -packageName $packageName -packageVersion $packageVersion
                 if(-Not $process){
                     continue
                 }

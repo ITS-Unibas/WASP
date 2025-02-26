@@ -22,10 +22,9 @@
 
         try {
             $Config = Get-Content -Path $FilePath | ConvertFrom-Json -ErrorAction Stop
-
         }
         catch {
-            Write-Log $_.Exception -Severity 3
+            Write-Log -Message $_.Exception -Severity 3
         }
     } end {
         return $config
