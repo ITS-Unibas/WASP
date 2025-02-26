@@ -8,8 +8,8 @@ function Invoke-Webhook {
         FileName: Invoke-Webhook.ps1
         Author: Uwe Molnar
         Contact: its-wcs-ma@unibas.ch
-        Created: 2022-06-07
-        Version: 1.0.0
+        Created: 2024-09-02
+        Version: 1.1.0
     #>
     [CmdletBinding()]
     param (
@@ -21,48 +21,83 @@ function Invoke-Webhook {
         $WebhookURL = $config.Application.TeamsWebhook
         $system = $config.Application.System
         $WebHookTemplate = $config.Application.WebhookTemplate
+        
+        # Function to add a new table row
+        function Add-TableRow {
+            param (
+                [string]$packageName,
+                [string]$version
+            )
+        
+            return @{
+                type = "TableRow"
+                cells = @(
+                    @{
+                        type = "TableCell"
+                        items = @(
+                            @{
+                                type = "TextBlock"
+                                text = "$packageName"
+                                wrap = $true
+                            }
+                        )
+                    },
+                    @{
+                        type = "TableCell"
+                        items = @(
+                            @{
+                                type = "TextBlock"
+                                text = "$version"
+                                wrap = $true
+                            }
+                        )
+                    }
+                )
+            }
+        }
+        
     }
 
     process {        
-        [System.Collections.ArrayList]$NewPackages = @()
-        
+        $JSONBody = Get-Content $WebHookTemplate -Raw | ConvertFrom-Json
+        $table = $JSONBody.attachments[0].content.body | Where-Object {$_.type -eq 'Table'}
+
         foreach ($Package in $Packages) {
             $PackageName = $Package.name
             $PackageVersion = $Package.version
-            $null = $NewPackages.Add("$PackageName $PackageVersion")
+
+            $addRow = Add-TableRow -packageName $PackageName -version $PackageVersion
+
+            $table[0].rows += $addRow
         }
 
-        # Formatting for a nicer look in MS Teams
-        $pacakgesEdited = foreach ($Package in $NewPackages){$Package.Insert($Package.Length, "`n`n")}
+        $updatedJsonContent = $JSONBody | ConvertTo-Json -Depth 12
 
-        # Get the Webhook-Template and add the necessary fields: system, color and packages
+        # Update the JSONBody with the correct System and Style
         $systemRegEx = 'Insert system here'
-        $colorRegEx = 'Insert color here'
-        $packagesRegEx = 'Insert packages here'
-        $color = ''
+        $styleRegEx = 'Insert style here'
+        $style = ''
 
         switch ($system) {
             "Test-System" {
-                $color = "attention" # red
+                $style = "attention" # orange
             }
             "Prod-System" {
-                $color = "good" # green
+                $style = "good" # green
             }
         }
 
-        $JSONBody = Get-Content $WebHookTemplate
-        $JSONBodyNew = $JSONBody
-        $JSONBodyNew = $JSONBodyNew -replace $systemRegEx, $system -replace $packagesRegEx, $pacakgesEdited -replace $colorRegEx, $color
+        $updatedJsonContent = $updatedJsonContent -replace $systemRegEx, $system -replace $styleRegEx, $style
 
         $parameters = @{
-            "URI" = $WebhookURL
-            "Method" = 'POST'
-            "Body" = $JSONBodyNew
-            "ContentType" = 'application/json'
+            "URI"           = $WebhookURL
+            "Method"        = 'POST'
+            "Body"          = $updatedJsonContent
+            "ContentType"   = 'application/json'
         }
         
         try {
-            Invoke-RestMethod @parameters
+            Invoke-Webrequest @parameters
 			Write-Log "Info-Message successfully send via Webhook to Microsoft Teams." -Severity 1
         }
         catch {
