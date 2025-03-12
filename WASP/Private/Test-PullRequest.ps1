@@ -96,7 +96,7 @@ function Test-PullRequest {
     }
 
     process {
-        # Array to all PR results
+        # Array for all PR results
         $PRResults = @()
 
         # Get the latest PR from ITS-Unibas-Choco to UniBasel-SWD for branch $branch

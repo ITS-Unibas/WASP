@@ -70,19 +70,19 @@ function Remove-HandledBranches {
             $state  = $latestPullRequest.Details.state
             $merged = $latestPullRequest.Details.merged_at
 
-
-            if (-Not (($remoteBranch -eq 'prod') -or ($remoteBranch -eq 'test'))) {
+            # Remove all dev-branches that are merged into prod - except for branches with declinced PRs! And remove all dev-branches for new software versions when an initial PR was declined
+            if (-Not (($remoteBranch -eq 'prod') -or ($remoteBranch -eq 'test')) -and ($state -eq "closed")) {
                 $remove = $false
-                # Check if merged into prod
-                if ($scope -eq "prod" -and (($null -ne $merged) -or ($merged -ne ""))) { 
+                # Check if a dev-branch was merged into prod 
+                if (($scope -eq "prod") -and ($null -ne $merged)) { 
                     # Double check if the nuspec-File exists in prod branch
                     $devBranchMergedIntoProd = Test-Path -Path ("$PackagesGalleryPath" + "\" + $packageName + "\" + $packageVersion + "\" + "$packageName.nuspec")
                     if ($devBranchMergedIntoProd) {
                         Write-Log "'$remoteBranch' merged into prod and will be deleted from remote '$PackageGalleryRepositoryName'."
                         $remove = $true
                     }
-                # Check if PR is declined    
-                } elseif (($scope -eq "dev") -and ($state -eq "closed") -and (($null -eq $merged) -or ($merged -eq ""))) {    
+                # Check if PR is declined for a new software version
+                } elseif (($scope -eq "dev") -and ($null -eq $merged)) {    
                     Write-Log "Pull request for $remoteBranch was declined and will be deleted from remote '$PackageGalleryRepositoryName'."
                     $remove = $true
                 }
