@@ -37,10 +37,28 @@ function Install-ChocolateyPackage() {
         [parameter(ValueFromRemainingArguments = $true)][Object[]] $ignoredArguments
     )
 
-    $downloadFilePath = Join-Path (Join-Path (Get-Item -Path ".\").FullName "tools") "$($packageName)Install.$fileType"
+    # Check the url found above ($url or $url64bit) and download the file
+    if ($null -ne $url) {
+        $urlFound = $url
+    } elseif ($null -ne $url64bit) {
+        $urlFound = $url64bit
+    }    
+
+    Write-Log "Start editing chocolateyInstall..." -Severity 1
+    
+    $defaultFileName = $urlFound.Split("/")[-1]
+    $fileName = Get-WebFileName -url $urlFound -defaultName $defaultFileName
+
+    if ($FileItem.Extension -eq '.zip') {
+        # If it is a zip package the file param should be provided but not as fullpath, just the main packages name
+        $FileName = $file
+    }
+
+    Edit-ChocolateyInstaller -ToolsPath (Join-Path (Get-Item -Path ".\").FullName "tools") -FileName $FileName
 
     if ($url -or $url64bit) {
-        $filePath = Get-ChocolateyWebFile -PackageName $packageName `
+        $downloadFilePath = Join-Path (Join-Path (Get-Item -Path ".\").FullName "tools") "$($packageName)Install.$fileType"
+        $null = Get-ChocolateyWebFile -PackageName $packageName `
             -FileFullPath $downloadFilePath `
             -Url $url `
             -Url64bit $url64bit `
@@ -49,17 +67,9 @@ function Install-ChocolateyPackage() {
             -Checksum64 $checksum64 `
             -ChecksumType64 $checksumType64 `
             -Options $options `
-            -GetOriginalFileName
-        $FileItem = Get-item $filePath
-        $FileName = $FileItem.Name
-        if ($FileItem.Extension -eq '.zip') {
-            # If it is a zip package the file param should be provided but not as fullpath, just the main packages name
-            $FileName = $file
-        }
-        Write-Log "Start editing chocolateyInstall at $filePath." -Severity 1
-        Edit-ChocolateyInstaller -ToolsPath (Join-Path (Get-Item -Path ".\").FullName "tools") -FileName $FileName
-    }
-    else {
+            -GetOriginalFileName `
+            -ForceDownload
+    } else {
         Write-Log "No url in install script of $packageName found. Skip."
     }
     exit 0
