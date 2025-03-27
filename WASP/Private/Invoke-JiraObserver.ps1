@@ -124,7 +124,6 @@ function Invoke-JiraObserver {
         # Die verfügbaren Branches werden aus der Package Gallery abgerufen
         $RemoteBranches = Get-RemoteBranches -Repo $packageGalleryRepo -User $gitHubOrganization
         
-        $UpdateJiraStateFile = $true
         # jedes Issue, welches vom Stand im neusten JiraState-File abweicht wird einzeln durchgegangen
         foreach($key in $IssuesCompareState.keys) { 
             # Ermittlung des Dev-Branches anhand des Paket Namens (mit Eventualität des Repackaging branches)
@@ -136,8 +135,10 @@ function Invoke-JiraObserver {
                 $response = New-PullRequest -SourceRepo $packageGalleryRepo -SourceUser $gitHubOrganization -SourceBranch $DevBranch -DestinationRepo $packageGalleryRepo -DestinationUser $gitHubOrganization -DestinationBranch $GitBranchTEST -PullRequestTitle $PullRequestTitle -ErrorAction Stop
                 Start-Sleep -Seconds 4     
                 if ($response.Status -ne 201) {
+                    # Bei einem Fehler wird das ticket wieder nach DEV verschoben und ein Kommentar mit der Fehlermeldung gemacht.
                     Write-Log -Message "Error creating Pull Request for Package $($key): $($response.Status) - $($response.Message) - $($response.errors.message)" -Severity 3
-                    $UpdateJiraStateFile = $false
+                    Update-JiraStatus -ticket $key -DestinationStatus "Development"
+                    New-JiraComment -ticket $key -comment "Error creating Pull Request for Package $($key): $($response.Status) - $($response.Message) - $($response.errors.message)"
                 } else {
                     Write-Log -Message "Successfully created new Pull Request from $PullRequestTitle." -Severity 1
                 }       
@@ -147,8 +148,10 @@ function Invoke-JiraObserver {
                 $response = New-PullRequest -SourceRepo $packageGalleryRepo -SourceUser $gitHubOrganization -SourceBranch $DevBranch -DestinationRepo $packageGalleryRepo -DestinationUser $gitHubOrganization -DestinationBranch $GitBranchPROD -PullRequestTitle $PullRequestTitle -ErrorAction Stop
                 Start-Sleep -Seconds 4     
                 if ($response.Status -ne 201) {
+                    # Bei einem Fehler wird das ticket wieder nach DEV verschoben und ein Kommentar mit der Fehlermeldung gemacht.
                     Write-Log -Message "Error creating Pull Request for Package $($key): $($response.Status) - $($response.Message) - $($response.errors.message)" -Severity 3
-                    $UpdateJiraStateFile = $false
+                    Update-JiraStatus -ticket $key -DestinationStatus "Development"
+                    New-JiraComment -ticket $key -comment "Error creating Pull Request for Package $($key): $($response.Status) - $($response.Message) - $($response.errors.message)"
                 } else {
                     Write-Log -Message "Successfully created new Pull Request from $PullRequestTitle." -Severity 1
                 } 
@@ -164,19 +167,19 @@ function Invoke-JiraObserver {
                 }
             # Doppelhopping: dev → prod, Use Case nicht erlaubt. Muss Testing durchlaufen.
             }  elseif ($IssuesCompareState[$key].StatusOld -eq "Development" -and $IssuesCompareState[$key].Status -eq "Production") {
+                # Bei einem Doppelhopp wird das Ticket mit entsprechendem Kommentar zurück nach Development verschoben
                 Write-Log -Message "Package $key moved from $($IssuesCompareState[$key].StatusOld) to $($IssuesCompareState[$key].Status): Not allowed! Move ticket to the correct lane." -Severity 2
-                $UpdateJiraStateFile = $false
+                Update-JiraStatus -ticket $key -DestinationStatus "Development"
+                New-JiraComment -ticket $key -comment "Package $key moved from $($IssuesCompareState[$key].StatusOld) to $($IssuesCompareState[$key].Status): Not allowed! Move ticket to the correct lane."
             # test -> dev
             } elseif ($IssuesCompareState[$key].StatusOld -eq "Testing" -and $IssuesCompareState[$key].Status -eq "Development") {
                 Write-Log -Message "Package $key moved from $($IssuesCompareState[$key].StatusOld) to $($IssuesCompareState[$key].Status): No action needed." -Severity 1
             # Doppelhopping: prod -> test, Use Case nicht erlaubt. Muss Development durchlaufen.
             } elseif ($IssuesCompareState[$key].StatusOld -eq "Production" -and $IssuesCompareState[$key].Status -eq "Testing") {
+                # Bei einem Doppelhopp wird das Ticket mit entsprechendem Kommentar zurück nach Production verschoben
                 Write-Log -Message "Package $key moved from $($IssuesCompareState[$key].StatusOld) to $($IssuesCompareState[$key].Status): Not allowed! Move ticket to the correct lane." -Severity 2
-                $UpdateJiraStateFile = $false
-            }
-
-            if ($UpdateJiraStateFile -eq $false) {
-                break
+                Update-JiraStatus -ticket $key -DestinationStatus "Production"
+                New-JiraComment -ticket $key -comment "Package $key moved from $($IssuesCompareState[$key].StatusOld) to $($IssuesCompareState[$key].Status): Not allowed! Move ticket to the correct lane."
             }
          }
 
@@ -187,9 +190,19 @@ function Invoke-JiraObserver {
 
     end {
         # Aktueller Stand Jira Tickets als neues Jira state file schreiben (Stand wurde schon aktualisiert, kein neuer Request)
-        if ($UpdateJiraStateFile) {
-            Write-JiraStateFile $IssuesCurrentState
+        # aktueller Stand Tickets von Jira holen (Get Request)
+        $CurrentIssues = Get-JiraIssues
+
+        # Filtere die Informationen, um den aktuellen Jira-Status mit dem aus der Datei gelesenen Status vergleichen zu können. 
+        # Die Issues werden in eine sortierte Liste geschrieben, für verbesserte Lesbarkeit im Jira State File.
+        $IssuesOutput = [System.Collections.SortedList]::new()
+        $CurrentIssues | ForEach-Object {
+            $IssuesOutput[$_.fields.summary] = [PSCustomObject]@{
+                Assignee = $_.fields.assignee.name
+                Status = $_.fields.status.name
+            }
         }
+        Write-JiraStateFile $IssuesOutput
     }
 }
  
