@@ -132,6 +132,14 @@ function Invoke-JiraObserver {
             # dev → test: PR nach test
             if ($IssuesCompareState[$key].StatusOld -eq "Development" -and $IssuesCompareState[$key].Status -eq "Testing") {
                 $PullRequestTitle = "$key to $GitBranchTEST"
+                # Bevor der Pull Request erstellt wird, wird geprüft, ob die Inhalte des Branches auch von der richtigen Software und Version sind.
+                $diff = Test-GitDiff -RepoPath $PackagesGalleryPath -SourceBranch $DevBranch -DestinationBranch $GitBranchTEST
+                if ($diff -eq $false) {
+                    Write-Log -Message "The branch $DevBranch does not contain the correct software and version. No Pull Request will be created." -Severity 3
+                    Update-JiraStatus -ticket $key -DestinationStatus "Development"
+                    New-JiraComment -ticket $key -comment "The branch $DevBranch does not contain the correct software and version. No Pull Request will be created."
+                    continue
+                }
                 $response = New-PullRequest -SourceRepo $packageGalleryRepo -SourceUser $gitHubOrganization -SourceBranch $DevBranch -DestinationRepo $packageGalleryRepo -DestinationUser $gitHubOrganization -DestinationBranch $GitBranchTEST -PullRequestTitle $PullRequestTitle -ErrorAction Stop
                 Start-Sleep -Seconds 4     
                 if ($response.Status -ne 201) {
@@ -145,6 +153,14 @@ function Invoke-JiraObserver {
             # test → prod: PR nach prod
             } elseif ($IssuesCompareState[$key].StatusOld -eq "Testing" -and $IssuesCompareState[$key].Status -eq "Production") {
                 $PullRequestTitle = "$key to $GitBranchPROD"
+                # Bevor der Pull Request erstellt wird, wird geprüft, ob die Inhalte des Branches auch von der richtigen Software und Version sind.
+                $diff = Test-GitDiff -RepoPath $PackagesGalleryPath -SourceBranch $DevBranch -DestinationBranch $GitBranchPROD
+                if ($diff -eq $false) {
+                    Write-Log -Message "The branch $DevBranch does not contain the correct software and version. No Pull Request will be created." -Severity 3
+                    Update-JiraStatus -ticket $key -DestinationStatus "Development"
+                    New-JiraComment -ticket $key -comment "The branch $DevBranch does not contain the correct software and version. No Pull Request will be created."
+                    continue
+                }
                 $response = New-PullRequest -SourceRepo $packageGalleryRepo -SourceUser $gitHubOrganization -SourceBranch $DevBranch -DestinationRepo $packageGalleryRepo -DestinationUser $gitHubOrganization -DestinationBranch $GitBranchPROD -PullRequestTitle $PullRequestTitle -ErrorAction Stop
                 Start-Sleep -Seconds 4     
                 if ($response.Status -ne 201) {
