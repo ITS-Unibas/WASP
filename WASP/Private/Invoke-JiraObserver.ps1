@@ -135,9 +135,9 @@ function Invoke-JiraObserver {
                 # Bevor der Pull Request erstellt wird, wird geprüft, ob die Inhalte des Branches auch von der richtigen Software und Version sind.
                 $diff = Test-GitDiff -RepoPath $PackagesGalleryPath -SourceBranch $DevBranch -DestinationBranch $GitBranchTEST
                 if ($diff -eq $false) {
-                    Write-Log -Message "The branch $DevBranch does not contain the correct software and version. No Pull Request will be created." -Severity 3
-                    Update-JiraStatus -ticket $key -DestinationStatus "Development"
-                    New-JiraComment -ticket $key -comment "The branch $DevBranch does not contain the correct software and version. No Pull Request will be created."
+                    Write-Log -Message "The branch $DevBranch does not contain any changes for $($key). No Pull Request will be created." -Severity 3
+                    Update-JiraStatus -ticket $key -flag $true -DestinationStatus "Development"
+                    New-JiraComment -ticket $key -comment "The branch $DevBranch does not contain any changes for $($key)."
                     continue
                 }
                 $response = New-PullRequest -SourceRepo $packageGalleryRepo -SourceUser $gitHubOrganization -SourceBranch $DevBranch -DestinationRepo $packageGalleryRepo -DestinationUser $gitHubOrganization -DestinationBranch $GitBranchTEST -PullRequestTitle $PullRequestTitle -ErrorAction Stop
@@ -145,7 +145,7 @@ function Invoke-JiraObserver {
                 if ($response.Status -ne 201) {
                     # Bei einem Fehler wird das ticket wieder nach DEV verschoben und ein Kommentar mit der Fehlermeldung gemacht.
                     Write-Log -Message "Error creating Pull Request for Package $($key): $($response.Status) - $($response.Message) - $($response.errors.message)" -Severity 3
-                    Update-JiraStatus -ticket $key -DestinationStatus "Development"
+                    Update-JiraStatus -ticket $key -flag $true -DestinationStatus "Development"
                     New-JiraComment -ticket $key -comment "Error creating Pull Request for Package $($key): $($response.Status) - $($response.Message) - $($response.errors.message)"
                 } else {
                     Write-Log -Message "Successfully created new Pull Request from $PullRequestTitle." -Severity 1
@@ -156,9 +156,9 @@ function Invoke-JiraObserver {
                 # Bevor der Pull Request erstellt wird, wird geprüft, ob die Inhalte des Branches auch von der richtigen Software und Version sind.
                 $diff = Test-GitDiff -RepoPath $PackagesGalleryPath -SourceBranch $DevBranch -DestinationBranch $GitBranchPROD
                 if ($diff -eq $false) {
-                    Write-Log -Message "The branch $DevBranch does not contain the correct software and version. No Pull Request will be created." -Severity 3
-                    Update-JiraStatus -ticket $key -DestinationStatus "Development"
-                    New-JiraComment -ticket $key -comment "The branch $DevBranch does not contain the correct software and version. No Pull Request will be created."
+                    Write-Log -Message "The branch $DevBranch does not contain any changes for $($key). No Pull Request will be created." -Severity 3
+                    Update-JiraStatus -ticket $key -flag $true -DestinationStatus "Development"
+                    New-JiraComment -ticket $key -comment "The branch $DevBranch does not contain any changes for $($key)."
                     continue
                 }
                 $response = New-PullRequest -SourceRepo $packageGalleryRepo -SourceUser $gitHubOrganization -SourceBranch $DevBranch -DestinationRepo $packageGalleryRepo -DestinationUser $gitHubOrganization -DestinationBranch $GitBranchPROD -PullRequestTitle $PullRequestTitle -ErrorAction Stop
@@ -166,7 +166,7 @@ function Invoke-JiraObserver {
                 if ($response.Status -ne 201) {
                     # Bei einem Fehler wird das ticket wieder nach DEV verschoben und ein Kommentar mit der Fehlermeldung gemacht.
                     Write-Log -Message "Error creating Pull Request for Package $($key): $($response.Status) - $($response.Message) - $($response.errors.message)" -Severity 3
-                    Update-JiraStatus -ticket $key -DestinationStatus "Development"
+                    Update-JiraStatus -ticket $key -flag $true -DestinationStatus "Development"
                     New-JiraComment -ticket $key -comment "Error creating Pull Request for Package $($key): $($response.Status) - $($response.Message) - $($response.errors.message)"
                 } else {
                     Write-Log -Message "Successfully created new Pull Request from $PullRequestTitle." -Severity 1
@@ -185,7 +185,7 @@ function Invoke-JiraObserver {
             }  elseif ($IssuesCompareState[$key].StatusOld -eq "Development" -and $IssuesCompareState[$key].Status -eq "Production") {
                 # Bei einem Doppelhopp wird das Ticket mit entsprechendem Kommentar zurück nach Development verschoben
                 Write-Log -Message "Package $key moved from $($IssuesCompareState[$key].StatusOld) to $($IssuesCompareState[$key].Status): Not allowed! Move ticket to the correct lane." -Severity 2
-                Update-JiraStatus -ticket $key -DestinationStatus "Development"
+                Update-JiraStatus -ticket $key -flag $true -DestinationStatus "Development"
                 New-JiraComment -ticket $key -comment "Package $key moved from $($IssuesCompareState[$key].StatusOld) to $($IssuesCompareState[$key].Status): Not allowed! Move ticket to the correct lane."
             # test -> dev
             } elseif ($IssuesCompareState[$key].StatusOld -eq "Testing" -and $IssuesCompareState[$key].Status -eq "Development") {
@@ -194,7 +194,7 @@ function Invoke-JiraObserver {
             } elseif ($IssuesCompareState[$key].StatusOld -eq "Production" -and $IssuesCompareState[$key].Status -eq "Testing") {
                 # Bei einem Doppelhopp wird das Ticket mit entsprechendem Kommentar zurück nach Production verschoben
                 Write-Log -Message "Package $key moved from $($IssuesCompareState[$key].StatusOld) to $($IssuesCompareState[$key].Status): Not allowed! Move ticket to the correct lane." -Severity 2
-                Update-JiraStatus -ticket $key -DestinationStatus "Production"
+                Update-JiraStatus -ticket $key -flag $true -DestinationStatus "Production"
                 New-JiraComment -ticket $key -comment "Package $key moved from $($IssuesCompareState[$key].StatusOld) to $($IssuesCompareState[$key].Status): Not allowed! Move ticket to the correct lane."
             }
          }

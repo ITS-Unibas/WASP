@@ -12,9 +12,13 @@ function Update-JiraStatus {
         [string]$ticket,
 
         [Parameter(Mandatory = $true)]
+        [bool]$flag,
+
+        [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
         [string]
         $DestinationStatus
+
     )
 
 
@@ -38,6 +42,13 @@ function Update-JiraStatus {
 
         $key = $issue.issues.key
         $SourceStatus = $issue.issues.fields.status.name
+
+
+        # Add a flag to the ticket if the flag is set to true
+        if ($flag) {
+            # Add a flag to the ticket
+            Add-JiraFlag -ticket $ticket
+        }
 
         # The URL to trigger the transition of the ticket status
         $url = "$($jiraBaseUrl)/rest/api/2/issue/$($key)/transitions"
