@@ -107,6 +107,12 @@ function Invoke-JiraObserver {
         # aktueller Stand Tickets von Jira holen (Get Request)
         $IssueResults = Get-JiraIssues
 
+        # Wenn keine Tickets gefunden wurden, wird der Jira Observer Run abgebrochen.
+        if ($null -eq $IssueResults) {
+            Write-Log -Message "The retrieval of the current state of the Jira board was not posible. Jira Observer run aborted." -Severity 3
+            break;
+        }
+
         # Filtere die Informationen, um den aktuellen Jira-Status mit dem aus der Datei gelesenen Status vergleichen zu können. 
         # Die Issues werden in eine sortierte Liste geschrieben, für verbesserte Lesbarkeit im Jira State File.
         $IssuesCurrentState = [System.Collections.SortedList]::new()
@@ -209,16 +215,22 @@ function Invoke-JiraObserver {
         # aktueller Stand Tickets von Jira holen (Get Request)
         $CurrentIssues = Get-JiraIssues
 
-        # Filtere die Informationen, um den aktuellen Jira-Status mit dem aus der Datei gelesenen Status vergleichen zu können. 
-        # Die Issues werden in eine sortierte Liste geschrieben, für verbesserte Lesbarkeit im Jira State File.
-        $IssuesOutput = [System.Collections.SortedList]::new()
-        $CurrentIssues | ForEach-Object {
-            $IssuesOutput[$_.fields.summary] = [PSCustomObject]@{
-                Assignee = $_.fields.assignee.name
-                Status = $_.fields.status.name
+        # Wenn keine Tickets gefunden wurden, wird der Jira Observer Run abgebrochen.
+        if ($null -eq $CurrentIssues) {
+            Write-Log -Message "The retrieval of the current state of the Jira board was not posible. Changes Made to the board possibly not visible in the new jira State file." -Severity 3
+            Write-JiraStateFile $IssueResults}
+        else {
+            # Filtere die Informationen, um den aktuellen Jira-Status mit dem aus der Datei gelesenen Status vergleichen zu können. 
+            # Die Issues werden in eine sortierte Liste geschrieben, für verbesserte Lesbarkeit im Jira State File.
+            $IssuesOutput = [System.Collections.SortedList]::new()
+            $CurrentIssues | ForEach-Object {
+                $IssuesOutput[$_.fields.summary] = [PSCustomObject]@{
+                    Assignee = $_.fields.assignee.name
+                    Status = $_.fields.status.name
+                }
             }
+            Write-JiraStateFile $IssuesOutput
         }
-        Write-JiraStateFile $IssuesOutput
     }
 }
  

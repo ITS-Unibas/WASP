@@ -26,11 +26,12 @@ function Get-JiraIssues () {
         $Url = $JiraUrl + "/rest/api/latest/search?jql=project=$ProjectKey&maxResults=500"
         Write-Log "Retrieving Jira Issues for Project $ProjectKey"
         try {
-            $Response = Invoke-RestMethod -Uri $Url -Method Get -Headers @{Authorization = "Basic $Base64Auth" }
+            $Response = Invoke-RestMethod -Uri $Url -Method Get -Headers @{Authorization = "Basic $Base64Auth" } -ErrorAction Stop
         }
         catch {
             $StatusCode = $_.Exception.Response.StatusCode.value__
             Write-Log "Get request failed with $StatusCode" -Severity 3
+            return $null
         }
         <#Save the number of total issues to check if all of them were downloaded.#>
         $totalIssues = $Response.total
@@ -50,6 +51,7 @@ function Get-JiraIssues () {
             catch {
                 $StatusCode = $_.Exception.Response.StatusCode.value__
                 Write-Log "Get request failed with $StatusCode" -Severity 3
+                return $null
             }
             $Results += $Response.Issues
             
