@@ -110,6 +110,7 @@ function Invoke-JiraObserver {
         # Wenn keine Tickets gefunden wurden, wird der Jira Observer Run abgebrochen.
         if ($null -eq $IssueResults) {
             Write-Log -Message "The retrieval of the current state of the Jira board was not posible. Jira Observer run aborted." -Severity 3
+            # TODO: Aus dem Invoke-JiraObserver ausbrechen, aber trotzdem zu Start-Workflow zurückkehren.
             break;
         }
 
@@ -202,6 +203,7 @@ function Invoke-JiraObserver {
                 Write-Log -Message "Package $key moved from $($IssuesCompareState[$key].StatusOld) to $($IssuesCompareState[$key].Status): Not allowed! Move ticket to the correct lane." -Severity 2
                 Update-JiraStatus -ticket $key -flag $true -DestinationStatus "Production"
                 New-JiraComment -ticket $key -comment "Package $key moved from $($IssuesCompareState[$key].StatusOld) to $($IssuesCompareState[$key].Status): Not allowed! Move ticket to the correct lane."
+                # TODO: Hier den letzten vom Jira Board bezogenen Stand anpassen, falls Get-JiraIssues am Ende nicht erfolgreich ist.
             }
          }
 
