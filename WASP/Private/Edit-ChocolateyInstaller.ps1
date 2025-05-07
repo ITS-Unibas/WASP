@@ -45,7 +45,6 @@ function Edit-ChocolateyInstaller {
             # Test if a previous chocolateyInstall file exist.
             if ($VersionHistory) {
                 $LastVersion = $StringVersionHistory | Where-Object { [version]$_ -eq $VersionHistory[1] } # 0 is the current, 1 the
-                Write-Log "Copying previous package version: $LastVersion." -Severity 1
 
                 Copy-Item -Path $NewFile -Destination $OriginalFile -ErrorAction Stop
 
@@ -60,6 +59,8 @@ function Edit-ChocolateyInstaller {
                     $LastVersionPath = Join-Path -Path $ParentSWDirectory -ChildPath "$LastVersion\tools"
                     $prevChocolateyInstallFile = Join-Path -Path $LastVersionPath -ChildPath "chocolateyinstall.ps1"
                 }
+
+                Write-Log "Copying previous package version: $LastVersion." -Severity 1
 
                 Write-Log "Copying $prevChocolateyInstallFile to $ToolsPath"
                 Copy-Item $prevChocolateyInstallFile -Destination $ToolsPath -Force -Recurse
@@ -192,45 +193,49 @@ function Edit-ChocolateyInstaller {
 
             Set-Content -Path $NewFile -Value $InstallerContent
 
-            # Fetch the additional scripts and configs from the last version
-            $AdditionalScripts = $PreAdditionalScripts + $PostAddtionalScripts
-            if ($VersionHistory) {
-                $LastVersion = $StringVersionHistory | Where-Object { [version]$_ -eq $VersionHistory[1] }
-                $LastVersionPath = Join-Path -Path $ParentSWDirectory -ChildPath "$LastVersion\tools"
-                $files = Get-ChildItem $LastVersionPath -Exclude *.msi, *.exe | Select-Object -ExpandProperty FullName
+			# Fetch the additional scripts and configs from the last version
+			$AdditionalScripts = $PreAdditionalScripts + $PostAddtionalScripts
+			$regexAdditionalScripts = $AdditionalScripts -join "|"
 
-                # search for the next preceeding version that is not in packaging to copy the install content
-                $counter = 1
-                while (-Not ($files) -and ($counter -lt $VersionHistory.Count)) {
-                    $counter += 1
-                    $LastVersion = $StringVersionHistory | Where-Object { [version]$_ -eq $VersionHistory[$counter] }
-                    $LastVersionPath = Join-Path -Path $ParentSWDirectory -ChildPath "$LastVersion\tools"
-                    $files = Get-ChildItem $LastVersionPath -Exclude *.msi, *.exe | Select-Object -ExpandProperty FullName
-                }
+			if ($VersionHistory) {
+				# Search for the the previous version that is not in packaging to copy the install content: Check if there are more than 2 files in the previous version ($filesCount) and if there is at least 1 file of them an "$AdditionalScripts" ($checkForAdditionalScriptsCount) to be sure we don't copy a previous version with only 1 file (e. g. NotePad++ or sysinternals, that have a zip-file included, that is not tracked by git!)
+				$counter = 1
 
-                # Fetch all files except the install/uninstallscripts from the last version
-                foreach ($file in $files) {
-                    if (!($file -like "*chocolateyInstall.ps1*" -or $file -like "*chocolateyInstall_old.ps1*")) {
+				do {
+					$LastVersion = $StringVersionHistory | Where-Object { [version]$_ -eq $VersionHistory[$counter] }
+					$LastVersionPath = Join-Path -Path $ParentSWDirectory -ChildPath "$LastVersion\tools"
+					$files = Get-ChildItem $LastVersionPath -Filter "*.*" | Where-Object { $_.Extension -ne ".msi" -and $_.Extension -ne ".exe" } | Select-Object -ExpandProperty FullName
+					$filesCount = $files.Count
+					$checkForAdditionalScripts = $files | Where-Object {$_ -match $regexAdditionalScripts}
+					$checkForAdditionalScriptsCount = $checkForAdditionalScripts.Count
+					$counter += 1
+				} while (-Not($filesCount -ge 2) -and -Not($checkForAdditionalScriptsCount -ge 1) -and ($counter -lt $VersionHistory.Count))
+				
+				# Fetch all files except the install/uninstallscripts from the last version
+				foreach ($file in $files) {
+					if (!($file -like "*chocolateyInstall.ps1*" -or $file -like "*chocolateyInstall_old.ps1*")) {
+                        Write-Log "Copying $file to $ToolsPath"
                         Copy-item $file -Destination $ToolsPath -Force -Recurse
-                    }
-                }
+					}
+				}
 
-                # path to current nuspec
-                $nuspecPath = Split-Path $ToolsPath -Parent
-                $nuspecFilePath = (Get-ChildItem -Path $nuspecPath -Recurse -Filter *.nuspec).FullName
+				# path to current nuspec
+				$nuspecPath = Split-Path $ToolsPath -Parent
+				$nuspecFilePath = (Get-ChildItem -Path $nuspecPath -Recurse -Filter *.nuspec).FullName
 
-                # path to previous nuspec
-                $previousNuspecPath = Join-Path $ParentSWDirectory $LastVersion
-                $previousNuspecFilePath = (Get-ChildItem -Path $previousNuspecPath -Recurse -Filter *.nuspec).FullName
+				# path to previous nuspec
+				$previousNuspecPath = Join-Path $ParentSWDirectory $LastVersion
+				$previousNuspecFilePath = (Get-ChildItem -Path $previousNuspecPath -Recurse -Filter *.nuspec).FullName
+				Write-Log "Copying $previousNuspecFilePath to $nuspecPath"
                 Copy-Item -Path $previousNuspecFilePath -Destination $nuspecFilePath -Force
 
-                # edit the copied nuspec from a previous version: insert/replace the new version number
-                $nuspecContentRaw = Get-Content -Path $nuspecFilePath -Raw -ErrorAction Stop
-                # get version by splitting the file path and use the second last element
-                $nuspecVersion = ($nuspecFilePath -split '\\')[-2]
-                $nuspecContentRaw = $nuspecContentRaw | ForEach-Object { $_ -replace '<version>.*</version>', "<version>$nuspecVersion</version>" }
-                Set-Content -Path $nuspecFilePath -Value $nuspecContentRaw
-            }
+				# edit the copied nuspec from a previous version: insert/replace the new version number
+				$nuspecContentRaw = Get-Content -Path $nuspecFilePath -Raw -ErrorAction Stop
+				# get version by splitting the file path and use the second last element
+				$nuspecVersion = ($nuspecFilePath -split '\\')[-2]
+				$nuspecContentRaw = $nuspecContentRaw | ForEach-Object { $_ -replace '<version>.*</version>', "<version>$nuspecVersion</version>" }
+				Set-Content -Path $nuspecFilePath -Value $nuspecContentRaw
+			}
 
             # Remove zip files when remote files are present
             if ($script:RemoteFilePresent) {
