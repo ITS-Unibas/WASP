@@ -111,8 +111,8 @@ function Test-PullRequest {
         $resultsSWDToProd = Get-PullRequest -branch $branch -repository $GitHubOrganisation -base $prod
         $PRResults += Add-PullRequestToList -results $resultsSWDToProd -scope $prod
 
-        # comapre all PRs returned and get the latest PR for branch $branch
-        $latestPRresults = $PRresults.GetEnumerator() | Sort-Object -Property $_.TimeStamp -Descending | Select-Object -First 1
+        # compare all PRs returned and get the latest PR for branch $branch
+        $latestPRresults = $PRResults | Sort-Object -Property TimeStamp -Descending | Select-Object -First 1
     }
 
     end {
