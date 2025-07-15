@@ -25,12 +25,14 @@ function Get-JiraIssues () {
         $Base64Auth = [Convert]::ToBase64String([Text.Encoding]::ASCII.GetBytes(("{0}:{1}" -f $Config.Application.JiraUser, $Config.Application.JiraPassword)))
         $Url = $JiraUrl + "/rest/api/latest/search?jql=project=$ProjectKey&maxResults=500"
         Write-Log "Retrieving Jira Issues for Project $ProjectKey"
+
         try {
             $Response = Invoke-RestMethod -Uri $Url -Method Get -Headers @{Authorization = "Basic $Base64Auth" }
         }
         catch {
             $StatusCode = $_.Exception.Response.StatusCode.value__
             Write-Log "Get request failed with $StatusCode" -Severity 3
+            return $null
         }
         <#Save the number of total issues to check if all of them were downloaded.#>
         $totalIssues = $Response.total
@@ -50,11 +52,13 @@ function Get-JiraIssues () {
             catch {
                 $StatusCode = $_.Exception.Response.StatusCode.value__
                 Write-Log "Get request failed with $StatusCode" -Severity 3
+                return $null
             }
             $Results += $Response.Issues
             
         }
+        
         Write-Log "Successfully Retrieved $totalIssues Jira Issues for the Project $ProjectKey"
-        Return $Results
+        return $Results    
     }
 }
