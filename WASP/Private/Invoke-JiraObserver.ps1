@@ -107,6 +107,12 @@ function Invoke-JiraObserver {
         # aktueller Stand Tickets von Jira holen (Get Request)
         $IssueResults = Get-JiraIssues
 
+        # Wenn keine Tickets gefunden wurden, wird der Jira Observer Run abgebrochen.
+        if ($null -eq $IssueResults) {
+            Write-Log -Message "The retrieval of the current state of the Jira board was not posible. Jira Observer run aborted." -Severity 3
+            return $null
+        }
+
         # Filtere die Informationen, um den aktuellen Jira-Status mit dem aus der Datei gelesenen Status vergleichen zu können. 
         # Die Issues werden in eine sortierte Liste geschrieben, für verbesserte Lesbarkeit im Jira State File.
         $IssuesCurrentState = [System.Collections.SortedList]::new()
@@ -119,7 +125,6 @@ function Invoke-JiraObserver {
 
         # $jiraStateFileContent <> $currentJiraStates: Vergleiche den aktuellen Stand der Tickets mit dem Jira State File und speichere die Unterschiede in einer Liste
         $IssuesCompareState, $NewIssues = Compare-JiraState $IssuesCurrentState $jiraStateFileContent
-
 
         # Die verfügbaren Branches werden aus der Package Gallery abgerufen
         $RemoteBranches = Get-RemoteBranches -Repo $packageGalleryRepo -User $gitHubOrganization
@@ -180,7 +185,6 @@ function Invoke-JiraObserver {
             }
          }
 
-        # PHS: Branch in der Package Gallery auf prod setzen (checkout prod)
         Write-Log -Message "Checkout prod branch in Package Gallery" -Severity 0
         Switch-GitBranch -path $PackagesGalleryPath -branch 'prod'
     }
