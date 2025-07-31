@@ -1,12 +1,12 @@
 function Install-ChocolateyPackage() {
     <#
     .SYNOPSIS
-        This function overrides the Install-ChocolateyPackage function and receives an url and checksums to download the package binary.
+        This function receives an url and checksums to download the package binary and overrides the Install-ChocolateyPackage.
 
     .DESCRIPTION
         This function receives and saves the parameters which are given in the package script.
-        With this parameters the Chocolatey Web downloader can be started and the binary can be downloaded into the tools folder of the package.
-        In the end the script gets modified by calling the Edit-ChocolateyInstaller script.
+        With this parameters the Chocolatey Web downloader can be started and the binary can be downloaded into the tools folder of the package.        
+        Prior to this step the script gets modified by calling the Edit-ChocolateyInstaller script.
 
     .PARAMETER all
         For further information to the parameters:
@@ -37,11 +37,11 @@ function Install-ChocolateyPackage() {
         [parameter(ValueFromRemainingArguments = $true)][Object[]] $ignoredArguments
     )
 
-    # Check the url found above ($url or $url64bit) and download the file
-    if ($null -ne $url) {
-        $urlFound = $url
-    } elseif ($null -ne $url64bit) {
+    # Check the url found above ($url or $url64bit) and download the file. url64bit is preferred over url32 bit!
+    if ($null -ne $url64bit) {
         $urlFound = $url64bit
+    } elseif ($null -ne $url) {
+        $urlFound = $url
     }    
 
     Write-Log "Start editing chocolateyInstall..." -Severity 1
@@ -58,6 +58,7 @@ function Install-ChocolateyPackage() {
 
     if ($url -or $url64bit) {
         $downloadFilePath = Join-Path (Join-Path (Get-Item -Path ".\").FullName "tools") "$($packageName)Install.$fileType"
+        # Get-ChocolateyWebFile works like this: url64bit is preferred over url32 bit!
         $null = Get-ChocolateyWebFile -PackageName $packageName `
             -FileFullPath $downloadFilePath `
             -Url $url `

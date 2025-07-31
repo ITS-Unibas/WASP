@@ -1,15 +1,14 @@
 function Install-ChocolateyZipPackage() {
     <#
     .SYNOPSIS
-        This function overrides the Install-ChocolateyZipPackage function and receives a optional filepath or an url to a zip file. Depending on the input the functions downloads and/or unzips the binaries.
+        This function downloads and/or unzips the binaries and overrides the Install-ChocolateyZipPackage function and receives a optional filepath or an url to a zip file.
 
     .DESCRIPTION
         This function receives and saves the parameters which are given in the package script.
         If there is file parameter given the function checks if the binary exists or not. If it does not exist and there is also no url given the VERIFICATION.txt will be checked to retrieve an url and checksums.
         If there is a url given or a url found in the VERIFICATION.txt file it will be downloaded.
         Afterwards the zip will be unpacked into the tools folder.
-
-        In the end the script gets modified by calling the Edit-ChocolateyInstaller script.
+        Prior the script gets modified by calling the Edit-ChocolateyInstaller script.
 
     .PARAMETER all
         For further information to the parameters:
@@ -116,11 +115,11 @@ function Install-ChocolateyZipPackage() {
         $checksumType64 = $checksumType
     }
 
-    # Check the url found above ($url or $url64bit) and download the file
-    if ($null -ne $url) {
-        $urlFound = $url
-    } elseif ($null -ne $url64bit) {
+    # Check the url found above ($url or $url64bit) and download the file. url64bit is preferred over url32 bit!
+    if ($null -ne $url64bit) {
         $urlFound = $url64bit
+    } elseif ($null -ne $url) {
+        $urlFound = $url
     }    
 
     Write-Log "Start editing chocolateyInstall..." -Severity 1
@@ -133,6 +132,7 @@ function Install-ChocolateyZipPackage() {
 
     try {
         if (-Not $remoteFile) {
+            # Get-ChocolateyWebFile works like this: url64bit is preferred over url32 bit!
             $null = Get-ChocolateyWebFile -PackageName $packageName `
                 -FileFullPath $downloadFilePath `
                 -Url $url `
