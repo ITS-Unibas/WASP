@@ -32,11 +32,20 @@ function Install-ChocolateyPowershellCommand() {
     $downloadFilePath = Join-Path (Join-Path (Get-Item -Path ".\").FullName "tools") "$($packageName)Install.ps1"
 
     # Check the url found above ($url or $url64bit) and download the file. url64bit is preferred over url32 bit!
-    if ($null -ne $url64bit) {
+    $urlFound = ''
+    
+    if ($url64bit -ne '' -and $null -ne $url64bit) {
         $urlFound = $url64bit
-    } elseif ($null -ne $url) {
+    } elseif ($url -ne '' -and $null -ne $url) {
         $urlFound = $url
-    }    
+    }
+
+    if ($urlFound -eq ''){
+        Write-Log "No url in Package found - Stop! url64bit: $url64bit, url: $url" -Severity 3
+        exit 1
+    }
+
+    Write-Log "Found the following URL: $urlFound" -Severity 1
 
     Write-Log "Start editing chocolateyInstall..." -Severity 1
     
