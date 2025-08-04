@@ -1,12 +1,12 @@
 function Install-ChocolateyPowershellCommand() {
     <#
     .SYNOPSIS
-        This function overrides the Install-ChocolateyPowershellCommand function and receives an url and checksums to download the package binary.
+        This function receives an url and checksums to download the package binary and overrides the Install-ChocolateyPowershellCommand function.
 
     .DESCRIPTION
         This function receives and saves the parameters which are given in the package script.
         With this parameters the Chocolatey Web downloader can be started and the binary can be downloaded into the tools folder of the package.
-        In the end the script gets modified by calling the Edit-ChocolateyInstaller script.
+        Prior to this step the script gets modified by calling the Edit-ChocolateyInstaller script.
 
     .PARAMETER all
         For further information to the parameters:
@@ -31,12 +31,21 @@ function Install-ChocolateyPowershellCommand() {
 
     $downloadFilePath = Join-Path (Join-Path (Get-Item -Path ".\").FullName "tools") "$($packageName)Install.ps1"
 
-    # Check the url found above ($url or $url64bit) and download the file
-    if ($null -ne $url) {
-        $urlFound = $url
-    } elseif ($null -ne $url64bit) {
+    # Check the url found above ($url or $url64bit) and download the file. url64bit is preferred over url32 bit!
+    $urlFound = ''
+    
+    if ($url64bit -ne '' -and $null -ne $url64bit) {
         $urlFound = $url64bit
-    }    
+    } elseif ($url -ne '' -and $null -ne $url) {
+        $urlFound = $url
+    }
+
+    if ($urlFound -eq ''){
+        Write-Log "No url in Package found - Stop! url64bit: $url64bit, url: $url" -Severity 3
+        exit 1
+    }
+
+    Write-Log "Found the following URL: $urlFound" -Severity 1
 
     Write-Log "Start editing chocolateyInstall..." -Severity 1
     
@@ -52,6 +61,7 @@ function Install-ChocolateyPowershellCommand() {
     New-Item -Path (Join-Path (Join-Path (Get-Item -Path ".\").FullName "tools") "overridden.info") -Force
 
     if ($url -or $url64bit) {
+        # Get-ChocolateyWebFile works like this: url64bit is preferred over url32 bit!
         $null = Get-ChocolateyWebFile -PackageName $packageName `
             -FileFullPath $downloadFilePath `
             -Url $url `

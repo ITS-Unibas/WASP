@@ -1,14 +1,13 @@
 function Install-ChocolateyInstallPackage() {
     <#
     .SYNOPSIS
-        This function overrides the Install-ChocolateyInstallPackage function and receives an optional filepath. It checks if the binary already exists or if it has to be downloaded first.
+        This function checks if the binary already exists or if it has to be downloaded first and overrides the Install-ChocolateyInstallPackage function.
 
     .DESCRIPTION
         This function receives and saves the parameters which are given in the package script.
         If there is file parameter given the function checks if the binary exists or not. If it does not exist the VERIFICATION.txt will be checked to retrieve an url and checksums.
-
         With this parameters the Chocolatey Web downloader can be started and the binary can be downloaded into the tools folder of the package.
-        In the end the script gets modified by calling the Edit-ChocolateyInstaller script.
+        Prior to this step the script gets modified by calling the Edit-ChocolateyInstaller script.
 
     .PARAMETER all
         For further information to the parameters:
@@ -149,13 +148,22 @@ function Install-ChocolateyInstallPackage() {
         }
     }
 
-    # Check the url found above ($url or $url64bit) and download the file
-    if ($null -ne $url) {
-        $urlFound = $url
-    } elseif ($null -ne $url64bit) {
+    # Check the url found above ($url or $url64bit) and download the file. url64bit is preferred over url32 bit!
+    $urlFound = ''
+    
+    if ($url64bit -ne '' -and $null -ne $url64bit) {
         $urlFound = $url64bit
-    }    
+    } elseif ($url -ne '' -and $null -ne $url) {
+        $urlFound = $url
+    }
 
+    if ($urlFound -eq ''){
+        Write-Log "No url in Package found - Stop! url64bit: $url64bit, url: $url" -Severity 3
+        exit 1
+    }
+
+    Write-Log "Found the following URL: $urlFound" -Severity 1
+    
     Write-Log "Start editing chocolateyInstall..." -Severity 1
 
     $defaultFileName = $urlFound.Split("/")[-1]
@@ -166,7 +174,8 @@ function Install-ChocolateyInstallPackage() {
         $downloadFilePath = Join-Path (Join-Path (Get-Item -Path ".\").FullName "tools") "$($packageName)Install.$fileType"
         $checksumType = Get-ChecksumTypeFromVerificationFile -Checksums $checksum, $checksum64
         $checksumType64 = $checksumType
-    
+        
+        # Get-ChocolateyWebFile works like this: url64bit is preferred over url32 bit!
         $null = Get-ChocolateyWebFile -PackageName $packageName `
             -FileFullPath $downloadFilePath `
             -Url $url `
