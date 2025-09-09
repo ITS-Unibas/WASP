@@ -34,6 +34,10 @@ function New-RemoteBranch {
 
     process {
         if ($RemoteBranches.Contains($BranchName)) {
+            if (($BranchName -eq "prod") -or ($BranchName -eq "test")) {
+                # Exception for prod and test branch, no log-entry should be created
+                return
+            } 
             Write-Log "Branch $branchName already exist. Nothing to do"
             return
         }
