@@ -29,9 +29,18 @@ function Invoke-JiraObserver {
         $GitBranchDEV = $Config.Application.GitBranchDEV
         $GitBranchTEST = $Config.Application.GitBranchTEST
         $GitBranchPROD = $Config.Application.GitBranchPROD
+
+        $GitRepo = $config.Application.PackagesWishlist
+        $GitFile = $GitRepo.Substring($GitRepo.LastIndexOf("/") + 1, $GitRepo.Length - $GitRepo.LastIndexOf("/") - 1)
+        $WishlistFolderName = $GitFile.Replace(".git", "")
+        $PackagesWishlistPath = Join-Path -Path $config.Application.BaseDirectory -ChildPath $WishlistFolderName
+        $wishlistPath = Join-Path -Path  $PackagesWishlistPath -ChildPath "wishlist.txt"
     }
 
     process {
+        $wishlist = Get-Content -Path $wishlistPath | Where-Object { $_ -notlike "#*" }
+        $nameAndVersionSeparator = '@'
+
         # Die neueste Jira State file wird eingelesen als Hashtable
         Write-Log -Message "Reading latest Jira state file" -Severity 0
         $jiraStateFileContent, $JiraStateFile = Read-JiraStateFile
@@ -120,6 +129,7 @@ function Invoke-JiraObserver {
             $IssuesCurrentState[$_.fields.summary] = [PSCustomObject]@{
                 Assignee = $_.fields.assignee.name
                 Status = $_.fields.status.name
+                IssueKey = $_.key
             }
         }
 
@@ -132,6 +142,20 @@ function Invoke-JiraObserver {
         $UpdateJiraStateFile = $true
         # jedes Issue, welches vom Stand im neusten JiraState-File abweicht wird einzeln durchgegangen
         foreach($key in $IssuesCompareState.keys) { 
+            $packageName, $packageVersion, $re = $key.split($nameAndVersionSeparator)
+            $foundInWishlist = $false
+            foreach ($line in $wishlist) {
+                $line = $line -replace "@.*", ""
+                if ($line -eq $packageName) {
+                    $foundInWishlist = $true
+                }
+            }
+            if (!$foundInWishlist) {
+                Write-Log "Skip handling of $key - deactivated in wishlist." -Severity 1
+                Flag-JiraTicket -issueKey $IssuesCompareState[$key].IssueKey -comment "Package $packageName is deactivated in the wishlist."
+                continue
+            }
+
             # Ermittlung des Dev-Branches anhand des Paket Namens (mit Eventualität des Repackaging branches)
             $DevBranchPrefix = "$GitBranchDEV$key"
             $DevBranch = Get-DevBranch -RemoteBranches $RemoteBranches -DevBranchPrefix $DevBranchPrefix
@@ -196,4 +220,4 @@ function Invoke-JiraObserver {
         }
     }
 }
- 
+Invoke-JiraObserver 
