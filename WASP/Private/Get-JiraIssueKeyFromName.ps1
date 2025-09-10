@@ -34,7 +34,7 @@ function Get-JiraIssueKeyFromName {
         }
 
         # JQL to search by issue summary
-        $jql = "project = $projectKey AND summary = `"$issueName`""
+        $jql = "project = $projectKey AND summary ~ `"$issueName`""
         $searchUrl = "$jiraBaseUrl/rest/api/2/search?jql=$([System.Web.HttpUtility]::UrlEncode($jql))"
 
         Write-Log -Message "Searching for Jira issue with summary: $issueName" -Severity 1
@@ -47,6 +47,11 @@ function Get-JiraIssueKeyFromName {
 
         # Return all matching issue keys
         $issueKeys = $response.issues | ForEach-Object { $_.key }
+
+        # if multiple issues found, log a warning
+        if ($issueKeys.Count -gt 1) {
+            Write-Log -Message "Multiple Jira issues found with summary: $issueName. Returning all matching keys." -Severity 2
+        }
 
         Write-Log -Message "Found Jira issues: $($issueKeys -join ', ')" -Severity 0
         return $issueKeys
