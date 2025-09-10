@@ -34,7 +34,7 @@ function Get-JiraIssueKeyFromName {
         }
 
         # JQL to search by issue summary
-        $jql = "project = $projectKey AND summary = `"$issueName`""
+        $jql = "project = $projectKey AND summary ~ `"$issueName`""
         $searchUrl = "$jiraBaseUrl/rest/api/2/search?jql=$([System.Web.HttpUtility]::UrlEncode($jql))"
 
         Write-Log -Message "Searching for Jira issue with summary: $issueName" -Severity 1
