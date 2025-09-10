@@ -48,6 +48,11 @@ function Get-JiraIssueKeyFromName {
         # Return all matching issue keys
         $issueKeys = $response.issues | ForEach-Object { $_.key }
 
+        # if multiple issues found, log a warning
+        if ($issueKeys.Count -gt 1) {
+            Write-Log -Message "Multiple Jira issues found with summary: $issueName. Returning all matching keys." -Severity 2
+        }
+
         Write-Log -Message "Found Jira issues: $($issueKeys -join ', ')" -Severity 0
         return $issueKeys
     }
