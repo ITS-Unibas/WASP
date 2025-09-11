@@ -129,7 +129,6 @@ function Invoke-JiraObserver {
             $IssuesCurrentState[$_.fields.summary] = [PSCustomObject]@{
                 Assignee = $_.fields.assignee.name
                 Status = $_.fields.status.name
-                IssueKey = $_.key
             }
         }
 
@@ -151,8 +150,10 @@ function Invoke-JiraObserver {
                 }
             }
             if (!$foundInWishlist) {
+                # Paket nicht in der Wishlist, Ticket wird auf Jira geflagged und kommentiert.
                 Write-Log "Skip handling of $key - deactivated in wishlist." -Severity 1
-                Flag-JiraTicket -issueKey $IssuesCompareState[$key].IssueKey -comment "Package $packageName is deactivated in the wishlist."
+                $IssueKey = Get-JiraIssueKeyFromName -issueName "$packageName$nameAndVersionSeparator$packageVersion"
+                Flag-JiraTicket -issueKey $IssueKey -comment "Package $packageName is deactivated in the wishlist."
                 continue
             }
 
