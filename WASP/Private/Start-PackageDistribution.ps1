@@ -91,6 +91,22 @@ function Start-PackageDistribution() {
                     Write-Log ("Skip $packageName@$PackageVersion - No tools/ folder.") -Severity 3
                     continue
                 }
+
+                # Check if the only changes in the branch are changes to the package in question
+                # If other files were changed, skip the branch
+                $allowedPath = "$packageName/$packageVersion"
+                $changedFiles = git -C $PackageGalleryPath diff --name-only prod..$branch
+                $invalidFiles = $changedFiles | Where-Object { $_ -notlike "$allowedPath/*" }
+
+                if ($invalidFiles) {
+                    Write-Log "Skip $packageName@$PackageVersion - Other files than $allowedPath were changed:" -Severity 3
+                    foreach ($file in $invalidFiles) {
+                        Write-Log " - $file" -Severity 3
+                    }
+                    $jiraKey = Get-JiraIssueKeyFromName -issueName "$packageName@$packageVersion" 
+                    Flag-JiraTicket -issueKey $jiraKey -comment "Please only change files in $allowedPath. Other changes were detected: `n$($invalidFiles -join "`n")`nPlease create a separate branch/PR for these changes."
+                    continue
+                }
                 # Check if the package, that has a dev branch is still in Development in JIRA or if it has been approved for Testing. 
                 # Only run the package distribution for packages that are in Development.
                 $process = Test-JiraIssueForTesting -packageName $packageName -packageVersion $packageVersion
