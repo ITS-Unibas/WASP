@@ -70,13 +70,7 @@ function Start-PackageDistribution() {
                     }
                 }
 
-                $foundInWishlist = $false
-                foreach ($line in $wishlist) {
-					$line = $line -replace "@.*", ""
-                    if ($line -eq $packageName) {
-                        $foundInWishlist = $true
-                    }
-                }
+                $foundInWishlist = Find-PackageInWishlist -packageName $packageName
                 if (!$foundInWishlist) {
                     Write-Log "Skip $packageName - deactivated in wishlist." -Severity 1
                     continue
