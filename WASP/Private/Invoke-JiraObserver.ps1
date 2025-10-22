@@ -32,13 +32,9 @@ function Invoke-JiraObserver {
 
         $GitRepo = $config.Application.PackagesWishlist
         $GitFile = $GitRepo.Substring($GitRepo.LastIndexOf("/") + 1, $GitRepo.Length - $GitRepo.LastIndexOf("/") - 1)
-        $WishlistFolderName = $GitFile.Replace(".git", "")
-        $PackagesWishlistPath = Join-Path -Path $config.Application.BaseDirectory -ChildPath $WishlistFolderName
-        $wishlistPath = Join-Path -Path  $PackagesWishlistPath -ChildPath "wishlist.txt"
     }
 
     process {
-        $wishlist = Get-Content -Path $wishlistPath | Where-Object { $_ -notlike "#*" }
         $nameAndVersionSeparator = '@'
 
         # Die neueste Jira State file wird eingelesen als Hashtable
@@ -142,13 +138,7 @@ function Invoke-JiraObserver {
         # jedes Issue, welches vom Stand im neusten JiraState-File abweicht wird einzeln durchgegangen
         foreach($key in $IssuesCompareState.keys) { 
             $packageName, $packageVersion, $re = $key.split($nameAndVersionSeparator)
-            $foundInWishlist = $false
-            foreach ($line in $wishlist) {
-                $line = $line -replace "@.*", ""
-                if ($line -eq $packageName) {
-                    $foundInWishlist = $true
-                }
-            }
+            $foundInWishlist = Find-PackageInWishlist -PackageName $packageName 
             if (!$foundInWishlist) {
                 # Paket nicht in der Wishlist, Ticket wird auf Jira geflagged und kommentiert.
                 Write-Log "Skip handling of $key - deactivated in wishlist." -Severity 1
