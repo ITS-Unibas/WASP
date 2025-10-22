@@ -24,12 +24,6 @@ function Start-PackageDistribution() {
         $PackageGalleryPath = Join-Path -Path $config.Application.BaseDirectory -ChildPath $GitFolderName
         $OldWorkingDir = $PWD.Path #?
 
-        $GitRepo = $config.Application.PackagesWishlist
-        $GitFile = $GitRepo.Substring($GitRepo.LastIndexOf("/") + 1, $GitRepo.Length - $GitRepo.LastIndexOf("/") - 1)
-        $WishlistFolderName = $GitFile.Replace(".git", "")
-        $PackagesWishlistPath = Join-Path -Path $config.Application.BaseDirectory -ChildPath $WishlistFolderName
-        $wishlistPath = Join-Path -Path  $PackagesWishlistPath -ChildPath "wishlist.txt"
-
         $tmpdir = $env:TEMP
 		$GitHubOrganisation =  $config.Application.GitHubOrganisation
     }
@@ -46,9 +40,6 @@ function Start-PackageDistribution() {
         foreach ($remoteBranch in $remoteBranches) {
             Write-Log $remoteBranch
         } 
-
-
-        $wishlist = Get-Content -Path $wishlistPath | Where-Object { $_ -notlike "#*" }
 
         $nameAndVersionSeparator = '@'
         $num_remoteBranches = $remoteBranches.Count
@@ -208,13 +199,7 @@ function Start-PackageDistribution() {
 
                 foreach ($package in $packagesList) {
 					
-					$foundInWishlist = $false
-					foreach ($line in $wishlist) {
-						$line = $line -replace "@.*", ""
-						if ($line -eq $package) {
-							$foundInWishlist = $true
-						}
-					}
+					$foundInWishlist = Find-PackageInWishlist -packageName $package
 					if (!$foundInWishlist) {
 						Write-Log "Skip Package $package`: deactivated in wishlist." -Severity 1
 						continue
