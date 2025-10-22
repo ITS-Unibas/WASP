@@ -5,7 +5,7 @@ function Write-JiraStateFile () {
     .Description 
     Read the lates jira state file 
     .Notes 
-    FileName: Read-JiraStateFile.ps1
+    FileName: Write-JiraStateFile.ps1
     Author: Tim Keller 
     Contact: tim.keller@unibas.ch
     Created: 2024-07-04
