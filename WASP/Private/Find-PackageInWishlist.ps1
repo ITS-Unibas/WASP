@@ -28,7 +28,6 @@ function Find-PackageInWishlist {
     }
 
     process { 
-        Write-Log "Searching for $packageName in wishlist..." -Severity 0
         $foundInWishlist = $false
         foreach ($line in $wishlistContent) {
             $line = $line -replace "@.*", ""
@@ -37,10 +36,8 @@ function Find-PackageInWishlist {
             }
         }
         if (!$foundInWishlist) {
-            Write-Log "$packageName not found in wishlist." -Severity 0
             return $false
         } else {
-            Write-Log "$packageName found in wishlist." -Severity 0
             return $true
         }
     }
