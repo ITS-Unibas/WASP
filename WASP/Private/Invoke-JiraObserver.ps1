@@ -221,4 +221,3 @@ function Invoke-JiraObserver {
         }
     }
 }
-Invoke-JiraObserver 
