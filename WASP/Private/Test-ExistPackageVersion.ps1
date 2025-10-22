@@ -7,7 +7,7 @@ function Test-ExistPackageVersion {
         The folder is defined by $packageName/$version
         URL will look like this:  https://api.github.com/repos/wasp-its/zzz-test-package-gallery/contents/git.install/2.37.0?ref=dev/git.install@2.37.0
     .NOTES
-        FileName: Format-VersionString.ps1
+        FileName: Test-ExistPackageVersion.ps1
         Author: Kevin Schaefer, Maximilian Burgert
         Contact: its-wcs-ma@unibas.ch
         Created: 2020-30-01
