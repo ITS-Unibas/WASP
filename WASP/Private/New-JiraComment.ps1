@@ -47,7 +47,7 @@ function New-JiraComment {
 
         if ($response.StatusCode -eq 201) {
             Write-Log -Message "StatusCode: $($response.StatusCode)" -Severity 0
-            Write-Log -Message "Jira ticket successfully commented: $($response.Content)" -Severity 0
+            Write-Log -Message "Jira ticket successfully commented." -Severity 0
         } else {
             Write-Log -Message "Failed to comment jira ticket! StatusCode: $($response.StatusCode):  $($response.StatusDescription)" -Severity 3
         }
