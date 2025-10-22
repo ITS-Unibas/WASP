@@ -23,21 +23,16 @@ function Search-NewPackages {
         $Manual
     )
     begin {
-        $config = Read-ConfigFile
  
-        $GitRepo = $config.Application.PackagesWishlist
-        $GitFile = $GitRepo.Substring($GitRepo.LastIndexOf("/") + 1, $GitRepo.Length - $GitRepo.LastIndexOf("/") - 1)
-        $GitFolderName = $GitFile.Replace(".git", "")
-        $PackagesWishlistPath = Join-Path -Path $config.Application.BaseDirectory -ChildPath $GitFolderName
-        $wishlistPath = Join-Path -Path  $PackagesWishlistPath -ChildPath "wishlist.txt"
     }
  
     process {
-        $wishlistContent = Get-Content -Path $wishlistPath | Select-String -Pattern "#" -NotMatch | ForEach-Object {$_ -replace "@.*", ""}
  
         foreach ($package in $Packages) {
             # Check if the package is in (not deactivated) wishlist. Only scan for packages that are relevant
-            if (!(($package.Name) -in $wishlistContent)) {
+            $packageName = $package.Name
+            $foundInWishlist = Find-PackageInWishlist -PackageName $packageName
+            if (!($foundInWishlist)) {
                 continue
             } else {
                 if ($Manual) {
