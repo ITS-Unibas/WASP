@@ -80,7 +80,8 @@ function Start-PackageDistribution() {
                 # Check if the only changes in the branch are changes to the package in question
                 # If other files were changed, skip the branch
                 $allowedPath = "$packageName/$packageVersion"
-                $changedFiles = git -C $PackageGalleryPath diff --name-only prod..$branch
+                $base = git -C $PackageGalleryPath merge-base prod $branch
+                $changedFiles = git -C $PackageGalleryPath diff --name-only --merge-base $base
                 $invalidFiles = $changedFiles | Where-Object { $_ -notlike "$allowedPath/*" }
 
                 if ($invalidFiles) {
