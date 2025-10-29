@@ -216,10 +216,23 @@ function Start-PackageDistribution() {
                             $FileDate = (Get-ChildItem -Path $packageRootPath | Where-Object { $_.FullName -match "\.nupkg" }).LastWriteTime
 
                             # check if package is being repackaged
-                            if ($repackagingBranches -match "$package@$FullVersion") {
+                            if ($repackagingBranches -match "$package@$Version") {
+                                Write-Log "Package $package with version $version is in repackaging."
+                                $repackagingBranch = $repackagingBranches | Where-Object { $_ -like "dev/$package@$Version@*" } | Select-Object -First 1
+                                $latestPullRequest = Test-PullRequest -Branch $repackagingBranch
+                                $prBranch =  $latestPullRequest.Branch
+                                $prState = $latestPullRequest.Details.state
+                                $prMergedTime = $LatestPullRequest.Details.merged_at
                                 # only push it to test if the jira issue is in test
                                 if ($chocolateyDestinationServer -eq $config.Application.ChocoServerTEST) {
                                     if (Test-IssueStatus $package $version 'Testing') {
+                                    
+                                        if ($prBranch -eq "test" -and $prState -eq "open") {
+                                            Write-Log "PR from $repackagingBranch to test is still open. Skip pushing package to testing."
+                                            continue
+                                        }
+
+
                                         if (-Not (Test-ExistsOnRepo -PackageName $FullID -PackageVersion $FullVersion -Repository $Repo -FileCreationDate $FileDate)) {
                                             Write-Log "Pushing Package $FullID with version $FullVersion to $chocolateyDestinationServer." -Severity 1
                                             Send-NupkgToServer $packageRootPath $chocolateyDestinationServer
@@ -228,6 +241,26 @@ function Start-PackageDistribution() {
                                     }
                                     else {
                                         Write-Log "Package $package with version $version is in repackaging and its jira task is not in testing." -Severity 1
+                                        continue
+                                    }
+                                }
+                                if ($chocolateyDestinationServer -eq $config.Application.ChocoServerPROD) {
+                                    if (Test-IssueStatus $package $version 'Production') {
+
+                                        if ($prBranch -eq "prod" -and $prState -eq "open") {
+                                            Write-Log "PR from $repackagingBranch to prod is still open. Skip pushing package to production."
+                                            continue
+                                        }
+
+
+                                        if (-Not (Test-ExistsOnRepo -PackageName $FullID -PackageVersion $FullVersion -Repository $Repo -FileCreationDate $FileDate)) {
+                                            Write-Log "Pushing Package $FullID with version $FullVersion to $chocolateyDestinationServer." -Severity 1
+                                            Send-NupkgToServer $packageRootPath $chocolateyDestinationServer
+                                        }
+                                        continue
+                                    }
+                                    else {
+                                        Write-Log "Package $package with version $version is in repackaging and its jira task is not in production." -Severity 1
                                         continue
                                     }
                                 }
