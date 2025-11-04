@@ -60,13 +60,21 @@ function Flag-JiraTicket {
             
             }
         } | ConvertTo-Json -Depth 3
-        
-        Write-Log -Message "Flagging jira ticket $issueKey" -Severity 1
-        $response = Invoke-WebRequest -Uri $url -Method Put -Headers $header -Body $body  
 
         if ($comment) {
+
+            # Check if the comment already exists
+            $existingComment = Search-JiraComment -issueKey $issueKey -searchString $flagComment
+
+            if ($existingComment) {
+                Write-Log -Message "Comment already exists on Jira ticket $issueKey. Skipping adding comment and flag." -Severity 2
+                return
+            }
             New-JiraComment -issueKey $issueKey -comment $flagComment
         }
+
+        Write-Log -Message "Flagging jira ticket $issueKey" -Severity 1
+        $response = Invoke-WebRequest -Uri $url -Method Put -Headers $header -Body $body  
 
         if ($response.StatusCode -eq 204) {
             Write-Log -Message "StatusCode: $($response.StatusCode)" -Severity 0
