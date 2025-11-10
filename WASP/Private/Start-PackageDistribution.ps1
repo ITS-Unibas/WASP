@@ -87,7 +87,7 @@ function Start-PackageDistribution() {
                 if ($invalidFiles) {
                     Write-Log "Skip $packageName@$PackageVersion - Other files than $allowedPath were changed:" -Severity 2
                     foreach ($file in $invalidFiles) {
-                        Write-Log " - $file" -Severity 3
+                        Write-Log " - $file" -Severity 2
                     }
                     $jiraKey = Get-JiraIssueKeyFromName -issueName "$packageName@$packageVersion" 
                     Flag-JiraTicket -issueKey $jiraKey -comment "Please only change files in $allowedPath. Other changes were detected: `n$($invalidFiles -join "`n")`nPlease create a separate branch/PR for these changes."
