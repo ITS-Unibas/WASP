@@ -52,7 +52,7 @@ function Search-JiraComment {
                 Write-Log -Message "Found $($matched.Count) matching comment(s) in $issueKey" -Severity 0
                 return $matched | Select-Object id, author, created, body
             } else {
-                Write-Log -Message "No comment matching '$searchString' found in $issueKey" -Severity 2
+                Write-Log -Message "No comment matching '$searchString' in $issueKey" -Severity 2
                 return $null
             }
         }

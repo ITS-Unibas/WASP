@@ -41,7 +41,7 @@ function New-JiraComment {
             body = $comment
         } | ConvertTo-Json -Depth 3
 
-        Write-Log -Message "Commenting jira ticket $issueKey with comment: $comment" -Severity 1
+        Write-Log -Message "Commenting jira ticket $issueKey with comment: `"$($comment)`"" -Severity 1
         
         $response = Invoke-WebRequest -Uri $url -Method Post -Headers $header -Body $body  
 
