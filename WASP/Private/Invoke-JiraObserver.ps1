@@ -141,7 +141,7 @@ function Invoke-JiraObserver {
             $foundInWishlist = Find-PackageInWishlist -PackageName $packageName 
             if (!$foundInWishlist) {
                 # Paket nicht in der Wishlist, Ticket wird auf Jira geflagged und kommentiert.
-                Write-Log "Skip handling of $key - deactivated in wishlist." -Severity 1
+                Write-Log "Skip handling of $key - deactivated in wishlist." -Severity 2
                 $IssueKey = Get-JiraIssueKeyFromName -issueName "$packageName$nameAndVersionSeparator$packageVersion"
                 Flag-JiraTicket -issueKey $IssueKey -comment "Package $packageName is deactivated in the wishlist."
                 continue

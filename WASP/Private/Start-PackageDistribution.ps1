@@ -63,7 +63,7 @@ function Start-PackageDistribution() {
 
                 $foundInWishlist = Find-PackageInWishlist -packageName $packageName
                 if (!$foundInWishlist) {
-                    Write-Log "Skip $packageName - deactivated in wishlist." -Severity 1
+                    Write-Log "Skip $packageName - deactivated in wishlist." -Severity 2
                     continue
                 }
                 $packageRootPath = Join-Path $PackageGalleryPath (Join-Path $packageName $packageVersion)
@@ -202,7 +202,7 @@ function Start-PackageDistribution() {
 					
 					$foundInWishlist = Find-PackageInWishlist -packageName $package
 					if (!$foundInWishlist) {
-						Write-Log "Skip Package $package`: deactivated in wishlist." -Severity 1
+						Write-Log "Skip Package $package`: deactivated in wishlist." -Severity 2
 						continue
 					}			
                     $packagePath = Join-Path $PackageGalleryPath $package
