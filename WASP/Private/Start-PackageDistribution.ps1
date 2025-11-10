@@ -85,7 +85,7 @@ function Start-PackageDistribution() {
                 $invalidFiles = $changedFiles | Where-Object { $_ -notlike "$allowedPath/*" }
 
                 if ($invalidFiles) {
-                    Write-Log "Skip $packageName@$PackageVersion - Other files than $allowedPath were changed:" -Severity 3
+                    Write-Log "Skip $packageName@$PackageVersion - Other files than $allowedPath were changed:" -Severity 2
                     foreach ($file in $invalidFiles) {
                         Write-Log " - $file" -Severity 3
                     }
