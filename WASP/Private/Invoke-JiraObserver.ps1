@@ -155,7 +155,7 @@ function Invoke-JiraObserver {
             $hasFlag = Test-IssueFlag -issueKey $issueKey
 
             if ($hasFlag) {
-                Write-Log -Message "Jira ticket $issueKey is flagged. Skipping  update for package $key." -Severity 2
+                Write-Log -Message "Package $key is flagged and moved, which is not allowed. Please remove the flag first." -Severity 2
                 $UpdateJiraStateFile = $false
                 break
             }
