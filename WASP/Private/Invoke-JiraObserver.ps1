@@ -150,6 +150,15 @@ function Invoke-JiraObserver {
             # Ermittlung des Dev-Branches anhand des Paket Namens (mit Eventualität des Repackaging branches)
             $DevBranchPrefix = "$GitBranchDEV$key"
             $DevBranch = Get-DevBranch -RemoteBranches $RemoteBranches -DevBranchPrefix $DevBranchPrefix
+            # Ermittel ob Jira Ticket eine Flag hat
+            $issueKey = Get-JiraIssueKeyFromName -issueName $key
+            $hasFlag = Test-IssueFlag -issueKey $issueKey
+
+            if ($hasFlag) {
+                Write-Log -Message "Jira ticket $issueKey is flagged. Skipping  update for package $key." -Severity 2
+                $UpdateJiraStateFile = $false
+                break
+            }
             # dev → test: PR nach test
             if ($IssuesCompareState[$key].StatusOld -eq "Development" -and $IssuesCompareState[$key].Status -eq "Testing") {
                 $PullRequestTitle = "$key to $GitBranchTEST"
