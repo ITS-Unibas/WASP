@@ -154,13 +154,21 @@ function Invoke-JiraObserver {
             $issueKey = Get-JiraIssueKeyFromName -issueName $key
             $hasFlag = Test-IssueFlag -issueKey $issueKey
 
-            if ($hasFlag) {
-                Write-Log -Message "Package $key is flagged and moved, which is not allowed. Please remove the flag first." -Severity 2
-                $UpdateJiraStateFile = $false
-                break
-            }
             # dev → test: PR nach test
             if ($IssuesCompareState[$key].StatusOld -eq "Development" -and $IssuesCompareState[$key].Status -eq "Testing") {
+                # Check ob Ticket eine Flag hat, wenn ja, kein PR erstellen
+                if ($hasFlag) {
+                    $Message = "Package $key is flagged and moved, which is not allowed. Please remove the flag first."
+                    Write-Log -Message "$Message" -Severity 2
+                    $existingComment = Search-JiraComment -issueKey $issueKey -searchString "$Message"
+                    if ($existingComment) {
+                        Write-Log -Message "Comment already exists on Jira ticket $issueKey. Skipping comment creation." -Severity 1
+                    } else {
+                        New-JiraComment -issueKey $issueKey -comment "$Message"
+                    }
+                    $UpdateJiraStateFile = $false
+                    break
+                }
                 $PullRequestTitle = "$key to $GitBranchTEST"
                 $response = New-PullRequest -SourceRepo $packageGalleryRepo -SourceUser $gitHubOrganization -SourceBranch $DevBranch -DestinationRepo $packageGalleryRepo -DestinationUser $gitHubOrganization -DestinationBranch $GitBranchTEST -PullRequestTitle $PullRequestTitle -ErrorAction Stop
                 Start-Sleep -Seconds 4     
@@ -172,6 +180,19 @@ function Invoke-JiraObserver {
                 }       
             # test → prod: PR nach prod
             } elseif ($IssuesCompareState[$key].StatusOld -eq "Testing" -and $IssuesCompareState[$key].Status -eq "Production") {
+                # Check ob Ticket eine Flag hat, wenn ja, kein PR erstellen
+                if ($hasFlag) {
+                    $Message = "Package $key is flagged and moved, which is not allowed. Please remove the flag first."
+                    Write-Log -Message "$Message" -Severity 2
+                    $existingComment = Search-JiraComment -issueKey $issueKey -searchString "$Message"
+                    if ($existingComment) {
+                        Write-Log -Message "Comment already exists on Jira ticket $issueKey. Skipping comment creation." -Severity 1
+                    } else {
+                        New-JiraComment -issueKey $issueKey -comment "$Message"
+                    }
+                    $UpdateJiraStateFile = $false
+                    break
+                }
                 $PullRequestTitle = "$key to $GitBranchPROD"
                 $response = New-PullRequest -SourceRepo $packageGalleryRepo -SourceUser $gitHubOrganization -SourceBranch $DevBranch -DestinationRepo $packageGalleryRepo -DestinationUser $gitHubOrganization -DestinationBranch $GitBranchPROD -PullRequestTitle $PullRequestTitle -ErrorAction Stop
                 Start-Sleep -Seconds 4     
