@@ -254,11 +254,7 @@ function Start-PackageDistribution() {
                                                 Write-Log "PR for Jira issue $issueKey hasn't been created. Skip pushing package to testing." -Severity 2
                                                 continue
                                             }
-                                            
-
-                                            
                                         }
-
 
                                         if (-Not (Test-ExistsOnRepo -PackageName $FullID -PackageVersion $FullVersion -Repository $Repo -FileCreationDate $FileDate)) {
                                             Write-Log "Pushing Package $FullID with version $FullVersion to $chocolateyDestinationServer." -Severity 1
