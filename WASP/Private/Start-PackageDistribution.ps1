@@ -233,6 +233,13 @@ function Start-PackageDistribution() {
                                             continue
                                         }
 
+                                        # No PR found for repackaging branch, not even older, closed PR's, skip pushing package to testing
+                                        if ($null -eq $prBranch) {
+                                            Write-Log "No PR found for repackaging branch $repackagingBranch. Skip pushing package to testing." -Severity 2
+                                            continue
+                                        }
+
+                                        # PR was closed, check if ticket was changed after PR was closed
                                         if ($prBranch -eq "test" -and $prState -eq "closed") {
                                             $issueName = "$package@$version"
                                             $issueKey = Get-JiraIssueKeyFromName -issueName $issueName
