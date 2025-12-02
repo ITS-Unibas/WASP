@@ -227,7 +227,8 @@ function Start-PackageDistribution() {
                                 # only push it to test if the jira issue is in test
                                 if ($chocolateyDestinationServer -eq $config.Application.ChocoServerTEST) {
                                     if (Test-IssueStatus $package $version 'Testing') {
-                                    
+                                        
+                                        # PR is still open, skip pushing package to testing
                                         if ($prBranch -eq "test" -and $prState -eq "open") {
                                             Write-Log "PR from $repackagingBranch to test is still open. Skip pushing package to testing."
                                             continue
@@ -249,7 +250,7 @@ function Start-PackageDistribution() {
 
                                             $prClosedDate = [datetime]$latestPullRequest.Details.closed_at
 
-                                            if ($ticketChangedDate -lt $prClosedDate) {
+                                            if ($ticketChangedDate -gt $prClosedDate) {
                                                 Write-Log "PR for Jira issue $issueKey hasn't been created. Skip pushing package to testing." -Severity 2
                                                 continue
                                             }
