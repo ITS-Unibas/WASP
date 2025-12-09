@@ -270,11 +270,33 @@ function Start-PackageDistribution() {
                                 if ($chocolateyDestinationServer -eq $config.Application.ChocoServerPROD) {
                                     if (Test-IssueStatus $package $version 'Production') {
 
+                                        # PR is still open, skip pushing package to production
                                         if ($prBranch -eq "prod" -and $prState -eq "open") {
                                             Write-Log "PR from $repackagingBranch to prod is still open. Skip pushing package to production."
                                             continue
                                         }
 
+                                        # No PR found for repackaging branch, not even older, closed PR's, skip pushing package to testing
+                                        if ($null -eq $prBranch) {
+                                            Write-Log "No PR found for repackaging branch $repackagingBranch. Skip pushing package to testing." -Severity 2
+                                            continue
+                                        }
+
+                                        # PR was closed, check if ticket was changed after PR was closed
+                                        if ($prBranch -eq "prod" -and $prState -eq "closed") {
+                                            $issueName = "$package@$version"
+                                            $issueKey = Get-JiraIssueKeyFromName -issueName $issueName
+
+                                            $ticketChangedDate = Get-JiraStatusChangedDate -IssueKey $issueKey
+                                            $ticketChangedDate = $ticketChangedDate.Changed
+
+                                            $prClosedDate = [datetime]$latestPullRequest.Details.closed_at
+
+                                            if ($ticketChangedDate -gt $prClosedDate) {
+                                                Write-Log "PR for Jira issue $issueKey hasn't been created. Skip pushing package to testing." -Severity 2
+                                                continue
+                                            }
+                                        }
 
                                         if (-Not (Test-ExistsOnRepo -PackageName $FullID -PackageVersion $FullVersion -Repository $Repo -FileCreationDate $FileDate)) {
                                             Write-Log "Pushing Package $FullID with version $FullVersion to $chocolateyDestinationServer." -Severity 1
