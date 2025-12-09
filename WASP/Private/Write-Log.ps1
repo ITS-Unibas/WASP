@@ -89,7 +89,7 @@ function Write-Log {
                     $LogFiles | Sort-Object CreationTime | Select-Object -First 1 | Remove-Item
                 }
                 elseif ($numLogFiles -gt $MaxLogFiles) {
-                    Get-ChildItem $LogPath | Sort-Object CreationTime | Select-Object -First ($numLogFiles - $MaxLogFiles + 1) | Remove-Item
+                    $LogFiles | Sort-Object CreationTime | Select-Object -First ($numLogFiles - $MaxLogFiles + 1) | Remove-Item
                 }
                 $null = New-Item $LogFilePath -type file
             }

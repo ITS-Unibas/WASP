@@ -24,12 +24,6 @@ function Start-PackageDistribution() {
         $PackageGalleryPath = Join-Path -Path $config.Application.BaseDirectory -ChildPath $GitFolderName
         $OldWorkingDir = $PWD.Path #?
 
-        $GitRepo = $config.Application.PackagesWishlist
-        $GitFile = $GitRepo.Substring($GitRepo.LastIndexOf("/") + 1, $GitRepo.Length - $GitRepo.LastIndexOf("/") - 1)
-        $WishlistFolderName = $GitFile.Replace(".git", "")
-        $PackagesWishlistPath = Join-Path -Path $config.Application.BaseDirectory -ChildPath $WishlistFolderName
-        $wishlistPath = Join-Path -Path  $PackagesWishlistPath -ChildPath "wishlist.txt"
-
         $tmpdir = $env:TEMP
 		$GitHubOrganisation =  $config.Application.GitHubOrganisation
     }
@@ -46,9 +40,6 @@ function Start-PackageDistribution() {
         foreach ($remoteBranch in $remoteBranches) {
             Write-Log $remoteBranch
         } 
-
-
-        $wishlist = Get-Content -Path $wishlistPath | Where-Object { $_ -notlike "#*" }
 
         $nameAndVersionSeparator = '@'
         $num_remoteBranches = $remoteBranches.Count
@@ -70,15 +61,9 @@ function Start-PackageDistribution() {
                     }
                 }
 
-                $foundInWishlist = $false
-                foreach ($line in $wishlist) {
-					$line = $line -replace "@.*", ""
-                    if ($line -eq $packageName) {
-                        $foundInWishlist = $true
-                    }
-                }
+                $foundInWishlist = Find-PackageInWishlist -packageName $packageName
                 if (!$foundInWishlist) {
-                    Write-Log "Skip $packageName - deactivated in wishlist." -Severity 1
+                    Write-Log "Skip $packageName - deactivated in wishlist." -Severity 2
                     continue
                 }
                 $packageRootPath = Join-Path $PackageGalleryPath (Join-Path $packageName $packageVersion)
@@ -89,6 +74,23 @@ function Start-PackageDistribution() {
                 $toolsPath = Join-Path -Path $packageRootPath -ChildPath "tools"
                 if (-Not (Test-Path $toolsPath)) {
                     Write-Log ("Skip $packageName@$PackageVersion - No tools/ folder.") -Severity 3
+                    continue
+                }
+
+                # Check if the only changes in the branch are changes to the package in question
+                # If other files were changed, skip the branch
+                $allowedPath = "$packageName/$packageVersion"
+                $base = git -C $PackageGalleryPath merge-base prod $branch
+                $changedFiles = git -C $PackageGalleryPath diff --name-only --merge-base $base
+                $invalidFiles = $changedFiles | Where-Object { $_ -notlike "$allowedPath/*" }
+
+                if ($invalidFiles) {
+                    Write-Log "Skip $packageName@$PackageVersion - Other files than $allowedPath were changed:" -Severity 2
+                    foreach ($file in $invalidFiles) {
+                        Write-Log " - $file" -Severity 2
+                    }
+                    $jiraKey = Get-JiraIssueKeyFromName -issueName "$packageName@$packageVersion" 
+                    Flag-JiraTicket -issueKey $jiraKey -comment "Please only change files in $allowedPath. Other changes were detected: `n$($invalidFiles -join "`n")`nPlease create a separate branch/PR for these changes."
                     continue
                 }
                 # Check if the package, that has a dev branch is still in Development in JIRA or if it has been approved for Testing. 
@@ -198,15 +200,9 @@ function Start-PackageDistribution() {
 
                 foreach ($package in $packagesList) {
 					
-					$foundInWishlist = $false
-					foreach ($line in $wishlist) {
-						$line = $line -replace "@.*", ""
-						if ($line -eq $package) {
-							$foundInWishlist = $true
-						}
-					}
+					$foundInWishlist = Find-PackageInWishlist -packageName $package
 					if (!$foundInWishlist) {
-						Write-Log "Skip Package $package`: deactivated in wishlist." -Severity 1
+						Write-Log "Skip Package $package`: deactivated in wishlist." -Severity 2
 						continue
 					}			
                     $packagePath = Join-Path $PackageGalleryPath $package
@@ -221,10 +217,45 @@ function Start-PackageDistribution() {
                             $FileDate = (Get-ChildItem -Path $packageRootPath | Where-Object { $_.FullName -match "\.nupkg" }).LastWriteTime
 
                             # check if package is being repackaged
-                            if ($repackagingBranches -match "$package@$FullVersion") {
+                            if ($repackagingBranches -match "$package@$Version") {
+                                Write-Log "Package $package with version $version is in repackaging."
+                                $repackagingBranch = $repackagingBranches | Where-Object { $_ -like "dev/$package@$Version@*" } | Select-Object -First 1
+                                $latestPullRequest = Test-PullRequest -Branch $repackagingBranch
+                                $prBranch =  $latestPullRequest.Branch
+                                $prState = $latestPullRequest.Details.state
+                                $prMergedTime = $LatestPullRequest.Details.merged_at
                                 # only push it to test if the jira issue is in test
                                 if ($chocolateyDestinationServer -eq $config.Application.ChocoServerTEST) {
                                     if (Test-IssueStatus $package $version 'Testing') {
+                                        
+                                        # PR is still open, skip pushing package to testing
+                                        if ($prBranch -eq "test" -and $prState -eq "open") {
+                                            Write-Log "PR from $repackagingBranch to test is still open. Skip pushing package to testing."
+                                            continue
+                                        }
+
+                                        # No PR found for repackaging branch, not even older, closed PR's, skip pushing package to testing
+                                        if ($null -eq $prBranch) {
+                                            Write-Log "No PR found for repackaging branch $repackagingBranch. Skip pushing package to testing." -Severity 2
+                                            continue
+                                        }
+
+                                        # PR was closed, check if ticket was changed after PR was closed
+                                        if ($prBranch -eq "test" -and $prState -eq "closed") {
+                                            $issueName = "$package@$version"
+                                            $issueKey = Get-JiraIssueKeyFromName -issueName $issueName
+
+                                            $ticketChangedDate = Get-JiraStatusChangedDate -IssueKey $issueKey
+                                            $ticketChangedDate = $ticketChangedDate.Changed
+
+                                            $prClosedDate = [datetime]$latestPullRequest.Details.closed_at
+
+                                            if ($ticketChangedDate -gt $prClosedDate) {
+                                                Write-Log "PR for Jira issue $issueKey hasn't been created. Skip pushing package to testing." -Severity 2
+                                                continue
+                                            }
+                                        }
+
                                         if (-Not (Test-ExistsOnRepo -PackageName $FullID -PackageVersion $FullVersion -Repository $Repo -FileCreationDate $FileDate)) {
                                             Write-Log "Pushing Package $FullID with version $FullVersion to $chocolateyDestinationServer." -Severity 1
                                             Send-NupkgToServer $packageRootPath $chocolateyDestinationServer
@@ -233,6 +264,48 @@ function Start-PackageDistribution() {
                                     }
                                     else {
                                         Write-Log "Package $package with version $version is in repackaging and its jira task is not in testing." -Severity 1
+                                        continue
+                                    }
+                                }
+                                if ($chocolateyDestinationServer -eq $config.Application.ChocoServerPROD) {
+                                    if (Test-IssueStatus $package $version 'Production') {
+
+                                        # PR is still open, skip pushing package to production
+                                        if ($prBranch -eq "prod" -and $prState -eq "open") {
+                                            Write-Log "PR from $repackagingBranch to prod is still open. Skip pushing package to production."
+                                            continue
+                                        }
+
+                                        # No PR found for repackaging branch, not even older, closed PR's, skip pushing package to testing
+                                        if ($null -eq $prBranch) {
+                                            Write-Log "No PR found for repackaging branch $repackagingBranch. Skip pushing package to testing." -Severity 2
+                                            continue
+                                        }
+
+                                        # PR was closed, check if ticket was changed after PR was closed
+                                        if ($prBranch -eq "prod" -and $prState -eq "closed") {
+                                            $issueName = "$package@$version"
+                                            $issueKey = Get-JiraIssueKeyFromName -issueName $issueName
+
+                                            $ticketChangedDate = Get-JiraStatusChangedDate -IssueKey $issueKey
+                                            $ticketChangedDate = $ticketChangedDate.Changed
+
+                                            $prClosedDate = [datetime]$latestPullRequest.Details.closed_at
+
+                                            if ($ticketChangedDate -gt $prClosedDate) {
+                                                Write-Log "PR for Jira issue $issueKey hasn't been created. Skip pushing package to testing." -Severity 2
+                                                continue
+                                            }
+                                        }
+
+                                        if (-Not (Test-ExistsOnRepo -PackageName $FullID -PackageVersion $FullVersion -Repository $Repo -FileCreationDate $FileDate)) {
+                                            Write-Log "Pushing Package $FullID with version $FullVersion to $chocolateyDestinationServer." -Severity 1
+                                            Send-NupkgToServer $packageRootPath $chocolateyDestinationServer
+                                        }
+                                        continue
+                                    }
+                                    else {
+                                        Write-Log "Package $package with version $version is in repackaging and its jira task is not in production." -Severity 1
                                         continue
                                     }
                                 }
