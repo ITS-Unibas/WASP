@@ -55,7 +55,7 @@ function Test-ExistsOnRepo {
         $Base64Auth = [Convert]::ToBase64String([Text.Encoding]::ASCII.GetBytes(("{0}:{1}" -f $Config.Application.RepositoryManagerAPIUser, $Config.Application.RepositoryManagerAPIPassword)))
         $Uri = $RepositoryUrl + "Packages(Id='$PackageName',Version='$PackageVersion')"
         try {
-            $Response = Invoke-WebRequest -Uri $Uri -Headers @{Authorization = "Basic $Base64Auth" }
+            $Response = Invoke-WebRequest -Uri $Uri -Headers @{Authorization = "Basic $Base64Auth" } -UseBasicParsing
             [xml]$XMLContent = $Response | Select-Object -ExpandProperty Content
             [datetime]$PublishDate = $XMLContent.entry.properties.Published.'#text'
             Write-Log "Package $PackageName with version $PackageVersion on repo server ($Repository) is current: $($PublishDate -ge $FileCreationDate)"
