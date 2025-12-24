@@ -90,10 +90,11 @@ function Invoke-Webhook {
         $updatedJsonContent = $updatedJsonContent -replace $systemRegEx, $system -replace $styleRegEx, $style
 
         $parameters = @{
-            "URI"           = $WebhookURL
-            "Method"        = 'POST'
-            "Body"          = $updatedJsonContent
-            "ContentType"   = 'application/json'
+            "URI"           	= $WebhookURL
+            "Method"        	= 'POST'
+            "Body"          	= $updatedJsonContent
+            "ContentType"   	= 'application/json'
+			"UseBasicParsing"	= $true
         }
         
         try {
