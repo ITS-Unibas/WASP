@@ -66,7 +66,7 @@ function New-JiraTicket {
         # Create the new issue
         Write-Log -Message "Creating new jira ticket for package $package with version $version" -Severity 1
         
-        $response = Invoke-WebRequest -Uri $url -Method Post -Headers $header -Body $body  
+        $response = Invoke-WebRequest -Uri $url -Method Post -Headers $header -Body $body -UseBasicParsing  
 
         if ($response.StatusCode -eq 201) {
             Write-Log -Message "StatusCode: $($response.StatusCode)" -Severity 0
