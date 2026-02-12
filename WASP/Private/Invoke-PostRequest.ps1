@@ -22,12 +22,12 @@ function Invoke-PostRequest {
     process {
         try {
             $Splat = @{
-                Method      = 'POST'
-                Uri         = $Url
-                Headers     = @{Authorization = "Token {0}" -f $config.Application.GitHubAPITokenITSUnibasChocoUser}
-                Body        = $Body
+                Method          = 'POST'
+                Uri             = $Url
+                Headers         = @{Authorization = "Token {0}" -f $config.Application.GitHubAPITokenITSUnibasChocoUser}
+                Body            = $Body
+                UseBasicParsing	= $true
             }
-            # Github Success Response ist unterschiedlich zur Error Response
             $res = Invoke-WebRequest @Splat
             $response = [PSCustomObject]@{ Status = $res.StatusCode }
             return $response
