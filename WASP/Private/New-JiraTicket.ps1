@@ -8,8 +8,9 @@ function New-JiraTicket {
         FileName: New-JiraTicket.ps1
         Author: Uwe Molnar
         Contact: its-wcs-ma@unibas.ch
-        Created: 2024-08-05
-        Version: 1.0.0
+        Created: 2024-09-04
+        Updated: 2026-05-12
+        Version: 1.0.1
     #>
     [CmdletBinding()]
     param (
@@ -20,8 +21,7 @@ function New-JiraTicket {
     begin {
         $config = Read-ConfigFile
         $jiraBaseUrl = $config.Application.JiraBaseUrl
-        $jiraUser = $config.Application.JiraUser
-        $jiraPassword = $config.Application.JiraPassword
+        $JiraUserAPIToken = $config.Application.JiraUserAPIToken
         $projectKey = $config.Application.ProjectKey
         $issueType = $config.Application.IssueType # Story
     }
@@ -39,10 +39,8 @@ function New-JiraTicket {
         # Create the new Jira ticket
         $url = "$($jiraBaseUrl)/rest/api/2/issue"
 
-        $base64AuthInfo = [Convert]::ToBase64String([Text.Encoding]::ASCII.GetBytes(("${jiraUser}:${jiraPassword}")))
-
         $header = @{
-            "Authorization" = "Basic $base64AuthInfo"
+            "Authorization" = "Bearer $JiraUserAPIToken"
             "Content-Type" = "application/json"
         } 
 
