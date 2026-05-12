@@ -4,6 +4,13 @@ function Test-IssueStatus {
         Tests if a jira issue status is true for a given package name and version
     .DESCRIPTION
         Invokes the REST API of the jira board to check the issues status
+    .Notes 
+        FileName: Test-IssueStatus.ps1
+        Author: Tim Keller, Uwe Molnar
+        Contact: its-wcs-ma@unibas.ch
+        Created: 2024-09-04
+        Updated: 2026-05-12
+        Version: 1.0.1
     #>
 
     [CmdletBinding()]
@@ -27,16 +34,16 @@ function Test-IssueStatus {
 
     begin {
         $Config = Read-ConfigFile
+        $JiraUserAPIToken = $config.Application.JiraUserAPIToken
         $JiraUrl = $config.Application.JiraBaseURL
         $ProjectKey = $config.Application.ProjectKey
     }
 
     process {
-        $Base64Auth = [Convert]::ToBase64String([Text.Encoding]::ASCII.GetBytes(("{0}:{1}" -f $Config.Application.JiraUser, $Config.Application.JiraPassword)))
         $Uri = $JiraUrl + "/rest/api/2/search?jql=project=$ProjectKey%20AND%20issuetype=%20Story%20AND%20status=%20$Status%20AND%20summary~`"$PackageName@$PackageVersion`""
         Write-Log "Checking Issue-Status for Package $PackageName with version $PackageVersion"
         try {
-            $Response = Invoke-RestMethod -Uri $Uri -Method Get -Headers @{Authorization = "Basic $Base64Auth" }
+            $Response = Invoke-RestMethod -Uri $Uri -Method Get -Headers @{Authorization = "Bearer $JiraUserAPIToken" }
             if ($Response.total -eq 1){
                 return $true
             }

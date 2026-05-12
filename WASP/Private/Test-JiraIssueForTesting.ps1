@@ -6,6 +6,13 @@ function Test-JiraIssueForTesting {
         If a software-package is in 'Testing' the workflow should not process it. Only if there are changes made on the corresponding git-branch.
         This function avoids that the workflow processes a package that is already in 'Testing' and no changes were made.
         If this function returns $true the workflow should process the package. 
+    .Notes 
+        FileName: Test-JiraIssueForTesting
+        Author: Tim Keller, Uwe Molnar
+        Contact: its-wcs-ma@unibas.ch
+        Created: 2024-09-04
+        Updated: 2026-05-12
+        Version: 1.0.1
     #>
 
     [CmdletBinding()]
@@ -25,7 +32,7 @@ function Test-JiraIssueForTesting {
     begin {
         $Config = Read-ConfigFile
         $JiraUrl = $config.Application.JiraBaseURL
-        $Base64Auth = [Convert]::ToBase64String([Text.Encoding]::ASCII.GetBytes(("{0}:{1}" -f $Config.Application.JiraUser, $Config.Application.JiraPassword)))
+        $JiraUserAPIToken = $Config.Application.JiraUserAPIToken
         $GitRepo = $config.Application.PackageGallery
         $GitFile = $GitRepo.Substring($GitRepo.LastIndexOf("/") + 1, $GitRepo.Length - $GitRepo.LastIndexOf("/") - 1)
         $GitFolderName = $GitFile.Replace(".git", "")
@@ -33,7 +40,7 @@ function Test-JiraIssueForTesting {
         $ProjectKey = $config.Application.ProjectKey
 
         $Headers = @{
-            Authorization = "Basic $Base64Auth"
+            Authorization = "Bearer $JiraUserAPIToken"
             'Content-Type' = 'application/json'
         }
     }

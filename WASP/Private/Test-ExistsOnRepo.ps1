@@ -7,6 +7,13 @@ function Test-ExistsOnRepo {
         Invokes the REST API of the Repository Manager to check if the
         choco package with a given name and version a specified version already exists
         on the given repository and if it is current or not
+    .NOTES
+        FileName: Test-ExistsOnRepo.ps1
+        Author: Uwe Molnar
+        Contact: its-wcs-ma@unibas.ch
+        Created: 2024-09-04
+        Updated: 2026-05-12
+        Version: 1.0.1
     #>
 
     [CmdletBinding()]
@@ -34,7 +41,8 @@ function Test-ExistsOnRepo {
 
     begin {
         $Config = Read-ConfigFile
-        # TODO: Maybe store Repo names in config?
+        $RepositoryManagerAPIKey = $config.Application.RepositoryManagerAPIKey
+        
         switch ($Repository) {
             "Dev" {
                 $RepositoryUrl = $config.Application.ChocoServerDEV
@@ -52,10 +60,9 @@ function Test-ExistsOnRepo {
     }
 
     process {
-        $Base64Auth = [Convert]::ToBase64String([Text.Encoding]::ASCII.GetBytes(("{0}:{1}" -f $Config.Application.RepositoryManagerAPIUser, $Config.Application.RepositoryManagerAPIPassword)))
         $Uri = $RepositoryUrl + "Packages(Id='$PackageName',Version='$PackageVersion')"
         try {
-            $Response = Invoke-WebRequest -Uri $Uri -Headers @{Authorization = "Basic $Base64Auth" } -UseBasicParsing
+            $Response = Invoke-WebRequest -Uri $Uri -Headers @{"X-NuGet-ApiKey" = $RepositoryManagerAPIKey} -UseBasicParsing
             [xml]$XMLContent = $Response | Select-Object -ExpandProperty Content
             [datetime]$PublishDate = $XMLContent.entry.properties.Published.'#text'
             Write-Log "Package $PackageName with version $PackageVersion on repo server ($Repository) is current: $($PublishDate -ge $FileCreationDate)"

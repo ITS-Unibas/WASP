@@ -1,16 +1,16 @@
 function Get-JiraIssues () {
     <#
     .Synopsis 
-    Get the Current Jira Issues for the given Project.
+        Get the Current Jira Issues for the given Project.
     .Description 
-    Get the Current Jira Issues for the given Project.
+        Get the Current Jira Issues for the given Project.
     .Notes 
-    FileName: Get-JiraIssues.ps1
-    Author: Tim Keller 
-    Contact: tim.keller@unibas.ch
-    Created: 2024-09-04
-    Updated: 2024-09-05
-    Version: 1.0.0
+        FileName: Get-JiraIssues.ps1
+        Author: Tim Keller, Uwe Molnar
+        Contact: its-wcs-ma@unibas.ch
+        Created: 2024-09-04
+        Updated: 2026-05-12
+        Version: 1.0.1
     #>
     param(
     )
@@ -18,26 +18,24 @@ function Get-JiraIssues () {
     begin {
         $Config = Read-ConfigFile
         $JiraUrl = $Config.Application.JiraBaseURL
+        $JiraUserAPIToken = $config.Application.JiraUserAPIToken
         $ProjectKey = $Config.Application.ProjectKey
 
     } process {
-        <#Create the URL for the Jira Issues API Endpoint#>
-        $Base64Auth = [Convert]::ToBase64String([Text.Encoding]::ASCII.GetBytes(("{0}:{1}" -f $Config.Application.JiraUser, $Config.Application.JiraPassword)))
         $Url = $JiraUrl + "/rest/api/latest/search?jql=project=$ProjectKey&maxResults=500"
         Write-Log "Retrieving Jira Issues for Project $ProjectKey"
 
         try {
-            $Response = Invoke-RestMethod -Uri $Url -Method Get -Headers @{Authorization = "Basic $Base64Auth" }
+            $Response = Invoke-RestMethod -Uri $Url -Method Get -Headers @{Authorization = "Bearer $JiraUserAPIToken" }
         }
         catch {
             $StatusCode = $_.Exception.Response.StatusCode.value__
             Write-Log "Get request failed with $StatusCode" -Severity 3
             return $null
         }
-        <#Save the number of total issues to check if all of them were downloaded.#>
+    
         $totalIssues = $Response.total
-
-        <#Iteratively save the Issues for all of the steps in one object.#>
+        
         $Results = @()
         $Results += $Response.Issues
 
@@ -47,7 +45,7 @@ function Get-JiraIssues () {
             $StartAt =  $Response.startAt + $Response.issues.Count
             $UrlIter = $JiraUrl + "/rest/api/latest/search?jql=project=$ProjectKey&startAt=$StartAt&maxResults=500"
             try {
-                $Response = Invoke-RestMethod -Uri $UrlIter -Method Get -Headers @{Authorization = "Basic $Base64Auth" }
+                $Response = Invoke-RestMethod -Uri $UrlIter -Method Get -Headers @{Authorization = "Bearer $JiraUserAPIToken" }
             }
             catch {
                 $StatusCode = $_.Exception.Response.StatusCode.value__
