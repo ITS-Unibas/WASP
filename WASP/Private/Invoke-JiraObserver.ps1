@@ -29,9 +29,14 @@ function Invoke-JiraObserver {
         $GitBranchDEV = $Config.Application.GitBranchDEV
         $GitBranchTEST = $Config.Application.GitBranchTEST
         $GitBranchPROD = $Config.Application.GitBranchPROD
+
+        $GitRepo = $config.Application.PackagesWishlist
+        $GitFile = $GitRepo.Substring($GitRepo.LastIndexOf("/") + 1, $GitRepo.Length - $GitRepo.LastIndexOf("/") - 1)
     }
 
     process {
+        $nameAndVersionSeparator = '@'
+
         # Die neueste Jira State file wird eingelesen als Hashtable
         Write-Log -Message "Reading latest Jira state file" -Severity 0
         $jiraStateFileContent, $JiraStateFile = Read-JiraStateFile
@@ -132,11 +137,38 @@ function Invoke-JiraObserver {
         $UpdateJiraStateFile = $true
         # jedes Issue, welches vom Stand im neusten JiraState-File abweicht wird einzeln durchgegangen
         foreach($key in $IssuesCompareState.keys) { 
+            $packageName, $packageVersion, $re = $key.split($nameAndVersionSeparator)
+            $foundInWishlist = Find-PackageInWishlist -PackageName $packageName 
+            if (!$foundInWishlist) {
+                # Paket nicht in der Wishlist, Ticket wird auf Jira geflagged und kommentiert.
+                Write-Log "Skip handling of $key - deactivated in wishlist." -Severity 2
+                $IssueKey = Get-JiraIssueKeyFromName -issueName "$packageName$nameAndVersionSeparator$packageVersion"
+                Flag-JiraTicket -issueKey $IssueKey -comment "Package $packageName is deactivated in the wishlist."
+                continue
+            }
+
             # Ermittlung des Dev-Branches anhand des Paket Namens (mit Eventualität des Repackaging branches)
             $DevBranchPrefix = "$GitBranchDEV$key"
             $DevBranch = Get-DevBranch -RemoteBranches $RemoteBranches -DevBranchPrefix $DevBranchPrefix
+            # Ermittel ob Jira Ticket eine Flag hat
+            $issueKey = Get-JiraIssueKeyFromName -issueName $key
+            $hasFlag = Test-IssueFlag -issueKey $issueKey
+
             # dev → test: PR nach test
             if ($IssuesCompareState[$key].StatusOld -eq "Development" -and $IssuesCompareState[$key].Status -eq "Testing") {
+                # Check ob Ticket eine Flag hat, wenn ja, kein PR erstellen
+                if ($hasFlag) {
+                    $Message = "Package $key is flagged and moved, which is not allowed. Please remove the flag first."
+                    Write-Log -Message "$Message" -Severity 2
+                    $existingComment = Search-JiraComment -issueKey $issueKey -searchString "$Message"
+                    if ($existingComment) {
+                        Write-Log -Message "Comment already exists on Jira ticket $issueKey. Skipping comment creation." -Severity 1
+                    } else {
+                        New-JiraComment -issueKey $issueKey -comment "$Message"
+                    }
+                    $UpdateJiraStateFile = $false
+                    break
+                }
                 $PullRequestTitle = "$key to $GitBranchTEST"
                 $response = New-PullRequest -SourceRepo $packageGalleryRepo -SourceUser $gitHubOrganization -SourceBranch $DevBranch -DestinationRepo $packageGalleryRepo -DestinationUser $gitHubOrganization -DestinationBranch $GitBranchTEST -PullRequestTitle $PullRequestTitle -ErrorAction Stop
                 Start-Sleep -Seconds 4     
@@ -148,6 +180,19 @@ function Invoke-JiraObserver {
                 }       
             # test → prod: PR nach prod
             } elseif ($IssuesCompareState[$key].StatusOld -eq "Testing" -and $IssuesCompareState[$key].Status -eq "Production") {
+                # Check ob Ticket eine Flag hat, wenn ja, kein PR erstellen
+                if ($hasFlag) {
+                    $Message = "Package $key is flagged and moved, which is not allowed. Please remove the flag first."
+                    Write-Log -Message "$Message" -Severity 2
+                    $existingComment = Search-JiraComment -issueKey $issueKey -searchString "$Message"
+                    if ($existingComment) {
+                        Write-Log -Message "Comment already exists on Jira ticket $issueKey. Skipping comment creation." -Severity 1
+                    } else {
+                        New-JiraComment -issueKey $issueKey -comment "$Message"
+                    }
+                    $UpdateJiraStateFile = $false
+                    break
+                }
                 $PullRequestTitle = "$key to $GitBranchPROD"
                 $response = New-PullRequest -SourceRepo $packageGalleryRepo -SourceUser $gitHubOrganization -SourceBranch $DevBranch -DestinationRepo $packageGalleryRepo -DestinationUser $gitHubOrganization -DestinationBranch $GitBranchPROD -PullRequestTitle $PullRequestTitle -ErrorAction Stop
                 Start-Sleep -Seconds 4     
@@ -196,4 +241,3 @@ function Invoke-JiraObserver {
         }
     }
 }
- 
