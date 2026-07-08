@@ -13,14 +13,15 @@ function Format-Version () {
         Version: 1.0.0
     #>
     param(
-        [Parameter(Mandatory = $true)]$NewPackages
+        [Parameter(Mandatory = $true)]
+        [PSCustomObject]$packages
     )
     
     begin {
     } 
     
     process {
-        $NewPackages.GetEnumerator() | ForEach-Object {
+        $packages.GetEnumerator() | ForEach-Object {
             $versionCorrected = ""
             $packageVersion = $_.version
         
@@ -32,7 +33,7 @@ function Format-Version () {
                 [version]$version = $packageVersion
             } catch {
                 Write-Log "Version $version could not be parsed as a version-variable. Please check version and correct manually!"
-                # Remove package from $newPackages and contine
+                # Remove package from $packages and contine
                 Continue
             }
         
@@ -72,5 +73,6 @@ function Format-Version () {
     }
     
     end {
+        return $packages
     }
 }
