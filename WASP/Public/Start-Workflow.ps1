@@ -67,7 +67,9 @@ function Start-Workflow {
         # Manual updated packages
         $packagesManual = @(Get-ChildItem $PackagesManualPath)
         $newPackagesUnformatted = Search-NewPackages -NewPackagesList $newPackagesUnformatted -Packages $packagesManual -Manual
-        $newPackages = Format-Version -packages $newPackagesUnformatted
+        if ($newPackagesUnformatted) {
+            $newPackages = Format-Version -packages $newPackagesUnformatted        
+        }
 
         # Automatic updated packages
         $externalRepositories = @(Get-ChildItem $PackagesInboxPath)
@@ -92,19 +94,25 @@ function Start-Workflow {
                 $automaticPath = Join-Path -Path $repository.FullName -ChildPath 'automatic'
                 $automaticPackages = @(Get-ChildItem $automaticPath | Where-Object { $_.PSIsContainer })
                 $newPackagesUnformatted = Search-NewPackages -NewPackagesList $newPackagesUnformatted -Packages $automaticPackages
-                $newPackages = Format-Version -packages $newPackagesUnformatted
+                if ($newPackagesUnformatted) {
+                    $newPackages = Format-Version -packages $newPackagesUnformatted
+                }
             }
 
             if ($manual) {
                 $manualPath = Join-Path -Path $repository.FullName -ChildPath 'manual'
                 $manualPackages = @(Get-ChildItem $manualPath | Where-Object { $_.PSIsContainer })
                 $newPackagesUnformatted = Search-NewPackages -NewPackagesList $newPackagesUnformatted -Packages $manualPackages
-                $newPackages = Format-Version -packages $newPackagesUnformatted            
+                if ($newPackagesUnformatted) {
+                    $newPackages = Format-Version -packages $newPackagesUnformatted        
+                }        
             }
 
             if (-not $manual -and -not $automatic) {
                 $newPackagesUnformatted = Search-NewPackages -NewPackagesList $newPackagesUnformatted -Packages $packages
-                $newPackages = Format-Version -packages $newPackagesUnformatted
+                if ($newPackagesUnformatted) {
+                    $newPackages = Format-Version -packages $newPackagesUnformatted
+                }
             }
         }
 
