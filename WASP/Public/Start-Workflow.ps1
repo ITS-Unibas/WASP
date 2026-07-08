@@ -58,13 +58,16 @@ function Start-Workflow {
         Write-Log "Detecting new packages and versions..." -Severity 1
 
         # Get all the packages which are to accept and further processed
+        $newPackagesUnformatted = New-Object System.Collections.ArrayList
         $newPackages = New-Object System.Collections.ArrayList
+        
         $script:unstablePackages = @{}
         Export-ModuleMember -Variable unstablePackages # needed to export the variable to the global scope
 
         # Manual updated packages
         $packagesManual = @(Get-ChildItem $PackagesManualPath)
-        $newPackages = Search-NewPackages -NewPackagesList $newPackages -Packages $packagesManual -Manual
+        $newPackagesUnformatted = Search-NewPackages -NewPackagesList $newPackagesUnformatted -Packages $packagesManual -Manual
+        $newPackages = Format-Version -packages $newPackagesUnformatted
 
         # Automatic updated packages
         $externalRepositories = @(Get-ChildItem $PackagesInboxPath)
@@ -88,17 +91,20 @@ function Start-Workflow {
             if ($automatic) {
                 $automaticPath = Join-Path -Path $repository.FullName -ChildPath 'automatic'
                 $automaticPackages = @(Get-ChildItem $automaticPath | Where-Object { $_.PSIsContainer })
-                $newPackages = Search-NewPackages -NewPackagesList $newPackages -Packages $automaticPackages
+                $newPackagesUnformatted = Search-NewPackages -NewPackagesList $newPackagesUnformatted -Packages $automaticPackages
+                $newPackages = Format-Version -packages $newPackagesUnformatted
             }
 
             if ($manual) {
                 $manualPath = Join-Path -Path $repository.FullName -ChildPath 'manual'
                 $manualPackages = @(Get-ChildItem $manualPath | Where-Object { $_.PSIsContainer })
-                $newPackages = Search-NewPackages -NewPackagesList $newPackages -Packages $manualPackages
+                $newPackagesUnformatted = Search-NewPackages -NewPackagesList $newPackagesUnformatted -Packages $manualPackages
+                $newPackages = Format-Version -packages $newPackagesUnformatted            
             }
 
             if (-not $manual -and -not $automatic) {
-                $newPackages = Search-NewPackages -NewPackagesList $newPackages -Packages $packages
+                $newPackagesUnformatted = Search-NewPackages -NewPackagesList $newPackagesUnformatted -Packages $packages
+                $newPackages = Format-Version -packages $newPackagesUnformatted
             }
         }
 
