@@ -1,16 +1,16 @@
 function Format-Version () {
     <#
     .Synopsis 
-    
+        This script makes sure every version of a new package is correctly formatted.    
     .Description 
-    
+        This script makes sure every version of a new package is correctly formatted according to the Chocolatey format. Details see: https://docs.chocolatey.org/en-us/choco/features/version-number-normalization/
     .Notes 
-    FileName: Format-Version.ps1
-    Author: Uwe Molnar
-    Contact: uwe.molnar@unibas.ch
-    Created: 2026-07-07
-    Updated: 2026-07-08
-    Version: 1.0.0
+        FileName: Format-Version.ps1
+        Author: Uwe Molnar
+        Contact: uwe.molnar@unibas.ch
+        Created: 2026-07-07
+        Updated: 2026-07-08
+        Version: 1.0.0
     #>
     param(
         [Parameter(Mandatory = $true)]$NewPackages
