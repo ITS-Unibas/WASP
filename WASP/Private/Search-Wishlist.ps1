@@ -8,10 +8,11 @@ function Search-Wishlist {
         These changes will later be committed an pushed to git.
     .NOTES
         FileName: Search-Wishlist.ps1
-        Author: Kevin Schaefer, Maximilian Burgert, Tim Königl
+        Author: Kevin Schaefer, Maximilian Burgert, Tim Königl, Uwe Molnar
         Contact: its-wcs-ma@unibas.ch
         Created: 2020-20-02
-        Version: 1.0.0
+		Updated: 2026-14-07
+        Version: 1.1.0
     #>
     [CmdletBinding()]
     param (
@@ -63,7 +64,7 @@ function Search-Wishlist {
                 }
                 # Check if previousVersion is not empty
                 if(-Not $previousVersion) {
-                    # Write-Log "$packageNameWhishlist has $NameAndVersionSeparator but no version is given. Handling it as if new package version" -Severity 2
+                    Write-Log "$packageNameWhishlist has $NameAndVersionSeparator but no version is given. Handling it as if new package version" -Severity 2
                     $previousVersion = "0.0.0.0"
                 }
 
@@ -81,11 +82,17 @@ function Search-Wishlist {
                             Write-Log "Formatted versions now $packageVersion / $previousVersion for package $packageName"    
                         }
 
-                        if (([version]$packageVersion) -le ([version]$previousVersion)) {
+						# Parse the version to be correctly formatted according to the Chocolatey version format
+						$tempPackage = ""
+						$tempPackageFromated = ""
+							
+						$tempPackage = New-Object psobject @{'path' = 'none'; 'name' = $packageName; 'version' = $packageVersion}
+						$tempPackageFromated = Format-Version -packages $tempPackage
+						
+                        if (([version($tempPackageFromated.version)) -le ([version]$previousVersion)) {
                             continue
                         }
-                    }
-                    catch [System.Management.Automation.RuntimeException] {
+                    } catch [System.Management.Automation.RuntimeException] {
                         Write-Log "The version $packageVersion could not be parsed" -Severity 2
                     }
 
