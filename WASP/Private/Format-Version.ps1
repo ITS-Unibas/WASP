@@ -49,11 +49,6 @@ function Format-Version () {
                 } else {
                     $versionCorrected = $version.ToString() + ".0"
                 }
-
-				if ($filesAndFolderUpdate){
-                	Write-Log -Message "Correction for version '$packageVersion' for package '$packageName' needed. Corrected version is set to: '$versionCorrected'" -Severity 0
-				}
-				
                 $_.version = $versionCorrected
             }
         
@@ -62,12 +57,7 @@ function Format-Version () {
         
             if (($version.Revision -ne "-1") -and ($version.Revision -eq "0")){
                 $correctionNeeded = $true
-
                 $versionCorrected = "$($version.Major).$($version.Minor).$($version.Build)"
-				if ($filesAndFolderUpdate){
-                	Write-Log -Message "Correction for version '$packageVersion' for package '$packageName' needed. Corrected version is set to: '$versionCorrected'" -Severity 0
-				}
-				
                 $_.version = $versionCorrected
             }
         
@@ -91,6 +81,8 @@ function Format-Version () {
 	
 	            # Correct the corresponing nuspec-file and foldernames if necessary
 	            if ($correctionNeeded){
+					Write-Log -Message "Correction for version '$packageVersion' for package '$packageName' needed. Corrected version is set to: '$versionCorrected'" -Severity 0
+				
 	                # Correct the foldername
 	                $oldVersion = $packageInboxPath.Split("\")[-1]
 					Write-Log -Message "Renaming folder '$packageInboxPath' to '$($_.version)'" -Severity 0
