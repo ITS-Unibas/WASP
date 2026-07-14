@@ -87,7 +87,7 @@ function Search-Wishlist {
 						$tempPackageFromated = ""
 							
 						$tempPackage = New-Object psobject @{'path' = 'none'; 'name' = $packageName; 'version' = $packageVersion}
-						$tempPackageFromated = Format-Version -packages $tempPackage
+						$tempPackageFromated = Format-Version -packages $tempPackage -noFilesAndFolderUpdate $true
 						
                         if (([version($tempPackageFromated.version)) -le ([version]$previousVersion)) {
                             continue
