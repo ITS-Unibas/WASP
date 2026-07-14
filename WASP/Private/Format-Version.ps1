@@ -49,8 +49,11 @@ function Format-Version () {
                 } else {
                     $versionCorrected = $version.ToString() + ".0"
                 }
-                
-                Write-Log -Message "Correction for version '$packageVersion' for package '$packageName' needed. Corrected version is set to: '$versionCorrected'" -Severity 0
+
+				if ($filesAndFolderUpdate){
+                	Write-Log -Message "Correction for version '$packageVersion' for package '$packageName' needed. Corrected version is set to: '$versionCorrected'" -Severity 0
+				}
+				
                 $_.version = $versionCorrected
             }
         
@@ -61,7 +64,10 @@ function Format-Version () {
                 $correctionNeeded = $true
 
                 $versionCorrected = "$($version.Major).$($version.Minor).$($version.Build)"
-                Write-Log -Message "Correction for version '$packageVersion' for package '$packageName' needed. Corrected version is set to: '$versionCorrected'" -Severity 0
+				if ($filesAndFolderUpdate){
+                	Write-Log -Message "Correction for version '$packageVersion' for package '$packageName' needed. Corrected version is set to: '$versionCorrected'" -Severity 0
+				}
+				
                 $_.version = $versionCorrected
             }
         
