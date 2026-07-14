@@ -84,12 +84,12 @@ function Search-Wishlist {
 
 						# Parse the version to be correctly formatted according to the Chocolatey version format
 						$tempPackage = ""
-						$tempPackageFromated = ""
+						$tempPackageFormatted = ""
 							
 						$tempPackage = New-Object psobject @{'path' = 'none'; 'name' = $packageName; 'version' = $packageVersion}
-						$tempPackageFromated = Format-Version -packages $tempPackage -filesAndFolderUpdate $false
+						$tempPackageFormatted = Format-Version -packages $tempPackage -filesAndFolderUpdate $false
 						
-                        if ([version]($tempPackageFromated.version) -le [version]$previousVersion) {
+                        if ([version]($tempPackageFormatted.version) -le [version]$previousVersion) {
                             continue
                         }
                     } catch [System.Management.Automation.RuntimeException] {
