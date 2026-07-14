@@ -80,7 +80,6 @@ function Format-Version () {
 			if ($filesAndFolderUpdate){
 	            if (!($packageVersion.ToString() -eq $versionCorrected.ToString())){
 	                $correctionNeeded = $true
-	                Write-Log -Message "Correction for version '$packageVersion' for package '$packageName' needed. Corrected version is set to: '$versionCorrected'" -Severity 0
 	                $_.version = $versionCorrected
 	            }
 	
