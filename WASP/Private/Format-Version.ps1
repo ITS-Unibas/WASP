@@ -25,7 +25,7 @@ function Format-Version () {
     } 
     
     process {
-        $packages.GetEnumerator() | ForEach-Object {
+        $packages | ForEach-Object {
             
             $correctionNeeded = $false
             $versionCorrected = ""
