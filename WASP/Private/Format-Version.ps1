@@ -77,7 +77,6 @@ function Format-Version () {
             $splitVersionString | ForEach-Object {$versionCorrected += "$($_)."}
             $versionCorrected = $versionCorrected -replace "\.$", ""
 
-			# TBD: Add Log-Output
 			if ($filesAndFolderUpdate){
 	            if (!($packageVersion.ToString() -eq $versionCorrected.ToString())){
 	                $correctionNeeded = $true
@@ -88,6 +87,7 @@ function Format-Version () {
 	            if ($correctionNeeded){
 	                # Correct the foldername
 	                $oldVersion = $packageInboxPath.Split("\")[-1]
+					Write-Log -Message "Renaming folder '$packageInboxPath' to '$($_.version)'" -Severity 0
 	                Rename-Item -Path $packageInboxPath -NewName $($_.version)
 	                $_.path = $packageInboxPath -replace "$oldVersion", "$($_.version)"
 	
@@ -96,6 +96,7 @@ function Format-Version () {
 	                $nuspecContentRaw = Get-Content -Path $nuspecFilePath -Raw -ErrorAction Stop
 	                $newContent = $_.version
 	                $nuspecContentRaw = $nuspecContentRaw | ForEach-Object { $_ -replace '<version>.*</version>', "<version>$newContent</version>" }
+					Write-Log -Message "Replacing version in nuspec-file '$nuspecFilePath' with '$newContent'" -Severity 0
 					Set-Content -Path $nuspecFilePath -Value $nuspecContentRaw
 	            }
 			}
