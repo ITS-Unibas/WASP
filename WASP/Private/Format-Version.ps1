@@ -10,7 +10,7 @@ function Format-Version () {
         Author: Uwe Molnar
         Contact: uwe.molnar@unibas.ch
         Created: 2026-07-07
-        Updated: 2026-07-09
+        Updated: 2026-14-07
         Version: 1.1.0
     #>
     param(
@@ -79,26 +79,10 @@ function Format-Version () {
                 Write-Log -Message "Correction for version '$packageVersion' for package '$packageName' needed. Corrected version is set to: '$versionCorrected'" -Severity 0
                 $_.version = $versionCorrected
             }
-        
-            # Correct the corresponing nuspec-file and foldernames if necessary
-            if ($correctionNeeded){
-                # Correct the foldername
-                $oldVersion = $packageInboxPath.Split("\")[-1]
-                Rename-Item -Path $packageInboxPath -NewName $($_.version)
-                $_.path = $packageInboxPath -replace "$oldVersion", "$($_.version)"
-
-                # Correct the nuspec-file
-                $nuspecFilePath = (Get-ChildItem -Path $($_.path) -Recurse -Filter *.nuspec).FullName
-                $nuspecContentRaw = Get-Content -Path $nuspecFilePath -Raw -ErrorAction Stop
-                $newContent = $_.version
-                $nuspecContentRaw = $nuspecContentRaw | ForEach-Object { $_ -replace '<version>.*</version>', "<version>$newContent</version>" }
-				Set-Content -Path $nuspecFilePath -Value $nuspecContentRaw
-            }
-
         }
     }
     
     end {
-        return $packages
+        return $packages, $correctionNeeded
     }
 }
