@@ -77,6 +77,7 @@ function Format-Version () {
             $splitVersionString | ForEach-Object {$versionCorrected += "$($_)."}
             $versionCorrected = $versionCorrected -replace "\.$", ""
 
+			# TBD: Add Log-Output
 			if ($filesAndFolderUpdate){
 	            if (!($packageVersion.ToString() -eq $versionCorrected.ToString())){
 	                $correctionNeeded = $true
