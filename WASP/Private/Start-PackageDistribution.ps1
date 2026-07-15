@@ -203,6 +203,7 @@ function Start-PackageDistribution() {
 						$line = $line -replace "@.*", ""
 						if ($line -eq $package) {
 							$foundInWishlist = $true
+							break
 						}
 					}
 					if (!$foundInWishlist) {
