@@ -30,7 +30,7 @@ function Initialize-Prerequisites {
     }
     
     process {					
-		$scriptsToOverride = foreach ($chocoFunctionToOverride in $chocoFunctionsToOverride) {Get-ChildItem .\ -Filter $chocoFunctionToOverride}
+		$scriptsToOverride = foreach ($chocoFunctionToOverride in $chocoFunctionsToOverride) {Get-ChildItem $ChocoFunctionsPath -Filter $chocoFunctionToOverride}
 			
 		# Check each script that needs to be overridden if it exists and remove the corresponding .old-file if available
 		foreach ($scriptToOverride in $scriptsToOverride){

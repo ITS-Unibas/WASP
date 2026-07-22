@@ -13,6 +13,7 @@ function Get-WebFileName {
         [parameter(Mandatory = $false, Position = 0)][string] $url = '',
         [parameter(Mandatory = $true, Position = 1)][string] $defaultName,
         [parameter(Mandatory = $false)][string] $userAgent = 'chocolatey command line',
+        [parameter(Mandatory = $false)][hashtable] $headers = @{Headers = @{}},
         [parameter(ValueFromRemainingArguments = $true)][Object[]] $ignoredArguments
     )
 
@@ -116,7 +117,33 @@ function Get-WebFileName {
 
     #http://stackoverflow.com/questions/518181/too-many-automatic-redirections-were-attempted-error-message-when-using-a-httpw
     $request.CookieContainer = New-Object System.Net.CookieContainer
-    $request.UserAgent = $userAgent
+    
+    # This part is custom and comes from Get-WebFile.ps1. This extended functionality is needed to allow downloading specific installers
+    if ($options.Headers.Count -gt 0) {
+        Write-Debug "Setting custom headers"
+        foreach ($key in $options.headers.keys) {
+            switch ($key) {
+                'Accept' {
+                    $request.Accept = $options.headers.$key
+                }
+                'Cookie' {
+                    $request.CookieContainer.SetCookies($uri, $options.headers.$key)
+                }
+                'Referer' {
+                    $request.Referer = $options.headers.$key
+                }
+                Default {
+                    $request.Headers.Add($key, $options.headers.$key)
+                }
+            }
+        }
+    }
+
+    if ($headers.UserAgent){
+        $request.UserAgent = $headers.UserAgent
+    } else {
+        $request.UserAgent = $userAgent
+    }    
 
     [System.Text.RegularExpressions.Regex]$containsABadCharacter = New-Object Regex("[" + [System.Text.RegularExpressions.Regex]::Escape([System.IO.Path]::GetInvalidFileNameChars() -join '') + "\=\;]");
 
