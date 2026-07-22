@@ -132,9 +132,6 @@ function Get-WebFileName {
                 'Referer' {
                     $request.Referer = $options.headers.$key
                 }
-                Default {
-                    $request.Headers.Add($key, $options.headers.$key)
-                }
             }
         }
     }
