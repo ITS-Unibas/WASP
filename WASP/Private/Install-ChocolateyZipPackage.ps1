@@ -134,7 +134,7 @@ function Install-ChocolateyZipPackage() {
     Write-Log "Start editing chocolateyInstall..." -Severity 1
     
     $defaultFileName = $urlFound.Split("/")[-1]
-    $fileName = Get-WebFileName -url $urlFound -defaultName $defaultFileName
+    $fileName = Get-WebFileName -url $urlFound -defaultName $defaultFileName -headers $options
 
     $unzipLocation = (Join-Path (Get-Item -Path ".\").FullName "tools")
     Edit-ChocolateyInstaller -ToolsPath (Join-Path (Get-Item -Path ".\").FullName "tools") -FileName $fileName -UnzipPath $unzipLocation
