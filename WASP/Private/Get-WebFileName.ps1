@@ -132,20 +132,15 @@ function Get-WebFileName {
                 'Referer' {
                     $request.Referer = $options.headers.$key
                 }
+                'User-Agent' {
+                    $request.UserAgent = $options.headers.$key
+                }
                 Default {
-                    $req.Headers.Add($key, $options.headers.$key)
+                    $request.Headers.Add($key, $options.headers.$key)
                 }
             }
         }
     }
-
-    # The User-Agent needs to be added like shown below because [System.Net.HttpWebRequest] class has a own UserAgent-Property
-    # If a User-Agent-Header is configured in "$options" in the ChocoalteyInstall.ps1 it is preffered over User-Agent defined in "$packageArgs" directly in the ChocoalteyInstall.ps1
-    if ($headers.UserAgent){
-        $request.UserAgent = $headers.UserAgent
-    } else {
-        $request.UserAgent = $userAgent
-    }    
 
     [System.Text.RegularExpressions.Regex]$containsABadCharacter = New-Object Regex("[" + [System.Text.RegularExpressions.Regex]::Escape([System.IO.Path]::GetInvalidFileNameChars() -join '') + "\=\;]");
 
