@@ -117,8 +117,10 @@ function Get-WebFileName {
 
     #http://stackoverflow.com/questions/518181/too-many-automatic-redirections-were-attempted-error-message-when-using-a-httpw
     $request.CookieContainer = New-Object System.Net.CookieContainer
+    $request.UserAgent = $userAgent
     
-    # This part is custom and comes from Get-WebFile.ps1. This extended functionality is needed to allow downloading specific installers
+    # This part is custom and comes from "Get-WebFile.ps1": This extended functionality is needed to allow downloading specific installers
+    # The User-Agent Header is overridden, so our User-Agent-Property from $options wins over $userAgent
     if ($options.Headers.Count -gt 0) {
         Write-Debug "Setting custom headers"
         foreach ($key in $options.headers.keys) {
@@ -141,7 +143,7 @@ function Get-WebFileName {
             }
         }
     }
-
+    
     [System.Text.RegularExpressions.Regex]$containsABadCharacter = New-Object Regex("[" + [System.Text.RegularExpressions.Regex]::Escape([System.IO.Path]::GetInvalidFileNameChars() -join '') + "\=\;]");
 
     try {
