@@ -50,7 +50,7 @@ function Install-ChocolateyPowershellCommand() {
     Write-Log "Start editing chocolateyInstall..." -Severity 1
     
     $defaultFileName = $urlFound.Split("/")[-1]
-    $fileName = Get-WebFileName -url $urlFound -defaultName $defaultFileName
+    $fileName = Get-WebFileName -url $urlFound -defaultName $defaultFileName -headers $options
 
     if ($FileItem.Extension -eq '.zip') {
         # If it is a zip package the file param should be provided but not as fullpath, just the main packages name

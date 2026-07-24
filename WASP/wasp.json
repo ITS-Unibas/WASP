@@ -33,6 +33,10 @@
         ],
         "PostAdditionalScripts": [
             "FinalScript.ps1"
+        ],
+        "ChocoFunctionsToOverride": [
+            "Install*.ps1",
+            "Get-WebFileName.ps1"
         ]
     },
     "Logger": {

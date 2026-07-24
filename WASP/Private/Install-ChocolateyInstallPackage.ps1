@@ -26,7 +26,8 @@ function Install-ChocolateyInstallPackage() {
         [parameter(Mandatory = $false)] $validExitCodes = @(0),
         [parameter(Mandatory = $false)]
         [alias("useOnlyPackageSilentArgs")][switch] $useOnlyPackageSilentArguments = $false,
-        [parameter(ValueFromRemainingArguments = $true)][Object[]] $ignoredArguments
+        [parameter(ValueFromRemainingArguments = $true)][Object[]] $ignoredArguments,
+        [parameter(Mandatory = $false)][hashtable] $options = @{Headers = @{ } }
     )
 
     if ($file64) {
@@ -167,7 +168,7 @@ function Install-ChocolateyInstallPackage() {
     Write-Log "Start editing chocolateyInstall..." -Severity 1
 
     $defaultFileName = $urlFound.Split("/")[-1]
-    $fileName = Get-WebFileName -url $urlFound -defaultName $defaultFileName
+    $fileName = Get-WebFileName -url $urlFound -defaultName $defaultFileName -headers $options
     Edit-ChocolateyInstaller -ToolsPath (Join-Path (Get-Item -Path ".\").FullName "tools") -FileName $fileName
 
     if ($url -or $url64bit) {
